@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 
 using namespace NSEpic;
@@ -69,21 +70,5 @@ void CSpectrumAxis::clear() {
 CSpectrumAxis
 CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
 {
-  return CSpectrumAxis(maskVector(mask, m_Samples));
-}
-
-TFloat64List CSpectrumAxis::maskVector(const TMaskList &mask,
-                                       const TFloat64List &inputVector) {
-  TFloat64List outputVector;
-  if (mask.size() != inputVector.size()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
-  }
-  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
-  outputVector.clear();
-  outputVector.reserve(sum);
-  for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i])
-      outputVector.push_back(inputVector[i]);
-  }
-  return outputVector;
+  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
 }

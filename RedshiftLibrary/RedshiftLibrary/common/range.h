@@ -128,6 +128,8 @@ public:
 
   T GetLength() const { return m_End - m_Begin; }
 
+  T GetMidRange() const { return (m_Begin + m_End) / 2; }
+
   bool isSameSign(T offset) const {
     return (m_Begin + offset) * (m_End + offset) >= 0;
   }

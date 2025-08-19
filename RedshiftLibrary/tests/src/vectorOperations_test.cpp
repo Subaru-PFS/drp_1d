@@ -47,6 +47,7 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
+using namespace NSEpic::NSVectorOp;
 
 BOOST_AUTO_TEST_SUITE(vectorOperations)
 

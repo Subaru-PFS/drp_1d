@@ -148,7 +148,7 @@ void CExtremum::assertPeakSeparation(TFloat64List &maxX) const {
                           maxX[i] + m_extrema_separation / 2 * (1 + maxX[i]));
     windowl.IntersectWith(TFloat64Range(maxX));
     Float64 overlap;
-    overlap = windowh.GetBegin() - windowl.GetEnd();
+    overlap = windowh.GetLength();
     if (overlap < 0)
       THROWG(ErrorCode::INTERNAL_ERROR,
              Formatter() << " Peaks " << maxX[i] << " and " << maxX[i + 1]

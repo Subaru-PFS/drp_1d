@@ -223,11 +223,6 @@ public:
     return m_lineRatioManager->isTplCorr();
   }
 
-  std::shared_ptr<CAbstractFitter> m_fitter;
-  std::shared_ptr<CLineRatioManager> m_lineRatioManager;
-
-  // Multi obs combination/aggregation methods on elements Lists
-
   CSpectraGlobalIndex &getSpectraIndex() const { return m_spectraIndex; }
   void refreshAllModels();
   bool needsCatalog();
@@ -243,6 +238,10 @@ public:
   setChiSquareRatioResult(const Int32 index_z,
                           const std::shared_ptr<CLineModelResult> &lmResult);
 
+  std::shared_ptr<const CLSF> buildEquivConstantResolLSF() const;
+  std::shared_ptr<CAbstractFitter> m_fitter;
+  std::shared_ptr<CLineRatioManager> m_lineRatioManager;
+
 private:
   void initParameters();
   void setElementsVector(CLineRatioManager::EType const &lineRatioType,
@@ -255,7 +254,7 @@ private:
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
 
-  void SetLSF();
+  void SetLSF(std::shared_ptr<const CLSF> const &lsf = nullptr);
   CLineModelSolution GetModelSolution(bool fullSolution = false);
   void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
 

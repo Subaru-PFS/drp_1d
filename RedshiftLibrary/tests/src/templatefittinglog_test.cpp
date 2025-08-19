@@ -40,7 +40,6 @@
 
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/templatefittingfortests.h"
-#include "tests/src/tool/inputContextLight.h"
 
 using namespace NSEpic;
 
@@ -73,9 +72,10 @@ BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
 
   EstimateXtYSlow(X, Y, XtY);
 
-  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
-  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
-  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+  Int32 nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+
+  FFTPlans plans(nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, plans, EPrecomputedFFT::none);
 
   for (std::size_t i = 0; i < XtY.size(); i++)
     BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
@@ -86,9 +86,9 @@ BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
 
   EstimateXtYSlow(X, Y, XtY);
 
-  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
-  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
-  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+  nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  plans = FFTPlans(nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, plans, EPrecomputedFFT::none);
 
   for (std::size_t i = 0; i < XtY.size(); i++)
     BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
@@ -99,9 +99,9 @@ BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
 
   EstimateXtYSlow(X, Y, XtY);
 
-  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
-  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
-  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+  nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  plans = FFTPlans(nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, plans, EPrecomputedFFT::none);
 
   for (std::size_t i = 0; i < XtY.size(); i++)
     BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);
@@ -112,9 +112,9 @@ BOOST_FIXTURE_TEST_CASE(EstimateXtY_test, fixture_TemplateFittingSolveTestFFT) {
 
   EstimateXtYSlow(X, Y, XtY);
 
-  tplFittingLog.m_nPaddedSamples = ceil(Y.size() / 2.0) * 2;
-  tplFittingLog.InitFFT(tplFittingLog.m_nPaddedSamples);
-  tplFittingLog.EstimateXtY(X, Y, XtYres, 0);
+  nPaddedSamples = ceil(Y.size() / 2.0) * 2;
+  plans = FFTPlans(nPaddedSamples);
+  tplFittingLog.EstimateXtY(X, Y, XtYres, plans, EPrecomputedFFT::none);
 
   for (std::size_t i = 0; i < XtY.size(); i++)
     BOOST_CHECK_CLOSE(XtY[i], XtYres[i], precision);

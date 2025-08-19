@@ -46,19 +46,41 @@
 namespace NSEpic {
 class CLineModelElementList;
 class CLMEltListVector;
+class CLSF;
+
+class CSwitchToZIndependantLSF {
+public:
+  CSwitchToZIndependantLSF(
+      std::shared_ptr<CLMEltListVector> const &elements_vector,
+      CSpectraGlobalIndex &spectraIndex,
+      std::shared_ptr<const CLSF> const &lsf);
+  ~CSwitchToZIndependantLSF();
+  CSwitchToZIndependantLSF(const CSwitchToZIndependantLSF &) = delete;
+  CSwitchToZIndependantLSF &
+  operator=(const CSwitchToZIndependantLSF &) = delete;
+
+private:
+  CSpectraGlobalIndex m_spectraIndex;
+  std::shared_ptr<CLMEltListVector> m_ElementsVector;
+  TList<std::shared_ptr<const CLSF>> m_LSFs_backup;
+};
+
 class COutsideLineMaskBuilder : public CMaskBuilder {
 public:
   COutsideLineMaskBuilder(
       std::shared_ptr<CLMEltListVector> const &elements_vector,
-      CSpectraGlobalIndex const &spcIndex);
+      CSpectraGlobalIndex const &spcIndex,
+      std::shared_ptr<const CLSF> const &lsf = nullptr);
 
   CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
                 const TFloat64Range &lamdbdaRange, const Float64 &redshift,
                 Int32 spc_index = 0) override;
+  bool isDefaultMask() const override { return false; };
 
 private:
   std::shared_ptr<CLMEltListVector> m_ElementsVector;
   CSpectraGlobalIndex m_spcIndex;
+  std::shared_ptr<const CLSF> m_lsf;
 };
 
 } // namespace NSEpic

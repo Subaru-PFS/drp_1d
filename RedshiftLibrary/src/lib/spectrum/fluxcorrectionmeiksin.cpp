@@ -208,7 +208,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     return convolvedArr;
 
   TInt32Range indices = getWaveRangeIndices(convRange_rest, false);
-  Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
+  Float64 z_center = zbin.GetMidRange();
   Float64 sigmaSupport =
       lsf->GetProfile()->GetNSigmaSupport() / 2. / (1.0 + z_center);
   for (Int32 i = indices.GetBegin(); i <= indices.GetEnd(); i++) {

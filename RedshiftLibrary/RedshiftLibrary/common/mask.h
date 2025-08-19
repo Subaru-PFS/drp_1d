@@ -57,6 +57,8 @@ public:
   explicit CMask(Int32 weightsCount, Int32 defaultValue = 0)
       : m_Mask(weightsCount, defaultValue){};
   CMask(TMaskList mask) : m_Mask(std::move(mask)){};
+  CMask(CMask const &other, Int32 start, Int32 end)
+      : m_Mask(other.m_Mask.begin() + start, other.m_Mask.begin() + end){};
   CMask(CMask &&other, Int32 start, Int32 end)
       : m_Mask(std::move_iterator(other.m_Mask.begin()) + start,
                std::move_iterator(other.m_Mask.begin()) + end){};
@@ -95,8 +97,7 @@ inline Int32 CMask::GetMaskedSampleCount() const {
 inline void CMask::SetSize(Int32 s) { m_Mask.resize(s); }
 
 inline Int32 CMask::GetUnMaskedSampleCount() const {
-  return std::reduce(m_Mask.cbegin(), m_Mask.cend(), 0,
-                     [](Int32 l, Int32 r) { return l + r; });
+  return std::reduce(m_Mask.cbegin(), m_Mask.cend(), 0, std::plus());
 }
 
 } // namespace NSEpic

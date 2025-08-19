@@ -218,7 +218,7 @@ Float64 CRules::getRestLineLambda(std::string nametag) const {
 }
 
 bool CRules::isLineInsideRange(Float64 lambda, bool winsize) const {
-  Float64 start = m_lambdaRange.GetBegin() + winsize ? m_winsize : 0.;
-  Float64 end = m_lambdaRange.GetEnd() + winsize ? m_winsize : 0.;
+  Float64 start = m_lambdaRange.GetBegin() + (winsize ? m_winsize : 0.);
+  Float64 end = m_lambdaRange.GetEnd() + (winsize ? m_winsize : 0.);
   return (lambda >= start && lambda <= end);
 }

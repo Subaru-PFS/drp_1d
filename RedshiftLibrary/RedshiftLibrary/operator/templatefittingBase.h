@@ -123,6 +123,9 @@ protected:
   void applyPositiveAndNonNullConstraint(Float64 amp_sigma,
                                          Float64 &ampl) const;
 
+  virtual std::pair<TList<CMask>, Int32>
+  getMaskListAndNSamples(Float64 redshift) const;
+
   std::vector<CTemplate> m_templateRebined_bf;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
   std::vector<CMask> m_mskRebined_bf;

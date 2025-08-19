@@ -118,34 +118,36 @@ void CLineModelResult::updateVectors(
       secondPassIndices;
 
   Int32 ndup = overwrittenSourceIndices.size();
-  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrection, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates(LineModelSolutions, insertionIdx, count,
-                       CLineModelSolution(), ndup);
-  insertWithDuplicates(ContinuumModelSolutions, insertionIdx, count,
-                       CContinuumModelSolution(), ndup);
-  insertWithDuplicates<Float64>(ChiSquareContinuum, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, insertionIdx,
-                                count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrection, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates(LineModelSolutions, insertionIdx, count,
+                                   CLineModelSolution(), ndup);
+  NSVectorOp::insertWithDuplicates(ContinuumModelSolutions, insertionIdx, count,
+                                   CContinuumModelSolution(), ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquareContinuum, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum,
+                                            insertionIdx, count, NAN, ndup);
 
   for (auto &xi2Cont : ChiSquareTplContinuum)
-    insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count, DBL_MAX, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count,
+                                              DBL_MAX, ndup);
 
   for (Int32 i = 0; i < ssize(ChiSquareTplratios); i++) {
-    insertWithDuplicates<Float64>(ChiSquareTplratios[i], insertionIdx, count,
-                                  DBL_MAX, ndup);
-    insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], insertionIdx,
-                                  count, 0., ndup);
-    insertWithDuplicates<bool>(StrongELPresentTplratios[i], insertionIdx, count,
-                               false, ndup);
-    insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i], insertionIdx,
-                               count, false, ndup);
-    insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i], insertionIdx, count,
-                                0, ndup);
-    insertWithDuplicates<Float64>(PriorLinesTplratios[i], insertionIdx, count,
-                                  0., ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(
+        ChiSquareTplratios[i], insertionIdx, count, DBL_MAX, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i],
+                                              insertionIdx, count, 0., ndup);
+    NSVectorOp::insertWithDuplicates<bool>(StrongELPresentTplratios[i],
+                                           insertionIdx, count, false, ndup);
+    NSVectorOp::insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i],
+                                           insertionIdx, count, false, ndup);
+    NSVectorOp::insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i],
+                                            insertionIdx, count, 0, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(PriorLinesTplratios[i],
+                                              insertionIdx, count, 0., ndup);
   }
 }
 

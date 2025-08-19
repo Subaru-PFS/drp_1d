@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/fullspectrum.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
@@ -49,12 +50,6 @@ CFullSpectrum::CFullSpectrum() : CSpectrum() {
   m_rebin = CRebin::create("linFull", *this);
 }
 
-CFullSpectrum::CFullSpectrum(const CFullSpectrum &other)
-    : CSpectrum(other), m_mask(other.m_mask) {}
-
-CFullSpectrum::CFullSpectrum(CFullSpectrum &&other)
-    : CSpectrum(other), m_mask(std::move(other.m_mask)) {}
-
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis,
                              TMaskList invalidPixels)
@@ -66,10 +61,10 @@ CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
 CFullSpectrum::CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask)
     : CSpectrum(other, mask) {
 
-  auto new_mask = CSpectrumAxis::maskVector(
-      mask, TFloat64List(other.m_mask.getMaskList().begin(),
-                         other.m_mask.getMaskList().end()));
-  m_mask = CMask(TMaskList(new_mask.begin(), new_mask.end()));
+  auto const new_mask =
+      NSVectorOp::maskVector<Mask>(mask, other.m_mask.getMaskList());
+
+  m_mask = CMask(new_mask);
 }
 
 CFullSpectrum::CFullSpectrum(const std::string &name, const std::string &obsId)

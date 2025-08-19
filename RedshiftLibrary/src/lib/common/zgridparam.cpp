@@ -99,7 +99,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
         CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
   }
 
-  insertWithDuplicates(zgrid, imin, subgrid, ndup);
+  NSVectorOp::insertWithDuplicates(zgrid, imin, subgrid, ndup);
 
   return std::make_tuple(imin, overwrittenSourceIndices);
 }

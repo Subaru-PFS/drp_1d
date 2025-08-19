@@ -103,18 +103,18 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   }
 
   if (m_ssRatio == 1) {
-    m_spectra.clear();
+    m_spectraFull.clear();
     for (const auto &spectrum : Context.getRebinnedFullSpectra())
-      m_spectra.push_back(spectrum);
+      m_spectraFull.push_back(spectrum);
     m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 
   // else subsampling required, subsample each spectrum :
   //  (coarse redshift grid)
-  m_spectra.clear();
+  m_spectraFull.clear();
   m_lambdaRanges.clear();
-  m_spectra.reserve(Context.getSpectra().size());
+  m_spectraFull.reserve(Context.getSpectra().size());
   m_lambdaRanges.reserve(Context.getSpectra().size());
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
@@ -144,12 +144,10 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     ssSpectrum->GetSpectralAxis().ClampLambdaRange(*logSampledLambdaRange_ptr,
                                                    *ssLambdaRange);
 
-    m_spectra.push_back(std::move(ssSpectrum));
+    m_spectraFull.push_back(std::move(ssSpectrum));
     m_lambdaRanges.push_back(std::move(ssLambdaRange));
   }
 }
-
-COperatorTemplateFittingLog::~COperatorTemplateFittingLog() { freeFFTPlans(); }
 
 // only works for mtm, Y=model^2, X=1.
 Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
@@ -175,201 +173,229 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
   return 0;
 }
 
-void COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
-                                              const TFloat64List &Y,
-                                              TFloat64List &XtY,
-                                              Int32 precomputedFFT) {
+void COperatorTemplateFittingLog::EstimateXtY(
+    const TFloat64List &X, const TFloat64List &Y, TFloat64List &XtY,
+    FFTPlans &plans, EPrecomputedFFT fftX, EPrecomputedFFT fftY) {
 
   // Processing the FFT
-  Int32 nSpc = X.size();
-  Int32 nTpl = Y.size();
-  Int32 nshifts = nTpl - nSpc + 1;
-  Int32 nPadded = m_nPaddedSamples;
+  Int32 nX = X.size();
+  Int32 nY = Y.size();
+  Int32 nshifts = nY - nX + 1;
+  Int32 nPadded = plans.nPaddedSamples;
 
-  Int32 nPadBeforeSpc = nPadded - nSpc;
+  Int32 nPadBeforeSpc = nPadded - nX;
 
-  Log.LogDebug(Formatter() << "FitAllz: Processing spc-fft "
+  Log.LogDebug(Formatter() << __func__
+                           << ": Processing X-fft "
                               "with n="
-                           << nSpc << ", padded to n=" << nPadded);
+                           << nX << ", padded to n=" << nPadded);
 
-  bool computeSpcFFT = true;
-  if ((precomputedFFT == 0 && precomputedFFT_spcFluxOverErr2 != 0) ||
-      (precomputedFFT == 1 && precomputedFFT_spcOneOverErr2 != 0))
-    computeSpcFFT = false;
-
-  if (computeSpcFFT) {
+  bool computeXfft =
+      (fftX == EPrecomputedFFT::none) || (!plans.isPrecomputed(fftX));
+  if (computeXfft) {
     Log.LogDebug(Formatter()
-                 << "FitAllz: Processing spc-fft with nPadBeforeSpc="
-                 << nPadBeforeSpc);
+                 << __func__
+                 << ": Processing X-fft with nPadBeforeSpc=" << nPadBeforeSpc);
     for (Int32 k = 0; k < nPadBeforeSpc; k++)
-      inSpc[k] = 0.0;
-    for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nSpc; k++)
-      inSpc[k] = X[nSpc - 1 - (k - nPadBeforeSpc)];
+      plans.inX[k] = 0.0;
+    for (Int32 k = nPadBeforeSpc; k < nPadBeforeSpc + nX; k++)
+      plans.inX[k] = X[nX - 1 - (k - nPadBeforeSpc)];
 
-    fftw_execute(pSpc);
-    Log.LogDebug("FitAllz: spc-fft done");
+    fftw_execute(plans.pX);
+    Log.LogDebug(Formatter() << __func__ << ": X-fft done");
 
-    // save computed FFT into precomputed buffer
-    if (precomputedFFT == 0) {
-      precomputedFFT_spcFluxOverErr2 =
-          (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcFluxOverErr2 == 0)
-        THROWG(ErrorCode::INTERNAL_ERROR,
-               "Unable to "
-               "allocate precomputedFFT_spcFluxOverErr2");
-      for (Int32 k = 0; k < nPadded; k++) {
-        precomputedFFT_spcFluxOverErr2[k][0] = outSpc[k][0];
-        precomputedFFT_spcFluxOverErr2[k][1] = outSpc[k][1];
-      }
-    }
-    if (precomputedFFT == 1) {
-      precomputedFFT_spcOneOverErr2 =
-          (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-      if (precomputedFFT_spcOneOverErr2 == 0)
-        THROWG(ErrorCode::INTERNAL_ERROR,
-               "Unable to "
-               "allocate precomputedFFT_spcOneOverErr2");
-      for (Int32 k = 0; k < nPadded; k++) {
-        precomputedFFT_spcOneOverErr2[k][0] = outSpc[k][0];
-        precomputedFFT_spcOneOverErr2[k][1] = outSpc[k][1];
-      }
-    }
-
+    if (fftX != EPrecomputedFFT::none)
+      plans.storeFFT(fftX, plans.outX);
   } else {
-    if (precomputedFFT == 0)
-      for (Int32 k = 0; k < nPadded; k++) {
-        outSpc[k][0] = precomputedFFT_spcFluxOverErr2[k][0];
-        outSpc[k][1] = precomputedFFT_spcFluxOverErr2[k][1];
-      }
-    if (precomputedFFT == 1)
-      for (Int32 k = 0; k < nPadded; k++) {
-        outSpc[k][0] = precomputedFFT_spcOneOverErr2[k][0];
-        outSpc[k][1] = precomputedFFT_spcOneOverErr2[k][1];
-      }
+    plans.getFFT(fftX, plans.outX);
   }
 
-  Log.LogDebug(Formatter() << "FitAllz: Processing tpl-fft with n=" << nTpl
+  Log.LogDebug(Formatter() << __func__ << ": Processing X-fft with n=" << nY
                            << ", padded to n=" << nPadded);
 
-  for (Int32 k = 0; k < nTpl; k++) {
-    inTpl[k] = Y[k];
-  }
-  for (Int32 k = nTpl; k < nPadded; k++) {
-    inTpl[k] = 0.0;
-  }
+  bool computeYfft =
+      (fftY == EPrecomputedFFT::none) || (!plans.isPrecomputed(fftY));
+  if (computeYfft) {
+    Log.LogDebug(Formatter()
+                 << __func__
+                 << ": Processing Y-fft with nPadBeforeSpc=" << nPadBeforeSpc);
+    for (Int32 k = 0; k < nY; k++)
+      plans.inY[k] = Y[k];
+    for (Int32 k = nY; k < nPadded; k++)
+      plans.inY[k] = 0.0;
 
-  fftw_execute(pTpl);
-  Log.LogDebug("FitAllz: tpl-fft done");
+    fftw_execute(plans.pY);
+    Log.LogDebug(Formatter() << __func__ << ": Y-fft done");
+
+    if (fftY != EPrecomputedFFT::none)
+      plans.storeFFT(fftY, plans.outY);
+  } else {
+    plans.getFFT(fftY, plans.outY);
+  }
 
   // Multiplying the FFT outputs
   for (Int32 k = 0; k < nPadded; k++) {
-    outCombined[k][0] =
-        (outTpl[k][0] * outSpc[k][0] - outTpl[k][1] * outSpc[k][1]);
-    outCombined[k][1] =
-        (outTpl[k][0] * outSpc[k][1] + outTpl[k][1] * outSpc[k][0]);
+    plans.outXY[k][0] = (plans.outY[k][0] * plans.outX[k][0] -
+                         plans.outY[k][1] * plans.outX[k][1]);
+    plans.outXY[k][1] = (plans.outY[k][0] * plans.outX[k][1] +
+                         plans.outY[k][1] * plans.outX[k][0]);
   }
 
-  fftw_execute(pBackward);
-  Log.LogDebug("FitAllz: backward-fft done");
+  fftw_execute(plans.pBackward);
+  Log.LogDebug(Formatter() << __func__ << ": backward-fft done");
 
   XtY.resize(nshifts);
-  XtY.front() = inCombined[nPadded - 1] / (Float64)nPadded;
+  XtY.front() = plans.inXY[nPadded - 1] / Float64(nPadded);
   for (Int32 k = 1; k < nshifts; k++)
-    XtY[k] = inCombined[k - 1] / (Float64)nPadded;
+    XtY[k] = plans.inXY[k - 1] / Float64(nPadded);
 }
 
-Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
-  freeFFTPlans();
+FFTPlans::FFTPlans(FFTPlans &&other) { *this = std::move(other); }
 
-  inSpc = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
-  outSpc = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-  pSpc = fftw_plan_dft_r2c_1d(nPadded, inSpc, outSpc, FFTW_ESTIMATE);
-  if (inSpc == 0) {
+FFTPlans &FFTPlans::operator=(FFTPlans &&other) {
+  freeFFTPlans();
+  std::swap(nPaddedSamples, other.nPaddedSamples);
+  std::swap(inX, other.inX);
+  std::swap(outX, other.outX);
+  std::swap(pX, other.pX);
+  std::swap(inY, other.inY);
+  std::swap(outY, other.outY);
+  std::swap(pY, other.pY);
+  std::swap(outXY, other.outXY);
+  std::swap(inXY, other.inXY);
+  std::swap(pBackward, other.pBackward);
+  for (auto &[key, other_buffer] : other.precomputedFFT) {
+    if (precomputedFFT.find(key) == precomputedFFT.end()) {
+      precomputedFFT[key] = other_buffer;
+      other.precomputedFFT.at(key) = nullptr;
+    } else {
+      std::swap(precomputedFFT.at(key), other.precomputedFFT.at(key));
+    }
+  }
+  return *this;
+}
+
+void FFTPlans::initFFT(Int32 nPadded) {
+
+  nPaddedSamples = nPadded;
+  inX = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
+  outX = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
+  pX = fftw_plan_dft_r2c_1d(nPadded, inX, outX, FFTW_ESTIMATE);
+  if (inX == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate inSpc");
   }
-  if (outSpc == 0) {
+  if (outX == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate outSpc");
   }
 
-  inTpl = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
-  outTpl = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-  pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
-  if (inTpl == 0) {
+  inY = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
+  outY = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
+  pY = fftw_plan_dft_r2c_1d(nPadded, inY, outY, FFTW_ESTIMATE);
+  if (inY == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate inTpl");
   }
-  if (outTpl == 0) {
+  if (outY == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate outTpl");
   }
 
-  outCombined = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
-  inCombined = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
-  pBackward =
-      fftw_plan_dft_c2r_1d(nPadded, outCombined, inCombined, FFTW_ESTIMATE);
-  if (outCombined == 0) {
+  outXY = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
+  inXY = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
+  pBackward = fftw_plan_dft_c2r_1d(nPadded, outXY, inXY, FFTW_ESTIMATE);
+  if (outXY == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to "
                                       "allocate outCombined");
   }
-  if (inCombined == 0) {
+  if (inXY == 0) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unable to "
                                       "allocate inCombined");
   }
-
-  // reinit fft precomputed buffers
-  freeFFTPrecomputedBuffers();
-
-  return 0;
 }
 
-void COperatorTemplateFittingLog::freeFFTPrecomputedBuffers() {
-  if (precomputedFFT_spcFluxOverErr2 != nullptr) {
-    fftw_free(precomputedFFT_spcFluxOverErr2);
-    precomputedFFT_spcFluxOverErr2 = 0;
-  }
-  if (precomputedFFT_spcOneOverErr2 != nullptr) {
-    fftw_free(precomputedFFT_spcOneOverErr2);
-    precomputedFFT_spcOneOverErr2 = 0;
-  }
+void FFTPlans::freeFFTPrecomputedBuffers() {
+  for (auto &[_, fft] : precomputedFFT)
+    if (fft != nullptr) {
+      fftw_free(fft);
+      fft = nullptr;
+    }
+  precomputedFFT.clear();
 }
 
-void COperatorTemplateFittingLog::freeFFTPlans() {
-  if (pSpc) {
-    fftw_destroy_plan(pSpc);
-    pSpc = 0;
+void FFTPlans::freeFFTPlans() {
+  if (pX) {
+    fftw_destroy_plan(pX);
+    pX = nullptr;
   }
-  if (inSpc) {
-    fftw_free(inSpc);
-    inSpc = 0;
+  if (inX) {
+    fftw_free(inX);
+    inX = nullptr;
   }
-  if (outSpc) {
-    fftw_free(outSpc);
-    outSpc = 0;
+  if (outX) {
+    fftw_free(outX);
+    outX = nullptr;
   }
-  if (pTpl) {
-    fftw_destroy_plan(pTpl);
-    pTpl = 0;
+  if (pY) {
+    fftw_destroy_plan(pY);
+    pY = nullptr;
   }
-  if (inTpl) {
-    fftw_free(inTpl);
-    inTpl = 0;
+  if (inY) {
+    fftw_free(inY);
+    inY = nullptr;
   }
-  if (outTpl) {
-    fftw_free(outTpl);
-    outTpl = 0;
+  if (outY) {
+    fftw_free(outY);
+    outY = nullptr;
   }
   if (pBackward) {
     fftw_destroy_plan(pBackward);
-    pBackward = 0;
+    pBackward = nullptr;
   }
-  if (inCombined) {
-    fftw_free(inCombined);
-    inCombined = 0;
+  if (inXY) {
+    fftw_free(inXY);
+    inXY = nullptr;
   }
-  if (outCombined) {
-    fftw_free(outCombined);
-    outCombined = 0;
+  if (outXY) {
+    fftw_free(outXY);
+    outXY = nullptr;
   }
 
   freeFFTPrecomputedBuffers();
+}
+
+void FFTPlans::storeFFT(EPrecomputedFFT precomputed, fftw_complex *fft) {
+  if (!isPrecomputed(precomputed))
+    allocatePrecomputedFFT(precomputed);
+  copyFFT(fft, precomputedFFT.at(precomputed));
+}
+
+void FFTPlans::getFFT(EPrecomputedFFT precomputed, fftw_complex *fft) {
+  copyFFT(precomputedFFT.at(precomputed), fft);
+}
+
+void FFTPlans::copyFFT(fftw_complex *src, fftw_complex *dest) {
+  for (Int32 k = 0; k < nPaddedSamples; k++) {
+    dest[k][0] = src[k][0];
+    dest[k][1] = src[k][1];
+  }
+}
+
+bool FFTPlans::isPrecomputed(EPrecomputedFFT precomputed) {
+  auto const it = precomputedFFT.find(precomputed);
+  if (it == precomputedFFT.end())
+    return false;
+  if (it->second == nullptr)
+    return false;
+  return true;
+}
+
+void FFTPlans::allocatePrecomputedFFT(EPrecomputedFFT precomputed) {
+  if (isPrecomputed(precomputed))
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Not allocating precomputedFFT since alreay allocated");
+  auto buffer =
+      (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPaddedSamples);
+  if (buffer == nullptr)
+    THROWG(ErrorCode::INTERNAL_ERROR, "Unable to allocate precomputedFFT");
+  precomputedFFT[precomputed] = buffer;
 }
 
 TInt32RangeList
@@ -378,7 +404,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
   TInt32List zsplit;
   if (m_enableIGM) {
     Float64 zmin_igm =
-        GetIGMStartingRedshiftValue(m_spectra[0]->GetSpectralAxis()[0]);
+        GetIGMStartingRedshiftValue(m_spectraFull[0]->GetSpectralAxis()[0]);
     if (zmin_igm > redshifts.front() && zmin_igm < redshifts.back()) {
       Int32 i_zmin_igm = -1;
       TFloat64Index::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
@@ -442,10 +468,10 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
  * @param logpriorze: if size=0, prior is deactivated
  * @return
  */
-Int32 COperatorTemplateFittingLog::FitAllz(
+void COperatorTemplateFittingLog::FitAllz(
     std::shared_ptr<CTemplateFittingResult> result,
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
-    const CPriorHelper::TPriorZEList &logpriorze) {
+    const CPriorHelper::TPriorZEList &logpriorze, CMask const &lineMask) {
 
   // prepare list of redshifts segments that keep the same IGM extinction curves
   TInt32RangeList izrangelist = FindZRanges(result->Redshifts);
@@ -453,19 +479,27 @@ Int32 COperatorTemplateFittingLog::FitAllz(
 
   // since dtd is cte, better compute it here
   const TAxisSampleList &error =
-      m_spectra[0]->GetFluxAxis().GetError().GetSamplesVector();
-  ;
+      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+
   const Int32 nRedshifts = result->Redshifts.size();
   const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectra[0]->GetFluxAxis().GetSamplesVector();
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
+  auto const &mask = m_spectraFull[0]->getMask();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
   TFloat64List inv_err(nSpcPixels);
+  TFloat64List spcRebinedFluxOverErr2(nSpcPixels);
+  TFloat64List spcRebinedFlux2OverErr2(nSpcPixels);
   for (Int32 j = 0; j < ssize(error); j++) {
-    inv_err[j] = 1.0 / error[j];
-    inv_err2[j] = inv_err[j] * inv_err[j];
-    dtd += spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2[j];
+    if (mask[j]) {
+      inv_err[j] = 1.0 / error[j];
+      inv_err2[j] = inv_err[j] * inv_err[j];
+      spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
+      spcRebinedFlux2OverErr2[j] =
+          spcRebinedFluxOverErr2[j] * spectrumRebinedFluxRaw[j];
+      dtd += spcRebinedFlux2OverErr2[j];
+    }
   }
 
   for (Int32 k = 0; k < nzranges; k++) {
@@ -505,156 +539,210 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                              << 0 << ", max="
                              << m_templateRebined_bf[0].GetSampleCount() - 1);
 
-    FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
+    CMask lineMaskatThisRange =
+        lineMask.GetMasksCount()
+            ? lineMask.extract(ilbda.GetBegin(), ilbda.GetEnd())
+            : CMask();
+
+    FitRangez(inv_err2, spcRebinedFluxOverErr2, spcRebinedFlux2OverErr2, ilbda,
+              subresult, MeiksinList, EbmvList, dtd, lineMaskatThisRange);
 
     // copy subresults into global results
-    for (Int32 isubz = 0; isubz < ssize(subresult->Redshifts); isubz++) {
-      Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
-      if (fullResultIdx >= ssize(result->ChiSquare))
-        THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
-      result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
-      result->FitQuality[fullResultIdx] = subresult->FitQuality[isubz];
-      result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
-      result->FitAmplitudeError[fullResultIdx] =
-          subresult->FitAmplitudeError[isubz];
-      result->FitAmplitudeSigma[fullResultIdx] =
-          subresult->FitAmplitudeSigma[isubz];
-      result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
-      result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
-      result->SNR[fullResultIdx] = subresult->SNR[isubz];
+    updateGlobalResults(result, subresult, izrangelist[k].GetBegin());
 
-      Float64 logprior = 0.;
-      if (logpriorze.size() > 0) {
-        Int32 kism_best = 0;
-        if (subresult->FitEbmvCoeff[isubz] != -1.0)
-          kism_best =
-              m_templateRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvIndex(
-                  subresult->FitEbmvCoeff[isubz]);
+    if (logpriorze.size() > 0)
+      applyPrior(result, subresult, izrangelist[k].GetBegin(), logpriorze, dtd);
 
-        const CPriorHelper::SPriorTZE &pTZE =
-            logpriorze[fullResultIdx][kism_best];
-        logprior += -2.0 * pTZE.betaTE * pTZE.logprior_precompTE;
-        logprior += -2.0 * pTZE.betaA * pTZE.logprior_precompA;
-        logprior += -2.0 * pTZE.betaZ * pTZE.logprior_precompZ;
+    // computeFitQuality(result, izrangelist[k].GetBegin(),
+    //                   subresult->Redshifts.size(), ilbda.GetBegin(),
+    //                   lineMaskatThisRange);
+  }
+}
 
-        if (pTZE.A_sigma > 0.0 && pTZE.A_mean > 0.0) {
-          // now update the amplitude if there is any constraints from the
-          // priors
-          Float64 ampl = result->FitAmplitude[fullResultIdx];
-          Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
-          Float64 ampl_sigma = result->FitAmplitudeSigma[fullResultIdx];
-          if (pTZE.betaA > 0.0) {
-            Float64 bss2 = pTZE.betaA / (pTZE.A_sigma * pTZE.A_sigma);
-            ampl = (result->FitDtM[fullResultIdx] + pTZE.A_mean * bss2) /
-                   (result->FitMtM[fullResultIdx] + bss2);
-            ampl_err = sqrt(result->FitMtM[fullResultIdx]) /
-                       (result->FitMtM[fullResultIdx] + bss2);
+void COperatorTemplateFittingLog::updateGlobalResults(
+    const std::shared_ptr<CTemplateFittingResult> &result,
+    const std::shared_ptr<const CTemplateFittingResult> &subResult,
+    Int32 resultIdx) {
+  for (Int32 isubz = 0, fullResultIdx = resultIdx;
+       isubz < ssize(subResult->Redshifts); ++isubz, ++fullResultIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+    result->ChiSquare[fullResultIdx] = subResult->ChiSquare[isubz];
+    result->FitQuality[fullResultIdx] = subResult->FitQuality[isubz];
+    result->FitAmplitude[fullResultIdx] = subResult->FitAmplitude[isubz];
+    result->FitAmplitudeError[fullResultIdx] =
+        subResult->FitAmplitudeError[isubz];
+    result->FitAmplitudeSigma[fullResultIdx] =
+        subResult->FitAmplitudeSigma[isubz];
+    result->FitDtM[fullResultIdx] = subResult->FitDtM[isubz];
+    result->FitMtM[fullResultIdx] = subResult->FitMtM[isubz];
+    result->SNR[fullResultIdx] = subResult->SNR[isubz];
+    result->Overlap[fullResultIdx] = subResult->Overlap[isubz];
+    result->FitEbmvCoeff[fullResultIdx] = subResult->FitEbmvCoeff[isubz];
+    result->FitMeiksinIdx[fullResultIdx] = subResult->FitMeiksinIdx[isubz];
 
-          } else {
-            ampl =
-                result->FitDtM[fullResultIdx] / result->FitMtM[fullResultIdx];
-            ampl_err = sqrt(1. / result->FitMtM[fullResultIdx]);
-          }
-
-          Log.LogDebug(Formatter()
-                       << "update the amplitude "
-                          "(a_mean="
-                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
-          Log.LogDebug(Formatter() << "update the amplitude "
-                                      "(ampl was = "
-                                   << result->FitAmplitude[fullResultIdx]
-                                   << ", updated to " << ampl);
-
-          // check negative amplitude
-          ampl_sigma = ampl / ampl_err;
-          applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
-
-          result->FitAmplitude[fullResultIdx] = ampl;
-          result->FitAmplitudeError[fullResultIdx] = ampl_err;
-          result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
-          const Float64 chi2 = dtd +
-                               result->FitMtM[fullResultIdx] * ampl * ampl -
-                               2. * ampl * result->FitDtM[fullResultIdx];
-          result->ChiSquare[fullResultIdx] = chi2;
-          Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
-                          (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
-          if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
-            THROWG(ErrorCode::INTERNAL_ERROR,
-                   Formatter() << " Invalid logPa value (a_mean=" << pTZE.A_mean
-                               << ", a_sigma=" << pTZE.A_sigma);
-          }
-          logprior += logPa;
-        } else {
-          Log.LogDebug(Formatter()
-                       << "NOT updating the "
-                          "amplitude (a_mean="
-                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
-        }
-        if (std::isnan(logprior) || logprior != logprior ||
-            std::isinf(logprior)) {
-          THROWG(ErrorCode::INTERNAL_ERROR,
-                 Formatter() << "Invalid logPa value (a_mean=" << pTZE.A_mean
-                             << ", a_sigma=" << pTZE.A_sigma
-                             << ", precompA=" << pTZE.logprior_precompA);
-        }
-        result->ChiSquare[fullResultIdx] += logprior;
-      }
-      result->Overlap[fullResultIdx] = subresult->Overlap[isubz];
-      result->LogPrior[fullResultIdx] = logprior;
-      result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
-      result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
-
-      if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
-        ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
-      if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
-        ApplyDustCoeff(
-            m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
-                result->FitEbmvCoeff[fullResultIdx]));
-
-      // Compute model flux
-      const auto &tplRebinedFluxRaw{
-          m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
-
-      const Int32 firstTplIdx = ilbda.GetBegin() + isubz;
-      TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
-                                tplRebinedFluxRaw.begin() + firstTplIdx +
-                                    nSpcPixels};
-      for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
-        modelFlux[lambdaIdx] =
-            modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
-      }
-
-      result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
-          spectrumRebinedFluxRaw, modelFlux, error,
-          result->ChiSquare[fullResultIdx], nSpcPixels);
-
+    for (Int32 kigm = 0;
+         kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]); kigm++)
+      result->IgmMeiksinIdxIntermediate[fullResultIdx][kigm] =
+          subResult->IgmMeiksinIdxIntermediate[isubz][kigm];
+    for (Int32 kism = 0;
+         kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
+      result->IsmEbmvIdxIntermediate[fullResultIdx][kism] =
+          subResult->IsmEbmvIdxIntermediate[isubz][kism];
       for (Int32 kigm = 0;
-           kigm < ssize(result->IgmMeiksinIdxIntermediate[fullResultIdx]);
-           kigm++)
-        result->IgmMeiksinIdxIntermediate[fullResultIdx][kigm] =
-            subresult->IgmMeiksinIdxIntermediate[isubz][kigm];
-      for (Int32 kism = 0;
-           kism < ssize(result->ChiSquareIntermediate[fullResultIdx]); kism++) {
-        result->IsmEbmvIdxIntermediate[fullResultIdx][kism] =
-            subresult->IsmEbmvIdxIntermediate[isubz][kism];
-        for (Int32 kigm = 0;
-             kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
-             kigm++) {
-          result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
-              subresult->ChiSquareIntermediate[isubz][kism][kigm];
-          if (logpriorze.size() > 0) {
-            Float64 logprior =
-                0.; // not implemented -> not a problem for fullmodel, but will
-                    // be necessary for tplmodel method for example
-            result->ChiSquareIntermediate[fullResultIdx][kism][kigm] +=
-                logprior;
-          }
-        }
+           kigm < ssize(result->ChiSquareIntermediate[fullResultIdx][kism]);
+           kigm++) {
+        result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
+            subResult->ChiSquareIntermediate[isubz][kism][kigm];
       }
     }
   }
+}
 
-  return 0;
+void COperatorTemplateFittingLog::applyPrior(
+    const std::shared_ptr<CTemplateFittingResult> &result,
+    const std::shared_ptr<const CTemplateFittingResult> &subResult,
+    Int32 resultIdx, const CPriorHelper::TPriorZEList &logpriorze,
+    Float64 dtd) {
+  for (Int32 isubz = 0, fullResultIdx = resultIdx;
+       isubz < ssize(subResult->Redshifts); ++isubz, ++fullResultIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+
+    Float64 logprior = 0.;
+    if (logpriorze.size() > 0) {
+      Int32 kism_best = 0;
+      if (subResult->FitEbmvCoeff[isubz] != -1.0)
+        kism_best =
+            m_templateRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvIndex(
+                subResult->FitEbmvCoeff[isubz]);
+
+      const CPriorHelper::SPriorTZE &pTZE =
+          logpriorze[fullResultIdx][kism_best];
+      logprior += -2.0 * pTZE.betaTE * pTZE.logprior_precompTE;
+      logprior += -2.0 * pTZE.betaA * pTZE.logprior_precompA;
+      logprior += -2.0 * pTZE.betaZ * pTZE.logprior_precompZ;
+
+      if (pTZE.A_sigma > 0.0 && pTZE.A_mean > 0.0) {
+        // now update the amplitude if there is any constraints from the
+        // priors
+        Float64 ampl = result->FitAmplitude[fullResultIdx];
+        Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
+        Float64 ampl_sigma = result->FitAmplitudeSigma[fullResultIdx];
+        if (pTZE.betaA > 0.0) {
+          Float64 bss2 = pTZE.betaA / (pTZE.A_sigma * pTZE.A_sigma);
+          ampl = (result->FitDtM[fullResultIdx] + pTZE.A_mean * bss2) /
+                 (result->FitMtM[fullResultIdx] + bss2);
+          ampl_err = sqrt(result->FitMtM[fullResultIdx]) /
+                     (result->FitMtM[fullResultIdx] + bss2);
+
+        } else {
+          ampl = result->FitDtM[fullResultIdx] / result->FitMtM[fullResultIdx];
+          ampl_err = sqrt(1. / result->FitMtM[fullResultIdx]);
+        }
+
+        Log.LogDebug(Formatter()
+                     << "update the amplitude "
+                        "(a_mean="
+                     << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+        Log.LogDebug(Formatter() << "update the amplitude "
+                                    "(ampl was = "
+                                 << result->FitAmplitude[fullResultIdx]
+                                 << ", updated to " << ampl);
+
+        // check negative amplitude
+        ampl_sigma = ampl / ampl_err;
+        applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
+
+        result->FitAmplitude[fullResultIdx] = ampl;
+        result->FitAmplitudeError[fullResultIdx] = ampl_err;
+        result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
+        const Float64 chi2 = dtd + result->FitMtM[fullResultIdx] * ampl * ampl -
+                             2. * ampl * result->FitDtM[fullResultIdx];
+        result->ChiSquare[fullResultIdx] = chi2;
+        Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
+                        (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
+        if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
+          THROWG(ErrorCode::INTERNAL_ERROR,
+                 Formatter() << " Invalid logPa value (a_mean=" << pTZE.A_mean
+                             << ", a_sigma=" << pTZE.A_sigma);
+        }
+        logprior += logPa;
+      } else {
+        Log.LogDebug(Formatter()
+                     << "NOT updating the "
+                        "amplitude (a_mean="
+                     << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+      }
+      if (std::isnan(logprior) || logprior != logprior ||
+          std::isinf(logprior)) {
+        THROWG(ErrorCode::INTERNAL_ERROR,
+               Formatter() << "Invalid logPa value (a_mean=" << pTZE.A_mean
+                           << ", a_sigma=" << pTZE.A_sigma
+                           << ", precompA=" << pTZE.logprior_precompA);
+      }
+      result->ChiSquare[fullResultIdx] += logprior;
+    }
+    result->LogPrior[fullResultIdx] = logprior;
+  }
+}
+
+void COperatorTemplateFittingLog::computeFitQuality(
+    const std::shared_ptr<CTemplateFittingResult> &result, Int32 resultIdx,
+    Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
+
+  const auto &spectrumRebinedFluxRaw =
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
+  auto const &mask = m_spectraFull[0]->getMask();
+  const auto &error =
+      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+
+  for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
+       ++isubz, ++fullResultIdx, ++firstTplIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+
+    if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
+      ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
+    if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
+      ApplyDustCoeff(
+          m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
+              result->FitEbmvCoeff[fullResultIdx]));
+
+    // Compute model flux
+    const auto &tplRebinedFluxRaw{
+        m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
+
+    TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
+                              tplRebinedFluxRaw.begin() + firstTplIdx +
+                                  nSpcPixels};
+    for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
+      modelFlux[lambdaIdx] =
+          modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
+    }
+
+    CMask combinedMask;
+    if (lineMask.GetMasksCount()) {
+      CMask combinedMask(lineMask, isubz, isubz + nSpcPixels);
+      combinedMask.IntersectWith(mask);
+    } else {
+      combinedMask = mask;
+    }
+    const Int32 nSpcUnmaskedPixels = combinedMask.GetUnMaskedSampleCount();
+
+    TList<TFloat64List> spcFluxVect;
+    TList<TFloat64List> modelFluxVect;
+    TList<TFloat64List> spcFluxErrorVect;
+    TList<CMask> maskVect;
+    spcFluxVect.push_back(spectrumRebinedFluxRaw);
+    modelFluxVect.push_back((std::move(modelFlux)));
+    spcFluxErrorVect.push_back(error);
+    maskVect.push_back(std::move(combinedMask));
+    result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
+        spcFluxVect, modelFluxVect, spcFluxErrorVect,
+        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels, maskVect);
+  }
 }
 
 /**
@@ -673,17 +761,19 @@ Int32 COperatorTemplateFittingLog::FitAllz(
  * @param EbmvList
  * @return
  */
-Int32 COperatorTemplateFittingLog::FitRangez(
-    const TFloat64List &inv_err2, const TInt32Range &currentRange,
+void COperatorTemplateFittingLog::FitRangez(
+    const TFloat64List &inv_err2, const TFloat64List &spcRebinedFluxOverErr2,
+    const TFloat64List &spcRebinedFlux2OverErr2,
+    const TInt32Range &currentRange,
     const std::shared_ptr<CTemplateFittingResult> &result,
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
-    const Float64 &dtd) {
+    const Float64 &dtd, CMask const &lineMask) {
 
   const TAxisSampleList &spectrumRebinedLambda =
-      m_spectra[0]->GetSpectralAxis().GetSamplesVector();
-  const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectra[0]->GetFluxAxis().GetSamplesVector();
-  Int32 nSpc = spectrumRebinedLambda.size();
+      m_spectraFull[0]->GetSpectralAxis().GetSamplesVector();
+  auto const &spcMask = m_spectraFull[0]->getMask();
+  const Int32 nSpc = spectrumRebinedLambda.size();
+  const Int32 nSpcUnmaskedPixels = spcMask.GetUnMaskedSampleCount();
 
   const TAxisSampleList &tplRebinedLambdaGlobal =
       m_templateRebined_bf[0].GetSpectralAxis().GetSamplesVector();
@@ -693,9 +783,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   kend = currentRange.GetEnd();
   Int32 nTpl = kend - kstart + 1;
 
-  TAxisSampleList spcRebinedFluxOverErr2(nSpc);
-  for (Int32 j = 0; j < nSpc; j++) {
-    spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
+  TFloat64List lineMaskFloat;
+  TFloat64List spcMaskFloat;
+  if (lineMask.GetMasksCount()) {
+    lineMaskFloat = TFloat64List(lineMask.getMaskList().begin(),
+                                 lineMask.getMaskList().end());
+
+    spcMaskFloat = TFloat64List(spcMask.getMaskList().begin(),
+                                spcMask.getMaskList().end());
   }
 
   Float64 redshiftValueMeiksin = result->Redshifts[0];
@@ -715,7 +810,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
                                   (1 + result->Redshifts[0]));
 
   Int32 nshifts = nTpl - nSpc + 1;
-  m_nPaddedSamples = ceil(nTpl / 2.0) * 2;
+  Int32 nPaddedSamples = ceil(nTpl / 2.0) * 2;
 
   Log.LogDetail(Formatter() << "Now fitting using the FFT on "
                                "nshifts="
@@ -724,8 +819,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
   Log.LogDebug(Formatter() << "FitRangez: initializing FFT "
                               "with n = "
-                           << m_nPaddedSamples << " points");
-  InitFFT(m_nPaddedSamples);
+                           << nPaddedSamples << " points");
+  FFTPlans fftPlans(nPaddedSamples);
 
   TFloat64List z_vect = result->Redshifts;
   std::reverse(z_vect.begin(), z_vect.end());
@@ -792,6 +887,22 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   TList<TInt32List> intermediateIgmMeiksinIdx(
       nshifts, enableIGM ? MeiksinList : TInt32List(nIGMFinal, undefIdx));
 
+  // precompute DtD and nValidSamples in case of lineMask
+  // since constant for all ism/igm
+  TFloat64List DtD_vec(nshifts, dtd);
+  TInt32List nValidSamples_vec(nshifts, nSpcUnmaskedPixels);
+  if (lineMask.GetMasksCount()) {
+    // Estimate DtD if lineMask
+    EstimateXtY(spcRebinedFlux2OverErr2, lineMaskFloat, DtD_vec, fftPlans,
+                EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
+    TFloat64List nValidSamples_vec_float;
+    EstimateXtY(spcMaskFloat, lineMaskFloat, nValidSamples_vec_float, fftPlans,
+                EPrecomputedFFT::none, EPrecomputedFFT::tplMask);
+    std::transform(nValidSamples_vec_float.cbegin(),
+                   nValidSamples_vec_float.cend(), nValidSamples_vec.begin(),
+                   [](Float64 v) { return std::round(v); });
+  }
+
   // note that there is no need to copy the ism/igm cause they already exist in
   // the rebinned template
   if (m_enableIGM || m_enableISM) {
@@ -800,7 +911,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   }
   for (Int32 kIGM = 0; kIGM < nIGM; kIGM++) {
     if (enableIGM) {
-      Log.LogDebug(Formatter() << "FitRangez: IGM index=" << kIGM);
+      Log.LogDebug(Formatter() << __func__ << ": IGM index=" << kIGM);
     }
 
     if (enableIGM) {
@@ -810,7 +921,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
     for (Int32 kISM = 0; kISM < nISM; kISM++) {
       if (m_enableISM) {
-        Log.LogDebug(Formatter() << "FitRangez: ISM index =" << kISM);
+        Log.LogDebug(Formatter() << __func__ << ": ISM index =" << kISM);
       }
 
       if (m_enableISM) {
@@ -837,8 +948,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
       // Estimate DtM: sumCross
       TFloat64List dtm_vec;
+
       EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFluxcorr_cropped, dtm_vec,
-                  0);
+                  fftPlans, EPrecomputedFFT::spcFluxOverErr2);
 
       if (ssize(dtm_vec) != nshifts)
         THROWG(ErrorCode::INTERNAL_ERROR,
@@ -848,13 +960,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
       // Estimate MtM: sumT
       TFloat64List mtm_vec;
-      EstimateXtY(inv_err2, tpl2RebinedFlux, mtm_vec, 1);
+      EstimateXtY(inv_err2, tpl2RebinedFlux, mtm_vec, fftPlans,
+                  EPrecomputedFFT::spcOneOverErr2);
 
-      Log.LogDebug(Formatter() << "FitRangez: dtd = " << dtd);
+      Log.LogDebug(Formatter() << __func__ << ": dtd = " << dtd);
 
       // Estimate Chi2
       if (ssize(mtm_vec) != nshifts) {
-        freeFFTPlans();
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "xty vector size do not match: dtm size = "
                            << nshifts << ", mtm size =" << mtm_vec.size());
@@ -868,14 +980,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(
           amp[k] = 0.0;
           amp_err[k] = 0.0;
           amp_sigma[k] = 0.0;
-          chi2[k] = dtd;
+          chi2[k] = dtd; // keep at maximum
         } else {
           amp[k] = dtm_vec[k] / mtm_vec[k];
           amp_err[k] = sqrt(1. / mtm_vec[k]);
           amp_sigma[k] = amp[k] / amp_err[k];
           applyPositiveAndNonNullConstraint(amp_sigma[k], amp[k]);
-          chi2[k] =
-              dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
+          chi2[k] = DtD_vec[k] - 2 * dtm_vec[k] * amp[k] +
+                    mtm_vec[k] * amp[k] * amp[k];
         }
       }
 
@@ -892,8 +1004,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(
         if (bestChi2[k] > chi2[k]) {
           bestChi2[k] = chi2[k];
           bestFitQuality[k].reducedChiSquare =
-              NSFitQuality::reducedChi2(chi2[k], nSpc);
-          bestFitQuality[k].pValue = NSFitQuality::pValue(chi2[k], nSpc);
+              NSFitQuality::reducedChi2(chi2[k], nValidSamples_vec[k]);
+          bestFitQuality[k].pValue =
+              NSFitQuality::pValue(chi2[k], nValidSamples_vec[k]);
           bestFitAmp[k] = amp[k];
           bestFitAmpErr[k] = amp_err[k];
           bestFitAmpSigma[k] = amp_sigma[k];
@@ -913,13 +1026,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       }
 
       Log.LogDebug(Formatter()
-                   << "FitRangez: spc lbda 0 =" << spectrumRebinedLambda[0]);
-      Log.LogDebug(Formatter() << "FitRangez: tpl lbda 0 ="
+                   << __func__ << ": spc lbda 0 =" << spectrumRebinedLambda[0]);
+      Log.LogDebug(Formatter() << __func__ << ": tpl lbda 0 ="
                                << tplRebinedLambdaGlobal[kstart]);
       Float64 z_O =
           (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[kstart]) /
           tplRebinedLambdaGlobal[kstart];
-      Log.LogDebug(Formatter() << "FitRangez: z 0 =" << z_O);
+      Log.LogDebug(Formatter() << __func__ << ": z 0 =" << z_O);
     }
   }
 
@@ -953,8 +1066,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // no need to reverse the two next: all values identical along z
   result->IsmEbmvIdxIntermediate = intermediateIsmEbmvIdx;
   result->IgmMeiksinIdxIntermediate = intermediateIgmMeiksinIdx;
-  freeFFTPlans();
-  return 0;
 }
 
 // find indexes in templateSpectra for which Z falls into the redshift range
@@ -968,7 +1079,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
  */
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
     const TFloat64Range &redshiftrange) const {
-  return FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
+  return FindTplSpectralIndex(m_spectraFull[0]->GetSpectralAxis(),
                               m_templateRebined_bf[0].GetSpectralAxis(),
                               redshiftrange);
 }
@@ -1065,7 +1176,7 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   }
   // check if spc and tpl have same step
   const Float64 epsilon = 1E-8;
-  if (std::abs(m_spectra[0]->GetSpectralAxis().GetlogGridStep() -
+  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
                logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
       epsilon)
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -1077,9 +1188,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   if (m_ssRatio == 1) { // no required subsampling
     m_templateRebined_bf[0] = logSampledTpl;
   } else {
-    TInt32Range ilbda = FindTplSpectralIndex(m_spectra[0]->GetSpectralAxis(),
-                                             logSampledTpl.GetSpectralAxis(),
-                                             TFloat64Range(m_redshifts));
+    TInt32Range ilbda = FindTplSpectralIndex(
+        m_spectraFull[0]->GetSpectralAxis(), logSampledTpl.GetSpectralAxis(),
+        TFloat64Range(m_redshifts));
     TMaskList mask_tpl =
         logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
 
@@ -1114,13 +1225,11 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
                << logpriorze.size() << " != " << m_redshifts.size());
   }
 
-  Int32 retFit =
-      FitAllz(result, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs, logpriorze);
+  CMask lineMask;
+  if (!m_maskBuilder->isDefaultMask())
+    lineMask = maskTemplate();
 
-  if (retFit != 0) {
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "FitAllz failed with error " << retFit);
-  }
+  FitAllz(result, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs, logpriorze, lineMask);
 
   //**************** End Fitting at all redshifts ****************//
 
@@ -1147,7 +1256,53 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   }
 
   // estimate CstLog for PDF estimation
+  //   note: with linemask it is not a constant anymore, since the number of
+  //   valid pixels depends on z, BUT this quantity is never used in linemodel.
+  //    It is used in templatefittingSolve, which has no linemask.
   result->CstLog = EstimateLikelihoodCstLog();
 
   return result;
+}
+
+CMask COperatorTemplateFittingLog::maskTemplate() {
+  auto const &spectralAxis = m_templateRebined_bf[0].GetSpectralAxis();
+  auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis();
+
+  auto const range = spectralAxis.GetLambdaRange();
+  auto const mask = m_maskBuilder->getMask(spectralAxis, range, 0.0, 0);
+  for (Int32 i = 0; i != spectralAxis.GetSamplesCount(); ++i) {
+    if (!mask[i])
+      fluxAxis[i] = 0.0;
+  }
+  m_templateRebined_bf[0].SetFluxAxis(std::move(fluxAxis));
+  return mask;
+}
+
+Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
+  Float64 cstLog = 0.0;
+  for (auto const &[spectrum_ptr, lambdaRange_ptr] :
+       boost::combine(m_spectraFull, m_lambdaRanges)) {
+    const CSpectrumSpectralAxis &spcSpectralAxis =
+        spectrum_ptr->GetSpectralAxis();
+    const TFloat64List &error =
+        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+    auto const &mask = spectrum_ptr->getMask();
+
+    Int32 numDevs = 0;
+
+    Float64 sumLogNoise = 0.0;
+
+    Int32 imin;
+    Int32 imax;
+    lambdaRange_ptr->getClosedIntervalIndices(
+        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    for (Int32 j = imin; j <= imax; j++) {
+      if (mask[j]) {
+        numDevs++;
+        sumLogNoise += log(error[j]);
+      }
+    }
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+  }
+  return cstLog;
 }

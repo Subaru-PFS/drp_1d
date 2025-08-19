@@ -51,6 +51,10 @@ class COperator {
 public:
   COperator();
   virtual ~COperator() = 0;
+  COperator(const COperator &) = default;
+  COperator(COperator &&) = default;
+  COperator &operator=(const COperator &) = default;
+  COperator &operator=(COperator &&) = default;
 
 protected:
 };
