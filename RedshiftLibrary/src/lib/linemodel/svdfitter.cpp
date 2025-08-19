@@ -338,9 +338,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     return;
   }
   for (Int32 irefit = 0; irefit < ssize(idx_positive); ++irefit) {
-    if (ampsfitted[irefit] > 0) {
-      fitAmplitude(ValidEltsIdx[idx_positive[irefit]], redshift, undefIdx);
-    }
+    // set at zero negative amplitudes
     if (isfinite(ampsfitted[irefit]) && ampsfitted[irefit] < 0) {
       m_ElementsVector->SetElementAmplitude(ValidEltsIdx[idx_positive[irefit]],
                                             0.0, errorsfitted[irefit]);

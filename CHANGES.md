@@ -7,6 +7,7 @@
 ### Deprecated
 ### Removed
 ### Fixed
+* [9869] : Fix linemeas bug with positive constraint on SVD fitter when using polynomials under lines
 
 ## 1.12.0 (2025-08-08)
 ### Added
