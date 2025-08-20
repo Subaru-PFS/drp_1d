@@ -41,7 +41,7 @@ import glob
 import json
 import os
 from typing import Dict
-
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -110,7 +110,7 @@ def load_sklearn_classifier(path, classifier):
 
 
 @doc_method
-def load_reliability_model(model_path, parameters: Parameters, object_type):
+def load_reliability_models(model_path, parameters: Parameters, object_type):
     zlog.LogInfo(f"reliability: loading neural network for {object_type}")
     try:
         # to avoid annoying messages about gpu/cuda availability
@@ -121,17 +121,49 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
         raise APIException(
             ErrorCode.RELIABILITY_NEEDS_TENSORFLOW, "Tensorflow is required to compute the reliability"
         ) from None
+
+    keys = (
+        "zrange_min",
+        "zrange_max",
+        "zrange_step",
+        "zgrid_end",
+        "classes",
+    )
+
+    if os.path.isdir(model_path):
+        model_files = [f for f in Path(model_path).glob("*")]
+    else:
+        model_files = [model_path]
+
+    models_ha = [h5py.File(f).attrs for f in model_files]
+
     ret = dict()
-    model_ha: Dict[str, str] = h5py.File(model_path).attrs
-    keras_model_version = model_ha["keras_version"].split(".")
-    keras_system_version = keras.__version__.split(".")
-    if keras_model_version[0] > keras_system_version[0]:
+    ret["parameters"] = dict()
+    for k in keys:
+        res = [k in m for m in models_ha]
+        if k == "classes" and not all(res):
+            # set to default
+            ret["parameters"]["classes"] = ["failure", "success"]
+            continue
+        if not all(res):
+            print(f"problem with {k}: missing in one NN")
+            # raise error
+        res = [m[k] for m in models_ha]
+        if len(set(res)) != 1:
+            print(f"problem with {k} : values are not identical")
+        ret["parameters"][k] = res[0]
+
+    # check
+    keras_model_version = list({m["keras_version"].split(".")[0] for m in models_ha})
+    keras_system_version = keras.__version__.split(".")[0]
+    if keras_model_version[0] > keras_system_version:
         raise APIException(
             ErrorCode.RELIABILITY_NEEDS_TENSORFLOW,
             f"Tensorflow major version >= {keras_model_version[0]} required",
         )
-    redshift_range = [model_ha["zrange_min"], model_ha["zrange_max"]]
-    redshift_range_step = model_ha["zrange_step"]
+
+    redshift_range = [ret["parameters"]["zrange_min"], ret["parameters"]["zrange_max"]]
+    redshift_range_step = ret["parameters"]["zrange_step"]
     s_redshift_range = parameters.get_redshiftrange(object_type)
     s_redshift_range_step = parameters.get_redshiftstep(object_type)
     if s_redshift_range != redshift_range:
@@ -146,16 +178,9 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
             "redshift step of reliability model must be identical to solver one : "
             f"{redshift_range_step} != {s_redshift_range_step}",
         )
-    model = models.load_model(model_path, compile=False)
-    ret["model"] = model
-    ret["parameters"] = dict()
-    ret["parameters"]["zgrid_end"] = model_ha["zgrid_end"]
-    ret["parameters"]["zrange_step"] = model_ha["zrange_step"]
-    if "classes" in model_ha:
-        ret["parameters"]["classes"] = json.loads(model_ha["classes"])
-    else:
-        ret["parameters"]["classes"] = ["failure", "success"]
-    # TODO add classes here
+    ret["models"] = list()
+    for mf in model_files:
+        ret["models"].add(models.load_model(mf, compile=False))
     return ret
 
 
@@ -548,8 +573,8 @@ class CalibrationLibrary:
                             model_path = os.path.join(
                                 self.calibration_dir, self.parameters.get_reliability_model(object_type)
                             )
-                            mp = load_reliability_model(model_path, self.parameters, object_type)
-                            self.reliability["deep"][object_type]["models"].append(mp["model"])
+                            mp = load_reliability_models(model_path, self.parameters, object_type)
+                            self.reliability["deep"][object_type]["models"] = mp["models"]
                             self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
                         if reliability_solver == "skLearnSolver":
                             self.reliability["sklearn"] = dict()
