@@ -146,11 +146,10 @@ def load_reliability_models(model_path, parameters: Parameters, object_type):
             ret["parameters"]["classes"] = ["failure", "success"]
             continue
         if not all(res):
-            print(f"problem with {k}: missing in one NN")
-            # raise error
+            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Missing {k} attribute")
         res = [m[k] for m in models_ha]
         if len(set(res)) != 1:
-            print(f"problem with {k} : values are not identical")
+            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Multiple values for {k} attribute")
         ret["parameters"][k] = res[0]
 
     # check
