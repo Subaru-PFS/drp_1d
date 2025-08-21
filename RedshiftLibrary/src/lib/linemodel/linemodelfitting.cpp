@@ -186,7 +186,7 @@ void CLineModelFitting::reloadFor2ndPass(
 
   setElementsVector(lineRatioType, ElementComposition::Default);
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     m_models->setModelsElements(m_ElementsVector->getElementList());
   }
 
@@ -204,7 +204,6 @@ void CLineModelFitting::setElementsVector(
     ElementComposition const &element_composition) {
   // Here must pass lineRatioType as arg because is used before
   // m_lineRatioManager initialization
-  ElementComposition effectiveComposition = element_composition;
   m_ElementsVector = std::make_shared<CLMEltListVector>(
       m_spectraIndex, m_RestLineList, element_composition);
 }

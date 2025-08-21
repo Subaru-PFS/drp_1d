@@ -73,7 +73,7 @@ CLineModelSolution::CLineModelSolution(const CLineMap &restLineList)
 bool CLineModelSolution::isLineValid(Int32 lineIdx) const {
   if (lineId.empty())
     THROWG(ErrorCode::INTERNAL_ERROR, "lineModelSolution is empty");
-    return (!NotFitted[lineIdx]) && (Amplitudes[lineIdx] > 0.0);
+  return (!NotFitted[lineIdx]) && (Amplitudes[lineIdx] > 0.0);
 }
 
 size_t CLineModelSolution::size() const { return Flux.size(); }

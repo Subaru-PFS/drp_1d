@@ -621,8 +621,6 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (isElementInvalid(eIdx, line_index))
       continue;
 
-    auto const &[mu, sigma] = m_Elements[eIdx]->getObservedPositionAndLineWidth(
-        m_Redshift, line_index, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);
