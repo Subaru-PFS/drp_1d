@@ -97,15 +97,13 @@ class DeepLearningSolve(AbstractReliabilitySolver):
                 "PDF and model shapes are not compatible, zgrid differ in the end : "
                 f"{z_step} != {np.exp(c_zrange_step)}",
             )
-        ret = dict()
-        classes = model_parameters["classes"]
         results = list()
         for model in models:
-            results.append(model.predict(np.exp(pdfval[None, :, None]))[0])
+            results.append(model.predict(np.exp(pdfval[None, :, None])))
+
+        classes = model_parameters["classes"]
         probas = np.mean(np.array(results), axis=0)
-        for i in range(1, len(classes)):
-            ret[classes[i]] = probas[i]
-        return ret
+        return {c: p for c, p in zip(classes, probas)}
 
 
 register_reliability_solver("deepLearningSolver", DeepLearningSolve, "deep")
