@@ -179,7 +179,7 @@ def load_reliability_models(model_path, parameters: Parameters, object_type):
         )
     ret["models"] = list()
     for mf in model_files:
-        ret["models"].add(models.load_model(mf, compile=False))
+        ret["models"].append(models.load_model(mf, compile=False))
     return ret
 
 
