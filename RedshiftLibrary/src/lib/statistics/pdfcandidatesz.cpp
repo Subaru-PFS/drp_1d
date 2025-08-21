@@ -203,7 +203,6 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
   TCandidateZRangebyID zranges;
   TStringList duplicates =
       SetIntegrationRanges(TFloat64Range(PdfRedshifts), zranges);
-  CDeltaz deltaz_op;
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
     std::shared_ptr<TCandidateZ> &cand = c.second;

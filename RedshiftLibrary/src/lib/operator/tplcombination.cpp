@@ -389,7 +389,6 @@ void COperatorTplcombination::RebinTemplate(
   for (Int32 ktpl = 0; ktpl < ssize(tplList); ktpl++) {
     const CSpectrumSpectralAxis &tplSpectralAxis =
         tplList[ktpl]->GetSpectralAxis();
-    const CSpectrumFluxAxis &tplFluxAxis = tplList[ktpl]->GetFluxAxis();
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;

@@ -621,8 +621,6 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
     if (isElementInvalid(eIdx, line_index))
       continue;
 
-    auto const &[mu, sigma] = m_Elements[eIdx]->getObservedPositionAndLineWidth(
-        m_Redshift, line_index, false);
     Float64 fluxDI = NAN;
     Float64 snrDI = NAN;
     TInt32List eIdx_line(1, eIdx);
@@ -664,7 +662,6 @@ CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   CSpectrumFluxAxis modelfluxAxis(spectralAxis.GetSamplesCount());
 
-  Int32 nElements = m_Elements.size();
   for (Int32 eIdx : eIdx_list) {
     const auto &elt = m_Elements[eIdx];
     elt->initSpectrumModel(modelfluxAxis, getContinuumFluxAxis());
@@ -687,14 +684,11 @@ void CSpectrumModel::ApplyContinuumTplOnGrid(
   m_fitContinuum->name = tpl->GetName();
   Int32 n = tpl->GetSampleCount();
 
-  Int32 idxDust = -1;
   if (m_fitContinuum->ebmvCoef > 0.) {
     if (tpl->CalzettiInitFailed()) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "  no calzetti calib. file in template");
     }
-    idxDust =
-        tpl->m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum->ebmvCoef);
   }
   const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
   TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
@@ -717,7 +711,6 @@ void CSpectrumModel::ApplyContinuumTplOnGrid(
 
 void CSpectrumModel::ApplyContinuumPowerLawOnGrid(
     CContinuumModelSolution const &continuum) {
-  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
 
   auto spcmodel =
       (std::dynamic_pointer_cast<COperatorPowerLaw>(m_continuumFittingOperator))

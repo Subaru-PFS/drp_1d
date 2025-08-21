@@ -935,7 +935,6 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     // saved corresponds to the bestchi2 model. PDFs should be combined
     // prior to exporting the best model for each extrema...
     Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
-    Int32 maxSaveNLinemodelContinua = maxModelSave;
     if (savedModels < maxModelSave) {
       // CModelSpectrumResult
       std::shared_ptr<CModelSpectrumResult> resultspcmodel =
@@ -1330,8 +1329,6 @@ void COperatorLineModel::RecomputeAroundCandidates(
                 << "  Operator-Linemodel: ---------- /\\ ---------- ---------- "
                 << "---------- Candidate #" << i);
 
-    Float64 Z = m_firstpass_extremaResult->Redshift(i);
-
     if (m_enableWidthFitByGroups) {
       std::vector<TInt32List> idxVelfitGroups;
       // absorption
@@ -1395,9 +1392,6 @@ void COperatorLineModel::RecomputeAroundCandidates(
     Log.LogInfo(Formatter()
                 << "    Operator-Linemodel: recompute with tplfit_option="
                 << static_cast<Int32>(tplfit_option));
-
-    // find the index in the zaxis results
-    const Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, Z);
 
     // reestimate the model (eventually with continuum reestimation) on
     // the extrema selected

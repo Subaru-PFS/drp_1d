@@ -79,7 +79,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
   // precompute data sum square
   Float64 sumSquare = 0.;
   for (Int32 i = 0; i < ssize(*m_xInds); i++) {
-    Float64 xi, yi, ei, ei2;
+    Float64 yi, ei, ei2;
     Int32 idx = (*m_xInds)[i];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
     ei = (*m_ErrorNoContinuum)[idx] * m_normFactor;
@@ -647,7 +647,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   bool solverException = false;
   try {
     // v_xResult will be overwritten to be the best point found
-    int niter = solver.minimize(myfunc, v_xResult, fx, lb, ub);
+    solver.minimize(myfunc, v_xResult, fx, lb, ub);
   } catch (const AmzException &e) {
     // throw again, since the exception was thrown inside amazed
     // CLbfgsbFitter::CLeastSquare

@@ -148,7 +148,6 @@ BOOST_FIXTURE_TEST_CASE(compute2Pass_test,
       Context.GetResultStore()->GetExtremaResult(
           "galaxy", "redshiftSolver", "templateFittingSolve", "extrema_results",
           "model_parameters", 0);
-  Float64 z = res->Redshift;
 
   // Checks that fit quality indicators are correctly set
   Float64 chi2 = res->fittedContinuum.merit;

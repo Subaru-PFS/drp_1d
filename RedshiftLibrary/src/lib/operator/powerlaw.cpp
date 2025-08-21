@@ -110,7 +110,6 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   if (N < m_nLogSamplesMin) {
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
-    Int32 const nPixels = curve.size();
     auto const constantLawsCoef = computeConstantLawCoefs(curve);
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
@@ -641,7 +640,6 @@ T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
     bool opt_extinction, bool opt_dustFitting) const {
   // In order to access ism igm coefs, we initialize a template with a flux
   // at 1, and apply ism/igm on it
-  Int32 n = spectrumLambdaRest.GetSamplesCount();
 
   T3DList<Float64> correctionCoefs(
       m_nIgmCurves,
@@ -672,7 +670,6 @@ TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
     Int32 igmIdx, Float64 ismCoef) const {
   // In order to access ism igm coefs, we initialize a template with a flux
   // at 1, and apply ism/igm on it
-  Int32 n = spectrumLambdaRest.GetSamplesCount();
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
       std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));

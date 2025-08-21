@@ -379,7 +379,7 @@ void CTplratioManager::fillHalphaArray(Int32 idx) {
   if (m_opt_haprior <= 0.)
     return;
   bool ha_strongest = false;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelHaStrongest()) {
       ha_strongest = true;
       break;
@@ -405,7 +405,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_ScaleMargCorrTplratio[idx] = m_elementsVector->getScaleMargCorrection();
 
   m_StrongELPresentTplratio[idx] = false;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelStrongEmissionLinePresent()) {
       m_StrongELPresentTplratio[idx] = true;
       break;

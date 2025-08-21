@@ -62,7 +62,6 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
-  bool storeResult = false;
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
       "extremaRedshiftSeparation");
   m_opt_maxCandidate =
@@ -280,7 +279,6 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
   chisquarearray.cstLog = -1;
   chisquarearray.zstep = m_redshiftStep;
-  Int32 retPdfz = -1;
 
   Int32 nISM = result->nISM;
   Int32 nIGM = result->nIGM;
@@ -349,8 +347,6 @@ CTplCombinationSolve::buildExtremaResults(
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
   const TFloat64List &redshifts = TplFitResult->Redshifts;
-
-  bool foundRedshiftAtLeastOnce = false;
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
     THROWG(ErrorCode::INTERNAL_ERROR,

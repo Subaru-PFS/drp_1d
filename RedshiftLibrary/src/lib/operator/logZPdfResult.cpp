@@ -182,7 +182,6 @@ Float64 CLogZPdfResult::getSumTrapez() const {
     return sum;
 
   // prepare LogEvidence
-  Int32 sumMethod = 1;
   Float64 logSum = COperatorPdfz::logSumExpTrick(valProbaLog, redshifts);
   sum = exp(logSum);
 

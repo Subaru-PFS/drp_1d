@@ -54,7 +54,6 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
   Float64 dz = NAN;
   if (!redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR, "Redshift range is empty");
-  Int32 ret = -1;
   Int32 deltaz_i = 0;
   Int32 maxIter = 2;
   while (deltaz_i < maxIter) { // iterate only twice
@@ -63,7 +62,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
     Int32 izmax = -1;
     dz = NAN;
     Int32 half_samples_nb = 5 / (deltaz_i + 1);
-    ret = GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
+    GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
 
     try {
       dz = gslfit ? Compute3ddl(pdf, redshifts, iz, izmin, izmax)

@@ -125,7 +125,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
            Formatter() << "Failed to load-fit continuum for cfitopt="
                        << static_cast<Int32>(m_fitContinuum_option));
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     // Retrieve the best template, otherwise Getter throws an error
     if (isContinuumComponentPowerLawXXX()) {
@@ -262,7 +262,7 @@ void CContinuumManager::logParameters() {
 
 void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
   m_ContinuumComponent = std::move(component);
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getModel().setContinuumComponent(m_ContinuumComponent);
   }
   *m_fitContinuum = {};
@@ -283,7 +283,7 @@ void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
 }
 
 void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     std::shared_ptr<const CTemplate> tpl =
         m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);
     getModel().ApplyContinuumTplOnGrid(tpl, redshift);
@@ -295,7 +295,7 @@ void CContinuumManager::reinterpolateContinuumResetAmp() {
   m_fitContinuum->tplAmplitude = 1.0;
   m_fitContinuum->tplAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                  m_fitContinuum->tplAmplitudeError,
                                  polyCoeffs_unused);

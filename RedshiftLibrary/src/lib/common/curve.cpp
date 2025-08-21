@@ -174,7 +174,6 @@ TFloat64List TCurve::computeUnmasked(const TFloat64List &data) const {
                           "size than the curve");
   TFloat64List unmasked;
   unmasked.reserve(size());
-  Int32 pixelIdx = -1;
   for (Int32 pixelIdx = 0; pixelIdx < size(); ++pixelIdx) {
     if (mask[pixelIdx])
       unmasked.push_back(data[pixelIdx]);

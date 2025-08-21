@@ -477,8 +477,6 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     templateFittingResult->set_at_redshift(zIdx, std::move(result_z));
   }
 
-  // Question what to do with overlap in second pass ?
-  // overlap warning
   Float64 overlapValidInfZ = -1;
   for (Int32 i = 0; i < ssize(m_redshifts); i++) {
     bool ok = true;

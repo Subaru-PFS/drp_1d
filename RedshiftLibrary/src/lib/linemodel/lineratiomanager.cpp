@@ -209,7 +209,7 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
 Float64 CLineRatioManager::getLeastSquareMerit() const {
   Float64 fit = 0.0;
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -328,7 +328,7 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
 }
 
 void CLineRatioManager::refreshAllModels() {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getModel().refreshModel();
   }
 }

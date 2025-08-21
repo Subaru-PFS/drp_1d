@@ -72,10 +72,6 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
   auto const &inputContext = Context.GetInputContext();
   auto const &resultStore = Context.GetResultStore();
 
-  Float64 opt_nsigmasupport =
-      inputContext->GetParameterStore()->GetScoped<Float64>(
-          "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
-
   m_linemodel.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
 
   CLineModelSolution bestModelSolution;

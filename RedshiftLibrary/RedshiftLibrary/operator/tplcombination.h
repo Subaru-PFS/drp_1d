@@ -122,7 +122,7 @@ private:
   std::vector<CTemplate> m_templatesRebined_bf;
   std::vector<CMask> m_masksRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
-
+  using COperatorContinuumFitting::EstimateLikelihoodCstLog;
   Float64 EstimateLikelihoodCstLog(const CSpectrum &spectrum,
                                    const TFloat64Range &lambdaRange);
 
