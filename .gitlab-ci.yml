@@ -127,22 +127,6 @@ push-rc-38-osx:
     - wheel38-osx
 
 # Linux stages
-.build-linux-cmake-old:
-  stage: build
-  script:
-    - source /venv/p39/bin/activate
-    - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
-    - mkdir -p build
-    - cd build
-    - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
-    - make -j 12
-    - make install
-  after_script:
-    - ccache --show-stats
-  cache:
-    policy: push
-    untracked: true
-
 .build-linux:
   stage: build
   script:
@@ -153,7 +137,7 @@ push-rc-38-osx:
     # - pip install ninja
     # - ninja install
   after_script:
-    - ccache --show-stats
+    - ccache-swig -s
   cache:
     policy: push
     untracked: true
@@ -194,8 +178,9 @@ push-rc-38-osx:
   stage: build-wheel
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip install build #to remove
     - python -m build -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.BUILD_TESTING=OFF
-    - ccache --show-stats
+    - ccache-swig -s
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - python -c "import pylibamazed; import importlib.metadata; print(importlib.metadata.version('pylibamazed'))"
@@ -294,9 +279,158 @@ push-rc-38-osx:
       variables:
         DOC_VERSION: $CI_DEFAULT_BRANCH
 
+# Almalinux9 stages
+.almalinux9:
+  image: $IMAGE_BUILD_DIR/amazed-almalinux9
+  variables:
+    PLATFORM: "manylinux_2_34_x86_64"
+    ENABLE_GCC10: "False"
+  cache:
+    key: "almalinux9-$CI_COMMIT_REF_SLUG"
+
+build-almalinux9:
+  extends:
+    - .almalinux9
+    - .build-linux
+
+test-almalinux9:
+  extends:
+    - .almalinux9
+    - .test-linux
+
+wheel39-almalinux9:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9
+    - .wheel-linux
+
+wheel311-almalinux9:
+  variables:
+    PYTHON_VERSION: "311"
+  when: manual
+  extends:
+    - .almalinux9
+    - .wheel-linux
+
+wheel312-almalinux9:
+  variables:
+    PYTHON_VERSION: "312"
+  when: manual
+  extends:
+    - .almalinux9
+    - .wheel-linux
+
+pytest39-almalinux9:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9
+    - .pytest-linux
+
+pytest311-almalinux9:
+  variables:
+    PYTHON_VERSION: "311"
+  when: manual
+  extends:
+    - .almalinux9
+    - .pytest-linux
+
+pytest312-almalinux9:
+  variables:
+    PYTHON_VERSION: "312"
+  when: manual
+  extends:
+    - .almalinux9
+    - .pytest-linux
+
+pytest39-coverage-almalinux9: 
+  rules :
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $COVERAGE == "true"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: manual
+  variables:
+    PYTHON_VERSION: "39"
+  allow_failure: true
+  extends:
+    - .almalinux9
+    - .pytest-coverage-linux
+
+pytest311-coverage-almalinux9:
+  variables:
+    PYTHON_VERSION: "311"
+  when: manual
+  extends:
+    - .almalinux9
+    - .pytest-coverage-linux
+
+pytest312-coverage-almalinux9:
+  variables:
+    PYTHON_VERSION: "312"
+  when: manual
+  extends:
+    - .almalinux9
+    - .pytest-coverage-linux
+
+push-rc-39-almalinux9:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9
+    - .push-rc-linux
+  dependencies:
+    - wheel39-almalinux9
+
+push-rc-311-almalinux9:
+  variables:
+    PYTHON_VERSION: "311"
+  extends:
+    - .almalinux9
+    - .push-rc-linux
+  dependencies:
+    - wheel311-almalinux9
+
+push-rc-312-almalinux9:
+  variables:
+    PYTHON_VERSION: "312"
+  extends:
+    - .almalinux9
+    - .push-rc-linux
+  dependencies:
+    - wheel312-almalinux9
+
+coverage-almalinux9:
+  rules :
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $COVERAGE == "true"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: manual
+  allow_failure: true
+  extends:
+    - .almalinux9
+    - .build-coverage-linux
+
+sonar-scanner-almalinux9:
+  extends:
+    - .almalinux9
+    - .sonar-linux
+  dependencies:
+    - coverage-almalinux9
+
+pages:
+  variables:
+    PYTHON_VERSION: "39"
+  extends:
+    - .almalinux9
+    - .pages-linux
+
 # Manylinux2014 stages
 .manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
+  when: manual
   variables:
     PLATFORM: "manylinux2014_x86_64"
     ENABLE_GCC10: "False"
@@ -323,7 +457,6 @@ wheel39-manylinux2014:
 wheel311-manylinux2014:
   variables:
     PYTHON_VERSION: "311"
-  when: manual
   extends:
     - .manylinux2014
     - .wheel-linux
@@ -331,7 +464,6 @@ wheel311-manylinux2014:
 wheel312-manylinux2014:
   variables:
     PYTHON_VERSION: "312"
-  when: manual
   extends:
     - .manylinux2014
     - .wheel-linux
@@ -339,7 +471,6 @@ wheel312-manylinux2014:
 wheel313-manylinux2014:
   variables:
     PYTHON_VERSION: "313"
-  when: manual
   extends:
     - .manylinux2014
     - .wheel-linux
@@ -354,7 +485,6 @@ pytest39-manylinux2014:
 pytest311-manylinux2014:
   variables:
     PYTHON_VERSION: "311"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-linux
@@ -362,7 +492,6 @@ pytest311-manylinux2014:
 pytest312-manylinux2014:
   variables:
     PYTHON_VERSION: "312"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-linux
@@ -370,21 +499,13 @@ pytest312-manylinux2014:
 pytest313-manylinux2014:
   variables:
     PYTHON_VERSION: "313"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-linux
 
 pytest39-coverage-manylinux2014: 
-  rules :
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $COVERAGE == "true"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - when: manual
   variables:
     PYTHON_VERSION: "39"
-  allow_failure: true
   extends:
     - .manylinux2014
     - .pytest-coverage-linux
@@ -392,7 +513,6 @@ pytest39-coverage-manylinux2014:
 pytest311-coverage-manylinux2014:
   variables:
     PYTHON_VERSION: "311"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-coverage-linux
@@ -400,7 +520,6 @@ pytest311-coverage-manylinux2014:
 pytest312-coverage-manylinux2014:
   variables:
     PYTHON_VERSION: "312"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-coverage-linux
@@ -408,7 +527,6 @@ pytest312-coverage-manylinux2014:
 pytest313-coverage-manylinux2014:
   variables:
     PYTHON_VERSION: "313"
-  when: manual
   extends:
     - .manylinux2014
     - .pytest-coverage-linux
@@ -450,13 +568,6 @@ push-rc-313-manylinux2014:
     - wheel313-manylinux2014
 
 coverage-manylinux2014:
-  rules :
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $COVERAGE == "true"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - when: manual
-  allow_failure: true
   extends:
     - .manylinux2014
     - .build-coverage-linux
@@ -468,141 +579,12 @@ sonar-scanner-manylinux2014:
   dependencies:
     - coverage-manylinux2014
 
-pages:
-  variables:
-    PYTHON_VERSION: "39"
-  extends:
-    - .manylinux2014
-    - .pages-linux
-
-# Manylinux_2_28 stages
-.manylinux_2_28:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux_2_28
-  when: manual
-  variables:
-    PLATFORM: "linux_x86_64"
-    ENABLE_GCC10: "True"
-  cache:
-    key: "manylinux_2_28-$CI_COMMIT_REF_SLUG"
-
-build-manylinux_2_28:
-  extends:
-    - .manylinux_2_28
-    - .build-linux
-
-test-manylinux_2_28:
-  extends:
-    - .manylinux_2_28
-    - .test-linux
-
-wheel38-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux_2_28
-    - .wheel-linux
-
-wheel39-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "39"
-  extends:
-    - .manylinux_2_28
-    - .wheel-linux
-
-wheel311-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "311"
-  extends:
-    - .manylinux_2_28
-    - .wheel-linux
-
-pytest38-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux_2_28
-    - .pytest-linux
-
-pytest39-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "39"
-  extends:
-    - .manylinux_2_28
-    - .pytest-linux
-
-pytest311-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "311"
-  extends:
-    - .manylinux_2_28
-    - .pytest-linux
-
-pytest38-coverage-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux_2_28
-    - .pytest-coverage-linux
-
-pytest39-coverage-manylinux_2_28: 
-  variables:
-    PYTHON_VERSION: "39"
-  extends:
-    - .manylinux_2_28
-    - .pytest-coverage-linux
-
-pytest311-coverage-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "311"
-  extends:
-    - .manylinux_2_28
-    - .pytest-coverage-linux
-
-push-rc-38-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux_2_28
-    - .push-rc-linux
-  dependencies:
-    - wheel38-manylinux_2_28
-
-push-rc-39-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "39"
-  extends:
-    - .manylinux_2_28
-    - .push-rc-linux
-  dependencies:
-    - wheel39-manylinux_2_28
-
-push-rc-311-manylinux_2_28:
-  variables:
-    PYTHON_VERSION: "311"
-  extends:
-    - .manylinux_2_28
-    - .push-rc-linux
-  dependencies:
-    - wheel311-manylinux_2_28
-
-coverage-manylinux_2_28:
-  extends:
-    - .manylinux_2_28
-    - .build-coverage-linux
-
-sonar-scanner-manylinux_2_28:
-  extends:
-    - .manylinux_2_28
-    - .sonar-linux
-  dependencies:
-    - coverage-manylinux_2_28
-
 # Rockylinux9 stages (euclid-like)
 .rockylinux:
   image: $IMAGE_BUILD_DIR/euclid-rockylinux-9
   when: manual
   variables:
-    PLATFORM: "linux_x86_64"
+    PLATFORM: "manylinux_2_35_x86_64"
     ENABLE_GCC10: "False"
   cache:
     key: "rockylinux-$CI_COMMIT_REF_SLUG"
