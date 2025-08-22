@@ -141,16 +141,19 @@ def load_reliability_models(model_path, parameters: Parameters, object_type):
     ret["parameters"] = dict()
     for k in keys:
         res = [k in m for m in models_ha]
-        if k == "classes" and not all(res):
+        if k == "classes" and not any(res):
             # set to default
             ret["parameters"]["classes"] = ["failure", "success"]
             continue
         if not all(res):
             raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Missing {k} attribute")
-        res = [m[k] for m in models_ha]
-        if len(set(res)) != 1:
+        result = [m[k] for m in models_ha]
+        if len(set(result)) != 1:
             raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Multiple values for {k} attribute")
-        ret["parameters"][k] = res[0]
+        if k == "classes":
+            ret["parameters"][k] = json.loads(str(result[0]))
+        else:
+            ret["parameters"][k] = result[0]
 
     # check
     keras_model_version = list({m["keras_version"].split(".")[0] for m in models_ha})
