@@ -123,8 +123,8 @@ private:
   std::vector<CMask> m_masksRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
   using COperatorContinuumFitting::EstimateLikelihoodCstLog;
-  Float64 EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                                   const TFloat64Range &lambdaRange);
+  Float64 EstimateLikelihoodCstLogForSpectrum(const CSpectrum &spectrum,
+                                              const TFloat64Range &lambdaRange);
 
   Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis &correctedFlux,
                                 const CSpectrumFluxAxis &spcFluxAxis,

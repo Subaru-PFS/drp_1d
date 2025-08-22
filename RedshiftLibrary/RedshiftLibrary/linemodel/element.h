@@ -199,6 +199,13 @@ protected:
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
+
+  void initSupport(const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
+                   const TFloat64Range &lambdaRange, Float64 max_offset = 0.0);
+  bool mergeIfOverlapping(Int32 i, Int32 j);
+  void resolveOverlaps();
+  bool detectDuplicateOverlaps();
+  void propagateOverlap(Int32 i, Int32 j);
 };
 
 inline bool CLineModelElement::IsOutsideLambdaRange() const {
