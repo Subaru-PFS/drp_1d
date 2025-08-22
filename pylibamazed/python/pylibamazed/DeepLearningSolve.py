@@ -98,10 +98,11 @@ class DeepLearningSolve(AbstractReliabilitySolver):
                 f"{z_step} != {np.exp(c_zrange_step)}",
             )
         results = list()
-        for model in models:
-            results.append(model.predict(np.exp(pdfval[None, :, None])))
-
         classes = model_parameters["classes"]
+        for model in models:
+            p = model.predict(np.exp(pdfval[None, :, None]))
+            results.append(p.reshape(len(classes)))
+
         probas = np.mean(np.array(results), axis=0)
         return {c: p for c, p in zip(classes, probas)}
 
