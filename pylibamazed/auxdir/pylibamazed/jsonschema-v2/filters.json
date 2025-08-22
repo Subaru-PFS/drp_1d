@@ -56,6 +56,7 @@
         "type": "object",
         "title": "Morphology Filter",
         "additionalProperties": false,
+        "description": "Morphology filter is used to apply a bitwise morphology operation on the spectrum. It is useful to remove isolated pixels or to smooth the selection. For instance : \n * To remove isolated pixels, use 'opening' [1,1] \n * To enlarge mask by one sample use 'erosion' [1, 1, 1]",
         "properties": {
           "type": {
             "const": "morphology"
@@ -72,7 +73,7 @@
           },
           "value": {
             "title": "kernel of morphology operation",
-            "decription": "array of integers in [0, 1]",
+            "decription": "Array of integers in [0, 1]",
             "type": "array",
             "minItems": 2,
             "items": {
