@@ -52,7 +52,7 @@ public:
       const std::shared_ptr<const TLSFGaussianVarWidthArgs> &args);
   Float64 GetWidth(Float64 lambda, bool cliplambda = false) const override;
 
-  bool IsValid() const override;
+  std::pair<bool, std::string> IsValid() const override;
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);

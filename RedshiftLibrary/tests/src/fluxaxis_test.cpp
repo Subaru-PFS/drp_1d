@@ -113,13 +113,11 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   noiseSample_ref = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
   Float64 Array2[10] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
   CSpectrumFluxAxis object_FluxAxis4(Array1, 10, Array2, 10);
-  Int32 s = object_FluxAxis4.GetSamplesCount();
   BOOST_CHECK(object_FluxAxis4.GetSamplesCount() == 10);
   BOOST_CHECK(object_FluxAxis4.GetSamplesVector() == sample_ref);
   CSpectrumNoiseAxis spectrumNoiseAxis4 = object_FluxAxis4.GetError();
   BOOST_CHECK(spectrumNoiseAxis4.GetSamplesVector() == noiseSample_ref);
 
-  Float64 Array2b[10] = {2, 4, 6, 8, 10, 12, 14, 16, 18};
   BOOST_CHECK_THROW(CSpectrumFluxAxis object_FluxAxis4_b(Array1, 10, Array2, 9),
                     AmzException);
 }
@@ -376,7 +374,7 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
   object_FluxAxisB = CSpectrumFluxAxis(sampleB);
 
-  bool resultSubtract = object_FluxAxisA.Subtract(object_FluxAxisB);
+  object_FluxAxisA.Subtract(object_FluxAxisB);
 
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
@@ -408,7 +406,7 @@ BOOST_AUTO_TEST_CASE(Invert_test) {
   // test Invert
   TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
   CSpectrumFluxAxis object_FluxAxisA(sampleA);
-  bool resultInvert = object_FluxAxisA.Invert();
+  object_FluxAxisA.Invert();
 
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 

@@ -128,6 +128,8 @@ public:
 
   T GetLength() const { return m_End - m_Begin; }
 
+  T GetMidRange() const { return (m_Begin + m_End) / 2; }
+
   bool isSameSign(T offset) const {
     return (m_Begin + offset) * (m_End + offset) >= 0;
   }
@@ -298,17 +300,18 @@ public:
                                    const T &value, Int32 &i_min,
                                    Int32 &i_max) const {
     if (value < m_Begin || value > m_End) {
-      THROWG(ErrorCode::CRANGE_VALUE_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VALUE_OUTSIDERANGE,
              Formatter() << "Value " << value << " not inside ]" << m_Begin
                          << "," << m_End << "[");
     }
 
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
 
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -330,10 +333,11 @@ public:
                                    Int32 &i_min, Int32 &i_max) const {
 
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
     if (m_Begin < ordered_values.front() || m_End > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -355,10 +359,11 @@ public:
   void getClosedIntervalIndices(const std::vector<T> &ordered_values,
                                 Int32 &i_min, Int32 &i_max) const {
     if (ordered_values.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ordered values is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST,
+             "Input ordered values is an empty vector.");
     }
     if (m_End < ordered_values.front() || m_Begin > ordered_values.back()) {
-      THROWG(ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE,
+      THROWG(ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE,
              Formatter() << "]" << m_Begin << "," << m_End
                          << "[ not inside ordered_values");
     }
@@ -376,7 +381,7 @@ public:
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if (i_min > i_max) {
-      THROWG(ErrorCode::CRANGE_NO_INTERSECTION,
+      THROWG(ErrorCode::IE_CRANGE_NO_INTERSECTION,
              Formatter() << "There is no sample inside range (min,max indices=["
                          << i_min << "," << i_max << "]");
     }
@@ -417,7 +422,7 @@ public:
   joinIntersections(std::vector<CRange<T>> ranges) {
 
     if (ranges.size() == 0) {
-      THROWG(ErrorCode::EMPTY_LIST, "Input ranges is an empty vector.");
+      THROWG(ErrorCode::IE_EMPTY_LIST, "Input ranges is an empty vector.");
     }
 
     if (ranges.size() == 1)

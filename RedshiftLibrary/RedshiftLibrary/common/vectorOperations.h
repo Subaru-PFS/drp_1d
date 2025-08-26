@@ -44,11 +44,26 @@
 #include <boost/range/combine.hpp>
 
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/exception.h"
+
 #include "RedshiftLibrary/common/size.h"
 
-namespace NSEpic {
+namespace NSEpic::NSVectorOp {
+
+template <typename T>
+TList<T> maskVector(const TMaskList &mask, const TList<T> &inputVector) {
+  TList<T> outputVector;
+  if (mask.size() != inputVector.size()) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
+  }
+  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
+  outputVector.reserve(sum);
+  for (Int32 i = 0; i < ssize(mask); i++) {
+    if (mask[i] == 1)
+      outputVector.push_back(inputVector[i]);
+  }
+  return outputVector;
+}
 
 // insert source into destination with ndup overlaping elements
 template <typename T>
@@ -154,9 +169,16 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
 
   Int32 ndup = overwrittenSourceIndices.size();
 
+  Int32 dupStart = 0;
+  Int32 dupEnd = ndup - 1;
+  Int32 const lastInsertIdx = ssize(source) - 1 - dupEnd;
+
+  // check insertion Idx
+  if ((insertionIdx < 0) || (insertionIdx > lastInsertIdx))
+    THROWG(ErrorCode::INTERNAL_ERROR, "insertion Idx is out of bound");
+
   TList<T> interpVect(nInterpolate);
 
-  Int32 dupStart = 0;
   // handle eventually incomplete first segment:
   //   if incomplete, interpolate the full segment and insert into interpVect
   //   only the required portion using the start index
@@ -175,13 +197,11 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
     ++dupStart; // start the main loop one segment later
   }
 
-  Int32 dupEnd = ndup - 1;
   // handle eventually incomplete last segment:
   //   if incomplete, interpolate the full segment and insert into interpVect
   //   only the required portion using the end index
-  Int32 const lastZidx = Int32(source.size()) - 1;
   if (overwrittenSourceIndices[dupEnd] != nInterpolate - 1) {
-    if (insertionIdx + ndup > lastZidx)
+    if (insertionIdx > lastInsertIdx - 1)
       THROWG(ErrorCode::INTERNAL_ERROR, "the last incomplete fine segment is "
                                         "above the end of the coarse z grid");
     Int32 const idx = insertionIdx + dupEnd;
@@ -205,5 +225,5 @@ interpolateBetweenDuplicates(TList<T> const &source, Int32 insertionIdx,
   return interpVect;
 }
 
-} // namespace NSEpic
+} // namespace NSEpic::NSVectorOp
 #endif

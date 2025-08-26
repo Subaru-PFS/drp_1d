@@ -68,6 +68,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
@@ -88,13 +89,12 @@ CLineModelFitting::CLineModelFitting(
 
   m_inputSpcs = std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
       Context.getSpectra(m_useloglambdasampling));
-  m_lambdaRanges = // std::make_shared<std::vector<std::shared_ptr<const
-                   // TLambdaRange>>>(
-      Context.getClampedLambdaRanges(m_useloglambdasampling);
-
-  initMembers(continuumFittingOperator, element_composition);
-  setLineRatioType(m_lineRatioType);
-  if (m_lineRatioType == "rules")
+  m_lambdaRanges = Context.getClampedLambdaRanges(m_useloglambdasampling);
+  auto lineRatioType = CLineRatioManager::stringToType.at(
+      Context.GetParameterStore()->GetScoped<std::string>("lineRatioType"));
+  initMembers(continuumFittingOperator, lineRatioType, element_composition);
+  setLineRatioManager(lineRatioType);
+  if (isLineRatioRules())
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
 }
 
@@ -111,25 +111,22 @@ CLineModelFitting::CLineModelFitting(
   initParameters();
   // override ortho specific parameters
   m_fittingmethod = "hybrid";
-  // temporary options override to be removed when full tpl ortho is implemented
-  m_lineRatioType = "rules";
 
-  initMembers(continuumFittingOperator, ElementComposition::Default);
-  setLineRatioType(m_lineRatioType);
+  auto lineRatioType = CLineRatioManager::EType::rules;
+  initMembers(continuumFittingOperator, lineRatioType,
+              ElementComposition::Default);
+  // temporary options override to be removed when full tpl ortho is implemented
+  setLineRatioManager(lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
   setContinuumComponent(TContinuumComponent("fromSpectrum"));
 }
 
 void CLineModelFitting::initParameters() {
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
   m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
   m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
-
-  m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
@@ -151,24 +148,25 @@ void CLineModelFitting::initParameters() {
 
 void CLineModelFitting::initMembers(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
+    CLineRatioManager::EType const &lineRatioType,
     ElementComposition element_composition) {
 
   m_nominalWidthDefault = 13.4; // euclid 1 px
   m_continuumFitValues = std::make_shared<CContinuumModelSolution>();
   m_models = std::make_shared<CSpcModelVector>(m_spectraIndex);
   if (element_composition == ElementComposition::Default &&
-      (m_lineRatioType == "tplRatio" || m_lineRatioType == "tplCorr"))
+      (lineRatioType == CLineRatioManager::EType::tplRatio ||
+       lineRatioType == CLineRatioManager::EType::tplCorr ||
+       lineRatioType == CLineRatioManager::EType::ratioToFree))
     element_composition = ElementComposition::EmissionAbsorption;
-  m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_spectraIndex, m_RestLineList, element_composition);
-  for (auto &spcIndex : m_spectraIndex) {
+  setElementsVector(lineRatioType, element_composition);
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     Log.LogDetail(Formatter() << "    model: Continuum winsize found is "
                               << std::fixed << std::setprecision(2)
                               << getSpectrum().GetMedianWinsize() << " A");
     m_models->push_back(CSpectrumModel(
-        std::make_shared<CLineModelElementList>(getElementList()),
-        getSpectrumPtr(), m_RestLineList, m_continuumFitValues,
-        continuumFittingOperator, m_spectraIndex.get()));
+        getElementList(), getSpectrumPtr(), m_RestLineList,
+        m_continuumFitValues, continuumFittingOperator, m_spectraIndex.get()));
   }
 
   m_continuumManager = std::make_shared<CContinuumManager>(
@@ -178,10 +176,37 @@ void CLineModelFitting::initMembers(
                    m_enableLbdaOffsets);
   SetLSF();
   LogCatalogInfos();
-
-  // TODO restore check the continuum flux axis for NaN
 }
-// hook
+
+void CLineModelFitting::reloadFor2ndPass(
+    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
+    ElementComposition element_composition) {
+
+  auto lineRatioType = m_lineRatioManager->getStrictType();
+
+  setElementsVector(lineRatioType, ElementComposition::Default);
+
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+    m_models->setModelsElements(m_ElementsVector->getElementList());
+  }
+
+  // Updates fitting method to hybrid for line ratio
+  SetFittingMethod("hybrid", m_enableAmplitudeOffsets, m_enableLbdaOffsets);
+  SetLSF();
+  LogCatalogInfos();
+  setLineRatioManager(lineRatioType);
+  if (isLineRatioRules())
+    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
+}
+
+void CLineModelFitting::setElementsVector(
+    CLineRatioManager::EType const &lineRatioType,
+    ElementComposition const &element_composition) {
+  // Here must pass lineRatioType as arg because is used before
+  // m_lineRatioManager initialization
+  m_ElementsVector = std::make_shared<CLMEltListVector>(
+      m_spectraIndex, m_RestLineList, element_composition);
+}
 
 void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "m_pass" << m_pass);
@@ -201,8 +226,6 @@ void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "nominalWidthDefault=" << m_nominalWidthDefault);
 
   Log.LogDetail(Formatter() << "fittingMethod=" << m_fittingmethod);
-
-  Log.LogDetail(Formatter() << "lineRatioType=" << m_lineRatioType);
 
   // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
@@ -281,7 +304,7 @@ the continuum can be reinterpolate.
 */
 void CLineModelFitting::setRedshift(Float64 redshift,
                                     bool reinterpolatedContinuum) {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getSpectrumModel().m_Redshift = redshift;
   }
   if (reinterpolatedContinuum) {
@@ -313,27 +336,34 @@ bool CLineModelFitting::initDtd() {
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (isContinuumComponentNoContinuum())
+  if (isContinuumComponentNoContinuum()) {
+    m_ElementsVector->setAllAbsLinesNotFittable();
     return;
+  }
 
-  if (!isContinuumComponentFitter()) {
-    for (auto &spcIndex : m_spectraIndex) {
+  if (isContinuumComponentFromSpectrum()) {
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().setContinuumToInputSpc();
     }
-    return;
-  }
-
-  // the support has to be already computed
-  // when LoadFitContinuum() is called
-  for (auto &spcIndex : m_spectraIndex) {
-    getSpectrumModel().initObserveGridContinuumFlux(
-        getSpectrum().GetSampleCount());
+  } else {
+    // the support has to be already computed
+    // when LoadFitContinuum() is called
+    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex)
+      getSpectrumModel().initObserveGridContinuumFlux(
+          getSpectrum().GetSampleCount());
     m_continuumManager->LoadFitContinuum(k, redshift);
   }
+
+  computeSpectrumFluxWithoutContinuum();
+
+  if (isContinuumFittedToNull())
+    m_ElementsVector->setAllAbsLinesNotFittable();
+  else
+    m_ElementsVector->setAllAbsLinesFittable();
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getSpectrumModel().initModelWithContinuum();
   }
 }
@@ -365,7 +395,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     initDtd();
 
   Int32 ntplratio = m_lineRatioManager->prepareFit(
-      redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
+      redshift); // multiple fitting steps for lineRatioType=tplratio
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplFitXXX() && !m_forcedisableMultipleContinuumfit)
@@ -377,14 +407,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   for (Int32 k = 0; k < nContinuum; k++) {
 
     Float64 _merit = INFINITY;
-    Float64 _meritprior = 0.; // only relevant for "tplRatio"
+    Float64 _meritprior = 0.; // only relevant for "tplRatio" and "ratioToFree"
 
     prepareAndLoadContinuum(k, redshift);
-    if (!isContinuumComponentNoContinuum()) {
-      computeSpectrumFluxWithoutContinuum();
-      m_ElementsVector->setAllAbsLinesFittable();
-    } else
-      m_ElementsVector->setAllAbsLinesNotFittable();
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
@@ -401,8 +426,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         bestMerit = _merit;
         bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
-        bool modelSolutionLevel =
-            m_lineRatioType == "rules" ? fullSolution : false;
+        bool modelSolutionLevel = isLineRatioRules() ? fullSolution : false;
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolutionCopy();
@@ -421,12 +445,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (isContinuumComponentFitter()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
-      for (auto &spcIndex : m_spectraIndex) {
-        m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
-      }
+      m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
     }
   }
-  if (m_lineRatioType == "tplRatio") {
+  if (isLineRatioTplRatio()) {
     m_lineRatioManager->resetToBestRatio(redshift);
     modelSolution = GetModelSolution(fullSolution);
     continuumModelSolution =
@@ -447,7 +469,8 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
   m_models->setEnableAmplitudeOffsets(enableAmplitudeOffsets);
 }
 
-void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
+void CLineModelFitting::setLineRatioManager(
+    CLineRatioManager::EType lineRatioType) {
   m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
       lineRatioType, m_ElementsVector, m_models, m_inputSpcs, m_lambdaRanges,
       m_continuumManager, m_RestLineList, m_fitter, m_spectraIndex);
@@ -518,7 +541,7 @@ CLineModelFitting::getOutsideLinesRMS(CMask const &_mask) const {
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
 
   Float64 fit = 0.0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -567,12 +590,10 @@ Int32 CLineModelFitting::computeSpcNSamples() const {
 
   Int32 imin;
   Int32 imax;
-  Int32 lambdaMinSpcIndex = -1;
-  Int32 lambdaMaxSpcIndex = -1;
 
   Int32 nSamples = 0;
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
     imin = spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
@@ -675,7 +696,6 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
  **/
 std::pair<Float64, Float64>
 CLineModelFitting::getSNROnRange(TInt32Range idxRange) const {
-  Int32 n = idxRange.GetEnd() - idxRange.GetBegin() + 1;
   if (idxRange.GetLength() < 1)
     return std::make_pair(0.0, 0.0);
 
@@ -749,7 +769,7 @@ void CLineModelFitting::LoadModelSolution(
     elt_param->setVelocity(modelSolution.Velocity[iRestLine]);
     elt_param->SetFittingGroupInfo(modelSolution.fittingGroupInfo[iRestLine]);
     if (m_enableAmplitudeOffsets) {
-      TPolynomCoeffs contPolynomCoeffs = {
+      CPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCoeff0[iRestLine],
           modelSolution.continuum_pCoeff1[iRestLine],
           modelSolution.continuum_pCoeff2[iRestLine]};
@@ -778,7 +798,7 @@ void CLineModelFitting::LoadModelSolution(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     for (auto const &elt_ptr : getElementList()) {
       elt_ptr->computeOutsideLambdaRange();
@@ -823,13 +843,20 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     if (m_enableAmplitudeOffsets) {
       const auto &polynom_coeffs =
           m_ElementsVector->getElementParam()[eIdx]->m_ampOffsetsCoeffs;
-      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.a0;
-      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.a1;
-      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.a2;
+      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.m_a0;
+      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.m_a1;
+      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.m_a2;
     }
 
-    auto const [cont, cont_std] =
-        GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
+    Float64 cont, cont_std;
+    if (m_fittingmethod == "svd" || m_fittingmethod == "hybrid" ||
+        m_fittingmethod == "lbfgsb")
+      std::tie(cont, cont_std) =
+          GetContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
+    else
+      std::tie(cont, cont_std) =
+          GetMeanContinuumUnderLine(eIdx, line_index, modelSolution.Redshift);
+
     modelSolution.CenterContinuumFlux[iRestLine] = cont;
     modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
 
@@ -855,7 +882,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
         amp *= -positive_cont;      // minus sign to get a negative flux for abs
       }
 
-      for (auto &spcIndex : m_spectraIndex) {
+      for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
         const auto &eltList = getElementList();
         if (!eltList[eIdx]->IsOutsideLambdaRangeLine(line_index)) {
           auto const &[mu, sigma] =
@@ -873,7 +900,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
           break;
         }
       }
-      if (!m_spectraIndex.isValid())
+      if (!m_spectraIndex.isValid().first)
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Failed finding a spectrum containing"
                            << line_index << " at " << modelSolution.Redshift);
@@ -881,7 +908,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
     auto [fluxDI, snrDI] = getFluxDirectIntegration(
         eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel);
     modelSolution.Flux[iRestLine] = flux;
-    if (getLineRatioType() == "rules")
+    if (isLineRatioRules())
       modelSolution.FluxUncertainty[iRestLine] = fluxError;
     modelSolution.FluxDirectIntegration[iRestLine] = fluxDI;
     modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
@@ -906,7 +933,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
         modelSolution.snrHa_DI = snrDI;
         modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
         modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
-        if (getLineRatioType() == "rules")
+        if (isLineRatioRules())
           modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
       }
     }
@@ -929,7 +956,7 @@ void CLineModelFitting::ComputeAndAddOptionalLineProperties(
         modelSolution.snrOII_DI = snrDI;
         modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
         modelSolution.lfOII = flux_oii > 0.0 ? log10(flux_oii) : -INFINITY;
-        if (getLineRatioType() == "rules")
+        if (isLineRatioRules())
           modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
       }
     }
@@ -990,7 +1017,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = elt_param_vect[eIdx]->m_FittedAmplitudesStd[line_index];
     modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
-    if (getLineRatioType() == "rules")
+    if (isLineRatioRules())
       modelSolution.SNR[iRestLine] = std::abs(amp) / ampError;
 
     modelSolution.LambdaObs[iRestLine] =
@@ -1018,24 +1045,25 @@ CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
   return modelSolution;
 }
 
-void CLineModelFitting::SetLSF() {
-  for (auto &spcIndex : m_spectraIndex) {
+void CLineModelFitting::SetLSF(std::shared_ptr<const CLSF> const &lsf_) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
-    const std::shared_ptr<const CLSF> &lsf = getSpectrum().GetLSF();
+    const std::shared_ptr<const CLSF> &lsf =
+        lsf_ ? lsf_ : getSpectrum().GetLSF();
 
     if (lsf == nullptr) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "Cannot enable LSF, LSF spectrum member is not initialized");
-    } else if (!lsf->IsValid()) {
+    }
+    const auto &[valid, message] = lsf->IsValid();
+
+    if (!valid) {
       THROWG(ErrorCode::INTERNAL_ERROR,
-             " Cannot enable LSF, LSF spectrum member is not valid");
+             " Cannot enable LSF, LSF spectrum member is not valid " + message);
     }
-    for (Int32 j = 0; j < getElementList().size(); j++) {
-      getElementList()[j]->SetLSF(
-          lsf); // lsf has now a type to be used for width computations
-    }
+
+    getElementList().setLSF(lsf);
   }
-  // m_spectraIndex.setAtBegining();
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
@@ -1059,7 +1087,7 @@ void CLineModelFitting::setVelocityByGroup(Float64 vel,
 Float64 CLineModelFitting::GetVelocityEmission() const {
 
   // no global emission or absorption velocities
-  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+  if (isLineRatioRules() && m_fittingmethod == "lbfgsb")
     return NAN;
 
   // find 1st emission element
@@ -1076,7 +1104,7 @@ Float64 CLineModelFitting::GetVelocityEmission() const {
 
 Float64 CLineModelFitting::GetVelocityAbsorption() const {
   // no global emission or absorption velocities
-  if (m_lineRatioType == "rules" && m_fittingmethod == "lbfgsb")
+  if (isLineRatioRules() && m_fittingmethod == "lbfgsb")
     return NAN;
 
   // find 1st emission element
@@ -1134,7 +1162,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
 
   Float64 dtd = 0.0;
   Float64 flux = 0.0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -1168,7 +1196,7 @@ Float64 CLineModelFitting::EstimateMTransposeM()
     const // duplicate with getMTranposeMCumulative, except for return values
 {
   Float64 mtm = 0.0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -1200,7 +1228,7 @@ void CLineModelFitting::setContinuumComponent(TContinuumComponent component) {
 Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
 
   Float64 cstLog = 0.0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -1226,8 +1254,6 @@ std::pair<Float64, Float64>
 CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
                                              Float64 redshift) {
 
-  Float64 error = NAN;
-
   Float64 sumContinuumAll = 0.0;
   Float64 sumWeightAll = 0.0;
   Float64 sumSquaredWeightAll = 0.0;
@@ -1237,7 +1263,7 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   Float64 sumSquaredWeightResidualAll = 0;
   auto const &polynomCoeffs =
       m_ElementsVector->getElementParam()[eltIdx]->m_ampOffsetsCoeffs;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     // TODO check this : it has been added because it caused Line position does
     // not belong to LSF range with lsf variable width
     if (m_ElementsVector->getElementList()[eltIdx]->IsOutsideLambdaRangeLine(
@@ -1274,13 +1300,33 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   return std::make_pair(continuum, std);
 }
 
+std::pair<Float64, Float64>
+CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
+                                               Float64 redshift) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+    // TODO check this : it has been added because it caused Line position does
+    // not belong to LSF range with lsf variable width
+    auto const &elt = *m_ElementsVector->getElementList()[eltIdx];
+    if (elt.IsOutsideLambdaRangeLine(line_index))
+      continue;
+
+    auto &model = getSpectrumModel();
+    auto const &spectralAxis = model.GetModelSpectrum().GetSpectralAxis();
+    auto const continuumFluxAxis = model.GetModelContinuum();
+    return elt.GetContinuumAtCenterProfile(line_index, spectralAxis, redshift,
+                                           continuumFluxAxis,
+                                           m_enableAmplitudeOffsets);
+  }
+  return std::make_pair(NAN, NAN);
+}
+
 std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
     const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
     bool substract_abslinesmodel) const {
 
   Float64 sumFlux = 0;
   Float64 sumErr = 0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     auto const [flux, err] = getSpectrumModel().getFluxDirectIntegration(
         eIdx_list, subeIdx_list, substract_abslinesmodel, getLambdaRange());
     sumFlux += flux;
@@ -1294,3 +1340,22 @@ std::pair<Float64, Float64> CLineModelFitting::getFluxDirectIntegration(
 }
 
 void CLineModelFitting::refreshAllModels() { m_models->refreshAllModels(); }
+
+void CLineModelFitting::setChiSquareRatioResult(
+    const Int32 index_z, const std::shared_ptr<CLineModelResult> &lmResult) {
+  return m_lineRatioManager->setChiSquareRatioResult(index_z, lmResult);
+}
+
+std::shared_ptr<const CLSF>
+CLineModelFitting::buildEquivConstantResolLSF() const {
+  getSpectraIndex().setAtBegining(); // TODO multiobs, get first spectrum lsf
+
+  Float64 lambda = getLambdaRange().GetMidRange();
+
+  Float64 resolution = CLSFGaussianConstantResolution::computeResolution(
+      lambda, getSpectrum().GetLSF()->GetWidth(lambda));
+  std::shared_ptr<TLSFArguments> args =
+      std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
+
+  return LSFFactory.Create("gaussianConstantResolution", args);
+}

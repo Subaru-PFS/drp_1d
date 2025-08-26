@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
 
 BOOST_AUTO_TEST_CASE(MaskAxis_test) {
   TFloat64List sample_in = {1., 2., 3., 4., 5.};
-  TFloat64List mask = {0, 0, 1, 0, 0};
+  TMaskList mask = {0, 0, 1, 0, 0};
 
   CSpectrumSpectralAxis spcAxis(sample_in);
   CSpectrumSpectralAxis spcAxisMasked = spcAxis.MaskAxis(mask);
@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE(GetMask) {
   const TFloat64List array{1., 3., 4., 10.};
   CMask mask;
   const TFloat64Range range(0.5, 5.);
-  Mask result[] = {1, 1, 1, 0};
+  TMaskList result = {1, 1, 1, 0};
 
   const CSpectrumSpectralAxis axis(array);
   axis.GetMask(range, mask);
-  BOOST_CHECK(std::equal(result, result + 4, mask.GetMasks()));
+  BOOST_CHECK(mask.getMaskList() == result);
 }
 
 BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapFraction) {
@@ -559,16 +559,16 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range3), AmzException);
 
   // ssratio = 1
-  TFloat64List mask = spcAxis.GetSubSamplingMask(ssratio, range);
+  TMaskList mask = spcAxis.GetSubSamplingMask(ssratio, range);
   BOOST_CHECK(mask.size() == 5);
-  TFloat64List mask_ref(5, 1.);
+  TMaskList mask_ref(5, 1);
   BOOST_CHECK(mask == mask_ref);
 
   // ssratio = 2
   ssratio = 2;
   mask = spcAxis.GetSubSamplingMask(ssratio, range);
   BOOST_CHECK(mask.size() == 5);
-  mask_ref = {0., 1., 0., 1., 0.};
+  mask_ref = {0, 1, 0, 1, 0};
   BOOST_CHECK(mask == mask_ref);
 
   TFloat64Range lambdarange(exp(1.9), exp(4.2));
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
 
   mask = spcAxis.GetSubSamplingMask(ssratio);
   BOOST_CHECK(mask.size() == 5);
-  mask_ref = {1., 0., 1., 0., 1.};
+  mask_ref = {1, 0, 1, 0, 1};
   BOOST_CHECK(mask == mask_ref);
 }
 

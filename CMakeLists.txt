@@ -3,7 +3,6 @@ PROJECT( cpf-redshift )
 
 # Dependencies requirements
 set(BOOST_MINIMUM_REQUIRED 1.74)
-set(CFISTIO_MINIMUM_REQUIRED 3.36)
 set(FFTW_MINIMUM_REQUIRED 3.3.8)
 set(OPENBLASS_MINIMUM_REQUIRED 0.3)
 set(GSL_MINIMUM_REQUIRED 2.5)
@@ -40,10 +39,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 
 # Get library revision
-include(gitrevision)
-message(STATUS "Using git revision : " ${GIT_REVISION})
-FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
+#include(gitrevision)
+#message(STATUS "Using git revision : " ${GIT_REVISION})
+#FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
+#MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
 
 # check version.h file to speed up "re pip install --no-build-isolation" command
 include(checkVersion)
@@ -108,16 +107,6 @@ message(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
 LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
 LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
-
-# Setup thirdparty directory : CFITSIO
-pkg_check_modules(CFITSIO cfitsio>=${CFISTIO_MINIMUM_REQUIRED} REQUIRED)
-message(STATUS "Found cfitsio: ${CFITSIO_LINK_LIBRARIES}")
-message(STATUS "CFITSIO_LIBRARIES = ${CFITSIO_LIBRARIES}")
-message(STATUS "CFITSIO_LIBRARY_DIRS = ${CFITSIO_LIBRARY_DIRS}")
-message(STATUS "CFITSIO_INCLUDE_DIRS = ${CFITSIO_INCLUDE_DIRS}")
-LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
-LIST(APPEND cpf-redshift_LINK_DIR ${CFITSIO_LIBRARY_DIRS})
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
 
 # Setup thirdparty directory : FFTW
 pkg_check_modules(FFTW fftw3>=${FFTW_MINIMUM_REQUIRED} REQUIRED)
@@ -190,6 +179,15 @@ SET( LIB_NAME cpf-redshift )
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
 ADD_DEFINITIONS(-DLBFGSBFITTER)
+
+# Adds specific warnings to include in compilation
+ADD_DEFINITIONS(-Wsign-compare)
+ADD_DEFINITIONS(-Wreorder)
+ADD_DEFINITIONS(-Wall)
+
+# Treate compilation warnings as errors
+SET(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+
 
 ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY})

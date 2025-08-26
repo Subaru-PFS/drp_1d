@@ -39,7 +39,6 @@
 #ifndef _AUTO_SCOPE_H
 #define _AUTO_SCOPE_H
 
-#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/processflow/scopestack.h"
 
 namespace NSEpic {

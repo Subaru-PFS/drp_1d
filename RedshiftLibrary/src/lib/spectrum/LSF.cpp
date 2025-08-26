@@ -63,9 +63,7 @@ const CLineProfile_ptr &CLSF::GetProfile() const { return m_profile; }
 TFloat64List CLSF::getNormalizedProfileVector(TFloat64List lambda,
                                               Float64 lambda0) const {
 
-  if (!IsValid())
-    THROWG(ErrorCode::INTERNAL_ERROR, "lsf is not valid");
-
+  ASSERT_lsf_IS_VALID(*this);
   Float64 sigma = GetWidth(lambda0, true);
 
   Float64 norm = 0.0;

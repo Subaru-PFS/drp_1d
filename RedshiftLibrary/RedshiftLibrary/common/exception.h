@@ -48,6 +48,12 @@
 
 #define THROWG(code, msg)                                                      \
   throw AmzException(code, msg, __FILE__, __func__, __LINE__)
+
+#define ASSERT(condition, errorCode, msg)                                      \
+  if (!(condition)) {                                                          \
+    THROWG((errorCode), (msg));                                                \
+  }
+
 namespace NSEpic {
 
 class AmzException : public std::exception {

@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
@@ -65,27 +66,19 @@ struct STplcombination_basicfitresult : TFittingIsmIgmResult {
       : TFittingIsmIgmResult(EbmvListSize, MeiksinListSize),
         fittingAmplitudes(componentCount, NAN),
         fittingAmplitudeErrors(componentCount, NAN),
-        fittingAmplitudeSigmas(componentCount, NAN),
-        fittingAmplitudesInterm(
-            EbmvListSize,
-            std::vector<TFloat64List>(MeiksinListSize,
-                                      TFloat64List(componentCount, NAN))),
-        tplNames(componentCount),
+        fittingAmplitudeSigmas(componentCount, NAN), tplNames(componentCount),
         COV(componentCount, TFloat64List(componentCount, NAN)){};
 
   TFloat64List fittingAmplitudes;
   TFloat64List fittingAmplitudeErrors;
   TFloat64List fittingAmplitudeSigmas;
-
-  std::vector<std::vector<TFloat64List>>
-      fittingAmplitudesInterm; // intermediate amplitudes
-  TStringList tplNames;        // cause combination of templates
+  TStringList tplNames; // cause combination of templates
 
   Float64 SNR = NAN;
   std::vector<TFloat64List> COV;
 };
 
-class COperatorTplcombination {
+class COperatorTplcombination : public COperatorContinuumFitting {
 public:
   std::shared_ptr<COperatorResult>
   Compute(const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
@@ -100,11 +93,13 @@ public:
 
   Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
                      const TInt32Range &range); // could be also made static
-  std::shared_ptr<CModelSpectrumResult> ComputeSpectrumModel(
+  CModelSpectrumResult ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
       const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
       const Float64 overlapThreshold);
+  void updateQualityFitWithResult(STplcombination_basicfitresult &result,
+                                  const Int32 nddl, const CSpectrum &spectrum);
 
 private:
   void BasicFit_preallocateBuffers(const CSpectrum &spectrum,
@@ -127,7 +122,7 @@ private:
   std::vector<CTemplate> m_templatesRebined_bf;
   std::vector<CMask> m_masksRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
-
+  using COperatorContinuumFitting::EstimateLikelihoodCstLog;
   Float64 EstimateLikelihoodCstLog(const CSpectrum &spectrum,
                                    const TFloat64Range &lambdaRange);
 
@@ -136,6 +131,8 @@ private:
                                 const Int32 imin_lbda);
   Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, Int32 kStart,
                         Int32 n);
+  void applyIGMISM(const Int32 meiksinIdx, const Float64 ebmvCoef,
+                   const Int32 nddl);
 };
 
 } // namespace NSEpic

@@ -101,7 +101,7 @@ public:
   EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
                      const TFloat64Range &lambdaRange, Float64 winsizeAngstrom);
 
-  Float64 GetContinuumAtCenterProfile(
+  std::pair<Float64, Float64> GetContinuumAtCenterProfile(
       Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
       bool enableAmplitudeOffsets = false) const;
@@ -137,6 +137,7 @@ public:
                                    Int32 line_index) const;
 
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
+  const std::shared_ptr<const CLSF> &GetLSF() const;
 
   Int32 GetSize() const { return m_size; };
 
@@ -227,6 +228,10 @@ inline Int32 CLineModelElement::getEndNoOverlap(Int32 line_index) const {
 
 inline void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {
   m_LSF = lsf;
+}
+
+inline const std::shared_ptr<const CLSF> &CLineModelElement::GetLSF() const {
+  return m_LSF;
 }
 
 inline void CLineModelElement::SetOutsideLambdaRangeList(Int32 line_index) {

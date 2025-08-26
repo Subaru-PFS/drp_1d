@@ -65,7 +65,7 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
 
     def test_non_multi_obs_naming_restrictions(self):
         fsr = self.initialize_fsr_with_data(**{"obs_ids": ["name that shouldn't be here"]})
-        with pytest.raises(APIException, match=r"INVALID_NAME"):
+        with pytest.raises(APIException, match=r"INVALID_SPECTRUM"):
             fsr.get_spectrum()
 
     def test_wavelength_duplicates_error(self):
@@ -176,12 +176,12 @@ class TestReaderGetSpectrum(TestSpectrumReaderUtils):
         spectra.init()
 
         # Check size is correct for spectrum first obs
-        spectrum_id1 = spectra.get_dataframe("1")
+        spectrum_id1 = spectra._get_dataframe("1")
 
         assert len(spectrum_id1.index) == 4
 
         # Check size is correct for second obs
-        spectrum_id2 = spectra.get_dataframe("2")
+        spectrum_id2 = spectra._get_dataframe("2")
         assert len(spectrum_id2.index) == 4
 
     def test_nb_samples_min(self):

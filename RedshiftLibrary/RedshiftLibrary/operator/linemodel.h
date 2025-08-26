@@ -126,10 +126,16 @@ public:
                    Float64 redshift);
 
   void setHapriorOption(Int32 opt);
-  const CSpectrum &
-  getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
+
+  std::pair<CModelSpectrumResult, CModelSpectrumResult>
+  getFittedModel(const CLineModelSolution &bestModelSolution,
+                 std::string const &obsId);
+
   std::shared_ptr<CContinuumFitStore const> const &
   getContinuumFitStoreFirstPass() const;
+
+  void retrieveContinuumFitStoreFirstPass();
+  void setResult(std::shared_ptr<CLineModelResult> res) { m_result = res; }
 
 private:
   friend class Linemodel::spanRedshift_test;
@@ -189,6 +195,11 @@ private:
   }
   TFloat64List makeVelFitBins(Float64 vInfLim, Float64 vSupLim,
                               Float64 vStep) const;
+
+  void addFitQualityToCandidate(
+      const std::shared_ptr<TLineModelResult> &candidate,
+      const std::shared_ptr<const NSEpic::CModelSpectrumResult> &candidateModel,
+      Int32 nPixels) const;
   std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   std::shared_ptr<CPriorHelper> m_phelperContinuum;

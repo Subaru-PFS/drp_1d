@@ -66,6 +66,10 @@ public:
 
   std::pair<Float64, Float64> computeMerit(Int32 itratio) override;
   void saveResults(Int32 itratio) override;
+  CLineRatioManager::EType getStrictType() const override {
+    return EType::tplCorr;
+  };
+  bool isTplCorr() const override { return true; };
 };
 
 } // namespace NSEpic

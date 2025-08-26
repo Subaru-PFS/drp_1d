@@ -45,9 +45,12 @@ from pylibamazed.ParametersAccessor import ParametersAccessor, ESolveMethod
 from pylibamazed.ParametersConverter import ParametersConverterSelector
 from pylibamazed.ParametersExtender import ParametersExtender
 from pylibamazed.redshift import ErrorCode
+from pylibamazed.DocDecorator import doc_method
 
 
 class Parameters(ParametersAccessor):
+    """Loads a raw parameters dictionary and provides access to its components."""
+
     defined_stages = ["redshiftSolver", "lineMeasSolver", "reliabilitySolver"]
 
     @exception_decorator
@@ -59,6 +62,13 @@ class Parameters(ParametersAccessor):
         ConverterSelector=ParametersConverterSelector,
         Extender=ParametersExtender,
     ):
+        """
+        Initializes the Parameters object from a raw parameters dictionary.
+
+        :param raw_params: The raw parameters to be processed. This dictionary must follow the structure defined in :doc:`/json-schema/general`.
+        :param make_checks: If True (default), validates the parameters. This includes checking that all required sections are present,
+                         unknown parameters are flagged, and parameter values are consistent.
+        """
         version = self.get_json_schema_version(raw_params)
         converter = ConverterSelector(accepts_v1).get_converter(version)
         converted_parameters = converter().convert(raw_params)
@@ -79,6 +89,7 @@ class Parameters(ParametersAccessor):
         ret.parameters = copy.deepcopy(self.parameters, memo)
         return ret
 
+    @doc_method
     def get_json_schema_version(self, raw_parameters: dict):
         version = raw_parameters.get("version")
         if version is None:
@@ -87,6 +98,7 @@ class Parameters(ParametersAccessor):
             raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Parameter version must be an integer")
         return version
 
+    @doc_method
     def get_solve_methods_str(self, spectrum_model: str) -> list[str]:
         method = self.get_redshift_solver_method(spectrum_model)
         linemeas_method = self.get_linemeas_method(spectrum_model)
@@ -128,6 +140,7 @@ class Parameters(ParametersAccessor):
                 ret[spectrum_model] = redshift_solver_method.value
         return ret
 
+    @doc_method
     def get_objects_linemeas_methods(self) -> dict[str, str]:
         ret = dict()
         for spectrum_model in self.get_spectrum_models():
@@ -139,10 +152,15 @@ class Parameters(ParametersAccessor):
     def is_tplratio_catalog_needed(self, spectrum_model) -> bool:
         solve_method = self.get_redshift_solver_method(spectrum_model)
         if solve_method == ESolveMethod.LINE_MODEL:
-            return self.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"]
+            return self.get_linemodel_line_ratio_type(spectrum_model) in [
+                "tplRatio",
+                "tplCorr",
+                "ratioToFree",
+            ]
         else:
             return False
 
+    @doc_method
     def stage_enabled(self, spectrum_model, stage) -> bool:
         if stage == "redshiftSolver":
             return self.get_redshift_solver_method(spectrum_model) is not None
@@ -158,10 +176,16 @@ class Parameters(ParametersAccessor):
         elif stage == "subClassifSolver":
             return self.is_tplratio_catalog_needed(spectrum_model)
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown stage {stage}")
+            raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Unknown stage {stage}")
 
-    def is_two_pass_active(self, solve_method: ESolveMethod, spectrum_model):
-        return not self.get_skipsecondpass(solve_method, spectrum_model, True)
+    def is_two_pass_active(self, spectrum_model):
+        solve_method = self.get_redshift_solver_method(spectrum_model)
+        if solve_method == ESolveMethod.TEMPLATE_FITTING:
+            return not self.get_template_fitting_single_pass(spectrum_model)
+        elif solve_method == ESolveMethod.LINE_MODEL:
+            return not self.get_skipsecondpass(solve_method, spectrum_model)
+        else:
+            return False
 
     def to_json(self):
         return json.dumps(self.parameters)
@@ -219,3 +243,15 @@ class Parameters(ParametersAccessor):
 
     def is_log_sampling(self, spectrum_model: str):
         return self.get_redshift_sampling(spectrum_model) == "log"
+
+    def full_spectrum_required(self):
+        for spectrum_model in self.get_spectrum_models([]):
+            if self.get_redshift_solver_method(spectrum_model) is not None:
+                solve_method = self.get_redshift_solver_method(spectrum_model)
+                if solve_method == ESolveMethod.LINE_MODEL:
+                    if self.get_linemodel_continuumfit_fft(spectrum_model):
+                        return True
+                elif solve_method == ESolveMethod.TEMPLATE_FITTING:
+                    if self.get_template_fitting_fft(spectrum_model):
+                        return True
+        return False

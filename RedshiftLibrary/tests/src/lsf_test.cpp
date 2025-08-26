@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
   // Test constructor with spectralAxis, fluxAxis and LSF
   CSpectrum object_CSpectrum = CSpectrum(SpectralAxis, FluxAxis, LSF);
   Float64 lambda = 7000.;
-  BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
+  BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid().first == true);
   BOOST_CHECK(object_CSpectrum.GetLSF()->checkAvailability(lambda) == true);
   BOOST_CHECK(object_CSpectrum.GetLSF()->getSpectralRange() ==
               TFloat64Range(LSF_MIN_LAMBDA, LSF_MAX_LAMBDA));
@@ -91,14 +91,14 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth) {
   // Test assignment copy constructor
   CSpectrum object_CSpectrum1 = object_CSpectrum;
 
-  BOOST_CHECK(object_CSpectrum1.GetLSF()->IsValid() == true);
+  BOOST_CHECK(object_CSpectrum1.GetLSF()->IsValid().first == true);
   BOOST_CHECK_CLOSE(object_CSpectrum1.GetLSF()->GetWidth(lambda), 1.09,
                     precision);
 
   // Test copy constructor
   CSpectrum object_CSpectrum1_bis(object_CSpectrum1);
 
-  BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
+  BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid().first == true);
   BOOST_CHECK_CLOSE(object_CSpectrum1_bis.GetLSF()->GetWidth(lambda), 1.09,
                     precision);
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
       std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
 
-  BOOST_CHECK(LSF->IsValid() == true);
+  BOOST_CHECK(LSF->IsValid().first == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width);
 
   Float64 x = 8000.;
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
       std::make_shared<TLSFGaussianConstantWidthArgs>(width);
   std::shared_ptr<CLSF> LSF_2 = LSFFactory.Create(lsfType, args_2);
 
-  BOOST_CHECK(LSF_2->IsValid() == true);
+  BOOST_CHECK(LSF_2->IsValid().first == true);
   BOOST_CHECK(LSF_2->GetWidth(lambda) == width);
 
   // TEST KO
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
 
   Float64 width_ref = lambda / resolution * instrumentResolutionEmpiricalFactor;
 
-  BOOST_CHECK(LSF->IsValid() == true);
+  BOOST_CHECK(LSF->IsValid().first == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
   BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianConstantResolution_test) {
       std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
   std::shared_ptr<CLSF> LSF_2 = LSFFactory.Create(lsfType, args_2);
 
-  BOOST_CHECK(LSF_2->IsValid() == true);
+  BOOST_CHECK(LSF_2->IsValid().first == true);
   BOOST_CHECK(LSF_2->GetWidth(lambda) == width_ref);
 
   // TEST KO
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
   Float64 width_ref = sqrt(instrumentSigma * instrumentSigma +
                            sourcesizeSigma * sourcesizeSigma);
 
-  BOOST_CHECK(LSF->IsValid() == true);
+  BOOST_CHECK(LSF->IsValid().first == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
   BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 }
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPSIM2016_test) {
 
   Float64 width_ref = (lambda * 8.121e-4 + 7.4248) / 2.35;
 
-  BOOST_CHECK(LSF->IsValid() == true);
+  BOOST_CHECK(LSF->IsValid().first == true);
   BOOST_CHECK(LSF->GetWidth(lambda) == width_ref);
   BOOST_CHECK(LSF->GetWidth(lambda, true) == width_ref);
 }
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
       std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
 
-  BOOST_CHECK(LSF->IsValid() == true);
+  BOOST_CHECK(LSF->IsValid().first == true);
   BOOST_CHECK(LSF->checkAvailability(13000) == true);
   BOOST_CHECK(LSF->getSpectralRange() == TFloat64Range(12000.0, 21000.0));
   for (Int32 i = 0; i < ssize(spcAxis); i++) {

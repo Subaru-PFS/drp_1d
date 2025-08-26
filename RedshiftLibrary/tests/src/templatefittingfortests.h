@@ -43,8 +43,6 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolveresult.h"
-#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
@@ -119,7 +117,6 @@ const std::string jsonStringNoFFT = {
     "\"secondPass\": {\"continuumFit\": \"fromFirstPass\", \"halfWindowSize\": "
     "0.001}"
     "}}}}"};
-// Question: here on halfwindowsize : should it be < redshiftStep ?
 
 class fixture_TemplateFittingCommon {
 public:
@@ -135,6 +132,17 @@ public:
     ctx.setPhotoBandCatalog(photoBandCatalog);
     spc->SetPhotData(photoData);
   }
+  void InitFull(std::string fullJsonString) {
+    fillCatalog();
+    ctx.reset();
+    ctx.loadParameterStore(fullJsonString);
+    ctx.setCorrections(igmCorrectionMeiksin, ismCorrectionCalzetti);
+    ctx.setCatalog(catalog);
+    ctx.addFullSpectrum(fullSpc, LSF);
+    ctx.initContext();
+    ctx.setPhotoBandCatalog(photoBandCatalog);
+    spc->SetPhotData(photoData);
+  }
 
   std::shared_ptr<CScopeStack> scopeStack = std::make_shared<CScopeStack>();
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin =
@@ -144,6 +152,7 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrum().spc;
+  std::shared_ptr<CFullSpectrum> fullSpc = fixture_SharedSpectrum().fullSpc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -189,8 +198,8 @@ class fixture_TemplateFittingSolveTestFFT
 public:
   fixture_Context ctx;
   fixture_TemplateFittingSolveTestFFT() {
-    spc = fixture_SharedSpectrumExtended().spc;
-    Init(jsonString + jsonStringFFT);
+    fullSpc = fixture_SharedSpectrumExtended().fullSpc;
+    InitFull(jsonString + jsonStringFFT);
   }
 };
 
@@ -201,9 +210,9 @@ Int32 EstimateXtYSlow(const TFloat64List &X, const TFloat64List &Y,
 
   Int32 nX = X.size();
   Float64 xty = 0.0;
-  for (std::size_t k = 0; k < nShifts; k++) {
+  for (Int32 k = 0; k < nShifts; k++) {
     xty = 0.0;
-    for (std::size_t j = 0; j < nX; j++) {
+    for (Int32 j = 0; j < nX; j++) {
       xty += X[j] * Y[j + k];
     }
     XtY[k] = xty;

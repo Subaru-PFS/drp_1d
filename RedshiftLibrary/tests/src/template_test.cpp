@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(tpl8.GetSampleCount() == 0);
 
   // InitIsmIgmConfig
-  TFloat64List maskList(spcAxisSize, 1);
+  TMaskList maskList(spcAxisSize, 1);
   maskList[0] = 0;
   tpl9.InitIsmIgmConfig(0, 40, 2.8);
   CTemplate tpl10(tpl9, maskList);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Constructor_test) {
   BOOST_CHECK(ssize(tpl10.m_computedMeiksingCoeff) == spcAxisSize - 1);
   BOOST_CHECK(tpl10.m_computedMeiksingCoeff[0] == 1.);
 
-  TFloat64List maskList2(spcAxisSize, 0);
+  TMaskList maskList2(spcAxisSize, 0);
   tpl7.InitIsmIgmConfig(0, 2, 2.8);
   maskList2[3] = 1.;
   CTemplate tpl11(tpl7, maskList2);
@@ -221,13 +221,13 @@ BOOST_AUTO_TEST_CASE(ApplyDustCoeff_test) {
 
   tplStar.InitIsmIgmConfig(1, 2, 2.86);
 
-  bool res = tplStar.ApplyDustCoeff(-1);
+  tplStar.ApplyDustCoeff(-1);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);
 
-  res = tplStar.ApplyDustCoeff(-2);
+  tplStar.ApplyDustCoeff(-2);
   BOOST_CHECK(tplStar.GetFluxAxis().GetSamplesVector() == fluxAxisList);
 
-  res = tplStar.ApplyDustCoeff(2);
+  tplStar.ApplyDustCoeff(2);
   Int32 coeff1 =
       (Int32)(2 * ismCorrectionCalzetti->m_dataCalzetti.size() +
               round(spcAxisList[1] - ismCorrectionCalzetti->getLambdaMin()));

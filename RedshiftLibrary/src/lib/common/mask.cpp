@@ -36,96 +36,66 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <algorithm>
 #include <cmath>
 
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
 
 using namespace NSEpic;
+
+CMask CMask::operator&(const CMask &other) const {
+  if (GetMasksCount() != other.GetMasksCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "parameter has not the same size: "
+                                          << other.GetMasksCount()
+                                          << " instead of " << GetMasksCount());
+
+  CMask result(GetMasksCount());
+  std::transform(m_Mask.begin(), m_Mask.end(), other.m_Mask.begin(),
+                 result.m_Mask.begin(), std::bit_and());
+  return result;
+}
 
 /**
  *
  */
 CMask &CMask::operator&=(const CMask &other) {
-  if (GetMasksCount() != other.GetMasksCount())
-    return *this;
-
-  for (Int32 i = 0; i < GetMasksCount(); i++) {
-    m_Mask[i] = other[i] & m_Mask[i];
-  }
-
+  *this = *this & other;
   return *this;
 }
 
 /**
  *
  */
-bool CMask::IntersectWith(const CMask &other) {
+Float64 CMask::ComputeOverlapFraction(const CMask &other) const {
   if (GetMasksCount() != other.GetMasksCount())
-    return false;
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "parameter has not the same size: "
+                                          << other.GetMasksCount()
+                                          << " instead of " << GetMasksCount());
 
-  Mask *selfWeight = m_Mask.data();
-  const Mask *otherWeight = other.GetMasks();
-
-  for (Int32 j = 0; j < GetMasksCount(); j++) {
-    selfWeight[j] = selfWeight[j] & otherWeight[j];
-  }
-
-  return true;
-}
-
-/**
- *
- */
-Float64 CMask::CompouteOverlapFraction(const CMask &other) const {
-  if (other.GetMasksCount() != GetMasksCount())
-    return -1.0;
-
-  Float64 selfRate = 0;
-  Float64 otherRate = 0;
-
-  /* method1
-  selfRate = GetUnMaskedSampleCount();
-  otherRate = other.GetUnMaskedSampleCount();
-  //*/
-
-  //* method2
-  const Mask *selfWeight = GetMasks();
-  const Mask *otherWeight = other.GetMasks();
-
-  for (Int32 i = 0; i < GetMasksCount(); i++) {
-    // selfRate+=(Float64) selfWeight[i];
-    // otherRate+=(Float64) otherWeight[i];
-    selfRate += (Int32)selfWeight[i];
-    otherRate += (Int32)otherWeight[i];
-  }
-  //*/
+  Float64 selfRate = GetUnMaskedSampleCount();
+  Float64 otherRate = other.GetUnMaskedSampleCount();
 
   if (selfRate == 0.0)
     return 0;
 
-  return (Float64)otherRate / (Float64)selfRate;
+  return otherRate / selfRate;
 }
 
 /**
  *
  */
 Float64 CMask::IntersectAndComputeOverlapFraction(const CMask &other) const {
-  if (other.GetMasksCount() != GetMasksCount())
-    return -1.0;
+  return ComputeOverlapFraction(*this & other);
+}
 
-  Int32 selfRate = 0;
-  Int32 otherRate = 0;
+CMask CMask::extract(Int32 startIdx, Int32 endIdx) const {
 
-  const Mask *selfWeight = GetMasks();
-  const Mask *otherWeight = other.GetMasks();
-
-  for (Int32 i = 0; i < GetMasksCount(); i++) {
-    selfRate += (Int32)selfWeight[i];
-    otherRate += (Int32)(otherWeight[i] & selfWeight[i]);
-  }
-
-  if (selfRate == 0.0)
-    return 0;
-
-  return (Float64)otherRate / (Float64)selfRate;
+  if (!m_Mask.size())
+    return CMask();
+  return CMask(
+      TMaskList(m_Mask.begin() + startIdx, m_Mask.begin() + endIdx + 1));
 }

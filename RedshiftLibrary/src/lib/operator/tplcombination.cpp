@@ -39,8 +39,7 @@
 #include <algorithm> // std::sort
 #include <climits>
 #include <cmath>
-#include <numeric>
-#include <sstream>
+#include <iterator>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
@@ -53,13 +52,11 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
@@ -68,7 +65,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/fitquality.h"
 
-namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
@@ -120,34 +116,30 @@ void COperatorTplcombination::BasicFit(
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
                 fittingResults.overlapFraction.front(), overlapThreshold);
 
-  Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
   // I consider here that all templates share the same spectralAxis
   currentRange.getClosedIntervalIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
-      kStart, kEnd);
+      m_kStart[0], m_kEnd[0]);
 
   if (opt_extinction || opt_dustFitting)
     for (auto &tpl : m_templatesRebined_bf)
-      tpl.InitIsmIgmConfig(kStart, kEnd, redshift);
-
-  if (opt_extinction)
-    kIgmEnd = m_templatesRebined_bf.front().GetIgmEndIndex();
+      tpl.InitIsmIgmConfig(m_kStart[0], m_kEnd[0], redshift);
 
   // determine min and max value of ebmv coeff
   Int32 nISM = EbmvList.size();
   Int32 nIGM = MeiksinList.size();
 
   // Linear fit
-  Int32 n = kEnd - kStart + 1;
+  Int32 n = m_kEnd[0] - m_kStart[0] + 1;
   Log.LogDebug(
       Formatter() << " prep. linear fitting with n=" << n
                   << " "
                      "samples in the clamped lambdarange spectrum (imin="
-                  << kStart
+                  << m_kStart[0]
                   << ", "
                      "lbda_min="
-                  << spcSpectralAxis[kStart] << " - imax=" << kEnd
-                  << ", lbda_max=" << spcSpectralAxis[kEnd] << ")");
+                  << spcSpectralAxis[m_kStart[0]] << " - imax=" << m_kEnd[0]
+                  << ", lbda_max=" << spcSpectralAxis[m_kEnd[0]] << ")");
 
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
@@ -160,14 +152,12 @@ void COperatorTplcombination::BasicFit(
   cov = gsl_matrix_alloc(nddl, nddl);
 
   // Normalizing factor
-  Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
+  Float64 normFactor = GetNormFactor(spcFluxAxis, m_kStart[0], n);
 
   Log.LogDetail(Formatter() << " Linear fitting, found "
                                "normalization Factor="
                             << normFactor);
 
-  bool option_igmFastProcessing =
-      (MeiksinList.size() == 1 ? false : true); // TODO
   bool igmLoopUseless_WavelengthRange = false;
   fittingResults.chiSquare = INFINITY; // final best Xi2 value
   Float64 chisq, SNR;
@@ -178,12 +168,14 @@ void COperatorTplcombination::BasicFit(
   Float64 yi;
   Float64 ei;
   for (Int32 i = 0; i < n; i++) {
-    yi = spcFluxAxis[i + kStart] / normFactor;
-    ei = spcError[i + kStart] / normFactor;
+    yi = spcFluxAxis[i + m_kStart[0]] / normFactor;
+    ei = spcError[i + m_kStart[0]] / normFactor;
 
     gsl_vector_set(y, i, yi);              // y[i] = yi
     gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
   }
+  TFloat64List modelFluxWithAmp(spcFluxAxis.GetSamplesCount(), 0);
+
   for (Int32 kigm = 0; kigm < nIGM; kigm++) {
     if (igmLoopUseless_WavelengthRange) {
       // Now copy from the already calculated k>0 igm values
@@ -230,7 +222,8 @@ void COperatorTplcombination::BasicFit(
       // for computing the amplitudes and then the fit
       for (Int32 i = 0; i < n; i++) {
         for (Int32 iddl = 0; iddl < nddl; iddl++) {
-          Float64 fval = m_templatesRebined_bf[iddl].GetFluxAxis()[i + kStart];
+          Float64 fval =
+              m_templatesRebined_bf[iddl].GetFluxAxis()[i + m_kStart[0]];
           gsl_matrix_set(X, i, iddl, fval); // i.e., X[i,iddl]=fval -> X is an
                                             // extract of m_templatesRebinned_bf
         }
@@ -297,8 +290,6 @@ void COperatorTplcombination::BasicFit(
         sE += err2;
       }
       SNR = std::sqrt(sA / sE);
-      fittingResults.fittingAmplitudesInterm[kEbmv_][kigm] =
-          fittingResults.fittingAmplitudes; // saving
 
       // save covariance matrix into MtM
       for (Int32 iddl = 0; iddl < nddl; iddl++) {
@@ -316,8 +307,15 @@ void COperatorTplcombination::BasicFit(
 
       if (chisq < fittingResults.chiSquare) {
         fittingResults.chiSquare = chisq;
-        fittingResults.reducedChiSquare = NSFitQuality::reducedChi2(chisq, n);
-        fittingResults.pValue = NSFitQuality::pValue(chisq, n);
+        std::fill(modelFluxWithAmp.begin(), modelFluxWithAmp.end(), 0);
+        for (Int32 tplIdx = 0; tplIdx < nddl; tplIdx++) {
+          for (Int32 pixelIdx = m_kStart[0]; pixelIdx <= m_kEnd[0];
+               ++pixelIdx) {
+            modelFluxWithAmp[pixelIdx] +=
+                m_templatesRebined_bf[tplIdx].GetFluxAxis()[pixelIdx] *
+                fittingResults.fittingAmplitudes[tplIdx];
+          }
+        }
         fittingResults.SNR = SNR;
         fittingResults.meiksinIdx = meiksinIdx;
         fittingResults.ebmvCoef = coeffEBMV;
@@ -340,10 +338,6 @@ void COperatorTplcombination::BasicFit(
     } // end iterating over ISM
   }   // end iterating over IGM
 
-  // fittingResults.modelSpectrum =
-  // CSpectrum(CSpectrumSpectralAxis(std::move(spc_extract)),
-  // CSpectrumFluxAxis(std::move(modelFlux)));
-
   gsl_matrix_free(X);
   gsl_vector_free(y);
   gsl_vector_free(w);
@@ -354,6 +348,20 @@ void COperatorTplcombination::BasicFit(
     THROWG(ErrorCode::INVALID_MERIT_VALUES,
            Formatter() << "Not even one single valid fit/merit value found");
   }
+
+  TFloat64List const &flux = spcFluxAxis.GetSamplesVector();
+  TFloat64List const &error = spcError.GetSamplesVector();
+  TFloat64List fluxInRange(flux.cbegin() + m_kStart[0],
+                           flux.cbegin() + m_kEnd[0] + 1);
+  TFloat64List errorInRange(error.cbegin() + m_kStart[0],
+                            error.cbegin() + m_kEnd[0] + 1);
+  TFloat64List modelInRange(
+      std::move_iterator(modelFluxWithAmp.begin() + m_kStart[0]),
+      std::move_iterator(modelFluxWithAmp.begin() + m_kEnd[0] + 1));
+
+  fittingResults.fitQuality = NSFitQuality::computeFitQuality(
+      std::move(fluxInRange), std::move(modelInRange), std::move(errorInRange),
+      fittingResults.chiSquare, n);
 }
 
 void COperatorTplcombination::RebinTemplate(
@@ -381,7 +389,6 @@ void COperatorTplcombination::RebinTemplate(
   for (Int32 ktpl = 0; ktpl < ssize(tplList); ktpl++) {
     const CSpectrumSpectralAxis &tplSpectralAxis =
         tplList[ktpl]->GetSpectralAxis();
-    const CSpectrumFluxAxis &tplFluxAxis = tplList[ktpl]->GetFluxAxis();
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;
@@ -417,11 +424,7 @@ void COperatorTplcombination::RebinTemplate(
         m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapFraction(
             lambdaRange_restframe, itplMask);
 
-    // Check for overlap rate
-    if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-      THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
-             Formatter() << "overlapFraction of " << overlapFraction);
-    }
+    checkTemplateOverlap(overlapFraction, overlapThreshold);
   }
   currentRange = intersectedAllLambdaRange;
   return;
@@ -525,8 +528,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
 
     result->ChiSquare[i] = fittingResults.chiSquare;
-    result->ReducedChiSquare[i] = fittingResults.reducedChiSquare;
-    result->pValue[i] = fittingResults.pValue;
+    result->FitQuality[i] = fittingResults.fitQuality;
     result->Overlap[i] = fittingResults.overlapFraction;
     result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
     result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;
@@ -572,8 +574,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   return result;
 }
 
-std::shared_ptr<CModelSpectrumResult>
-COperatorTplcombination::ComputeSpectrumModel(
+CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
     const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
     Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
     const TFloat64List &amplitudes, const TFloat64Range &lambdaRange,
@@ -592,11 +593,10 @@ COperatorTplcombination::ComputeSpectrumModel(
   TFloat64Range currentRange;
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
                 overlapFraction, overlapThreshold);
-  Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
 
   currentRange.getClosedIntervalIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
-      kStart, kEnd);
+      m_kStart[0], m_kEnd[0]);
 
   // create identityTemplate on which we apply meiksin and ism, once for all
   // tpllist
@@ -605,7 +605,7 @@ COperatorTplcombination::ComputeSpectrumModel(
       CSpectrumFluxAxis(m_templatesRebined_bf.front().GetSampleCount(), 1));
 
   if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
-    identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift);
+    identityTemplate.InitIsmIgmConfig(m_kStart[0], m_kEnd[0], redshift);
   }
 
   if (ebmvCoef > 0.) {
@@ -638,11 +638,9 @@ COperatorTplcombination::ComputeSpectrumModel(
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
-  std::shared_ptr<CModelSpectrumResult> ret =
-      std::make_shared<CModelSpectrumResult>();
-  ret->addModel(std::move(modelSpcAxis.GetSamplesVector()),
-                std::move(modelFlux), "");
-  return ret;
+
+  return CModelSpectrumResult(std::move(modelSpcAxis.GetSamplesVector()),
+                              std::move(modelFlux), "");
 }
 
 /**

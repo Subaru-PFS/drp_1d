@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   // create spectrum
   spc.InitSpectrumContinuum(*paramStore);
   spc.EstimateContinuum();
-  TFloat64List maskList(spcAxisSize, 1);
+  TMaskList maskList(spcAxisSize, 1);
 
   // constructor
   CSpectrum spc_2;
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
               fluwWithoutContinuum);
 
   // Invert
-  bool result = spc.InvertFlux();
+  spc.InvertFlux();
   for (Int32 i = 0; i < ssize(rawFlux); i++) {
     BOOST_CHECK(spc.GetRawFluxAxis().GetSamplesVector()[i] == -rawFlux[i]);
     BOOST_CHECK(spc.GetContinuumFluxAxis().GetSamplesVector()[i] ==
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
     BOOST_CHECK(spc.GetWithoutContinuumFluxAxis().GetSamplesVector()[i] ==
                 -fluwWithoutContinuum[i]);
   }
-  result = spc.InvertFlux();
+  spc.InvertFlux();
 
   // ApplyAmplitude
   spc.ApplyAmplitude(2.);
@@ -523,7 +523,6 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   object_CSpectrum.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
 
   const CSpectrumFluxAxis &const_FluxAxis = m_FluxAxis;
-  const CSpectrumSpectralAxis &const_SpectralAxis = m_SpectralAxis;
   const CSpectrumNoiseAxis &const_noiseAxis = m_FluxAxis.GetError();
 
   //--------------------//

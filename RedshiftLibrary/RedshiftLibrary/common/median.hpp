@@ -47,7 +47,7 @@ template <class T>
 T CMedian<T>::BeersFind(const typename std::vector<T>::const_iterator &begin,
                         const typename std::vector<T>::const_iterator &end) {
   T medVal;
-  Int32 i, n2, n;
+  Int32 n2, n;
   n = std::distance(begin, end);
 
   std::vector<T> xwork(begin, end);

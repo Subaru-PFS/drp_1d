@@ -39,9 +39,8 @@
 #ifndef _REDSHIFT_SPECTRUM_AXIS_
 #define _REDSHIFT_SPECTRUM_AXIS_
 
-#include <vector>
-
 #include "RedshiftLibrary/common/datatypes.h"
+#include <algorithm>
 
 namespace NSEpic {
 
@@ -67,9 +66,7 @@ public:
   virtual CSpectrumAxis &operator/=(const Float64 op);
   Float64 &operator[](const Int32 i);
   const Float64 &operator[](const Int32 i) const;
-  CSpectrumAxis MaskAxis(const TFloat64List &mask) const;
-  static TFloat64List maskVector(const TFloat64List &mask,
-                                 const TFloat64List &inputVector);
+  CSpectrumAxis MaskAxis(const TMaskList &mask) const;
 
   const Float64 *GetSamples() const;
   const TAxisSampleList &GetSamplesVector() const;
@@ -80,6 +77,15 @@ public:
   void clear();
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
+  friend CSpectrumAxis operator*(const CSpectrumAxis &axis, const Float64 op) {
+    CSpectrumAxis multipliedAxis = axis;
+    multipliedAxis *= op;
+    return multipliedAxis;
+  }
+
+  friend CSpectrumAxis operator*(const Float64 op, const CSpectrumAxis &axis) {
+    return axis * op;
+  }
 
 protected:
   TAxisSampleList m_Samples;

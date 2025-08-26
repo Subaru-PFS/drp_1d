@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================using
 #include "RedshiftLibrary/common/zgridparam.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 
@@ -98,7 +99,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
         CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
   }
 
-  insertWithDuplicates(zgrid, imin, subgrid, ndup);
+  NSVectorOp::insertWithDuplicates(zgrid, imin, subgrid, ndup);
 
   return std::make_tuple(imin, overwrittenSourceIndices);
 }

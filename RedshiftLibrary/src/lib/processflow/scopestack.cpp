@@ -78,13 +78,13 @@ void CScopeStack::set_type_level(ScopeType type) {
   case ScopeType::SPECTRUMMODEL:
     // SPECTRUMMODEL should be before STAGE (ie no STAGE set)
     if (has_type(ScopeType::STAGE))
-      THROWG(ErrorCode::SCOPESTACK_ERROR,
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
              Formatter() << "cannot set type " << ScopeType::SPECTRUMMODEL
                          << " if " << ScopeType::STAGE << " is already set");
     break;
   case ScopeType::STAGE:
     if (has_type(ScopeType::METHOD))
-      THROWG(ErrorCode::SCOPESTACK_ERROR,
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
              Formatter() << "cannot set type " << ScopeType::STAGE << " if "
                          << ScopeType::METHOD << " is already set");
     break;
@@ -92,16 +92,18 @@ void CScopeStack::set_type_level(ScopeType type) {
     // METHOD should follow stage
     if (!has_type(ScopeType::STAGE) ||
         m_type_level.at(ScopeType::STAGE) + 1 != m_scopeStack.size())
-      THROWG(ErrorCode::SCOPESTACK_ERROR,
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
              Formatter() << "cannot set type " << ScopeType::METHOD
                          << " if current scope is not " << ScopeType::STAGE);
+    break;
+  case ScopeType::UNDEFINED:
     break;
   }
 
   // insert (type, rank)
   const auto &[it, success] = m_type_level.insert({type, m_scopeStack.size()});
   if (!success)
-    THROWG(ErrorCode::SCOPESTACK_ERROR,
+    THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
            Formatter() << "scope type " << type << "already set");
 }
 

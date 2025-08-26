@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/ratiotofreemanager.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
@@ -117,34 +118,36 @@ void CLineModelResult::updateVectors(
       secondPassIndices;
 
   Int32 ndup = overwrittenSourceIndices.size();
-  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrection, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates(LineModelSolutions, insertionIdx, count,
-                       CLineModelSolution(), ndup);
-  insertWithDuplicates(ContinuumModelSolutions, insertionIdx, count,
-                       CContinuumModelSolution(), ndup);
-  insertWithDuplicates<Float64>(ChiSquareContinuum, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum, insertionIdx,
-                                count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrection, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates(LineModelSolutions, insertionIdx, count,
+                                   CLineModelSolution(), ndup);
+  NSVectorOp::insertWithDuplicates(ContinuumModelSolutions, insertionIdx, count,
+                                   CContinuumModelSolution(), ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquareContinuum, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrectionContinuum,
+                                            insertionIdx, count, NAN, ndup);
 
   for (auto &xi2Cont : ChiSquareTplContinuum)
-    insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count, DBL_MAX, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(xi2Cont, insertionIdx, count,
+                                              DBL_MAX, ndup);
 
   for (Int32 i = 0; i < ssize(ChiSquareTplratios); i++) {
-    insertWithDuplicates<Float64>(ChiSquareTplratios[i], insertionIdx, count,
-                                  DBL_MAX, ndup);
-    insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i], insertionIdx,
-                                  count, 0., ndup);
-    insertWithDuplicates<bool>(StrongELPresentTplratios[i], insertionIdx, count,
-                               false, ndup);
-    insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i], insertionIdx,
-                               count, false, ndup);
-    insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i], insertionIdx, count,
-                                0, ndup);
-    insertWithDuplicates<Float64>(PriorLinesTplratios[i], insertionIdx, count,
-                                  0., ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(
+        ChiSquareTplratios[i], insertionIdx, count, DBL_MAX, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(ScaleMargCorrectionTplratios[i],
+                                              insertionIdx, count, 0., ndup);
+    NSVectorOp::insertWithDuplicates<bool>(StrongELPresentTplratios[i],
+                                           insertionIdx, count, false, ndup);
+    NSVectorOp::insertWithDuplicates<bool>(StrongHalphaELPresentTplratios[i],
+                                           insertionIdx, count, false, ndup);
+    NSVectorOp::insertWithDuplicates<Int32>(NLinesAboveSNRTplratios[i],
+                                            insertionIdx, count, 0, ndup);
+    NSVectorOp::insertWithDuplicates<Float64>(PriorLinesTplratios[i],
+                                              insertionIdx, count, 0., ndup);
   }
 }
 
@@ -168,63 +171,6 @@ void CLineModelResult::SetChisquareContinuumResultFromPrevious(Int32 index_z) {
   for (auto it = ChiSquareTplContinuum.begin(), e = ChiSquareTplContinuum.end();
        it != e; ++it)
     it->at(index_z) = it->at(previous);
-}
-
-void CLineModelResult::SetChisquareTplratioResult(
-    Int32 index_z, std::shared_ptr<CTplratioManager> tplratioManager) {
-  if (tplratioManager->GetChisquareTplratio().size() < 1)
-    return;
-
-  if (index_z >= ssize(Redshifts))
-    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
-
-  if (tplratioManager->GetChisquareTplratio().size() !=
-          ChiSquareTplratios.size() ||
-      tplratioManager->GetChisquareTplratio().size() !=
-          tplratioManager->GetScaleMargTplratio().size() ||
-      tplratioManager->GetChisquareTplratio().size() !=
-          tplratioManager->GetStrongELPresentTplratio().size() ||
-      tplratioManager->GetChisquareTplratio().size() !=
-          tplratioManager->GetNLinesAboveSNRTplratio().size() ||
-      tplratioManager->GetChisquareTplratio().size() !=
-          tplratioManager->GetPriorLinesTplratio().size())
-    THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
-
-  for (Int32 k = 0; k < ssize(tplratioManager->GetChisquareTplratio()); k++) {
-    ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
-    ScaleMargCorrectionTplratios[k][index_z] =
-        tplratioManager->GetScaleMargTplratio()[k];
-    StrongELPresentTplratios[k][index_z] =
-        tplratioManager->GetStrongELPresentTplratio()[k];
-    StrongHalphaELPresentTplratios[k][index_z] =
-        tplratioManager->getHaELPresentTplratio()[k];
-    NLinesAboveSNRTplratios[k][index_z] =
-        tplratioManager->GetNLinesAboveSNRTplratio()[k];
-    PriorLinesTplratios[k][index_z] =
-        tplratioManager->GetPriorLinesTplratio()[k];
-  }
-  return;
-}
-
-void CLineModelResult::SetChisquareTplratioResultFromPrevious(Int32 index_z) {
-
-  if (index_z >= ssize(Redshifts))
-    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
-
-  auto previous = index_z - 1;
-
-  for (Int32 k = 0; k < ssize(ChiSquareTplratios); k++) {
-    ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
-    ScaleMargCorrectionTplratios[k][index_z] =
-        ScaleMargCorrectionTplratios[k][previous];
-    StrongELPresentTplratios[k][index_z] =
-        StrongELPresentTplratios[k][previous];
-    StrongHalphaELPresentTplratios[k][index_z] =
-        StrongHalphaELPresentTplratios[k][previous];
-    NLinesAboveSNRTplratios[k][index_z] = NLinesAboveSNRTplratios[k][previous];
-    PriorLinesTplratios[k][index_z] = PriorLinesTplratios[k][previous];
-  }
-  return;
 }
 
 TFloat64List CLineModelResult::getChisquareTplContinuumResult(Int32 index_z) {

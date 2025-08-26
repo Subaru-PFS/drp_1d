@@ -42,6 +42,7 @@ from pylibamazed.redshift import CLogZPdfResult, CZGridListParams, CZGridParam, 
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
 from pylibamazed.Exception import APIException
+from pylibamazed.DocDecorator import doc_method
 
 
 def buildPdfParams(pdf_params, first_pass=False):
@@ -55,13 +56,14 @@ def buildPdfParams(pdf_params, first_pass=False):
     )
 
 
+@doc_method
 def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
     method = parameters.get_redshift_solver_method(spectrum_model)
     if method is None:
         return None
     if parameters.get_skipsecondpass(method, spectrum_model, False):
         raise APIException(
-            ErrorCode.PYTHON_API_ERROR, "get_final_regular_z_grid cannot be called with skipSecondPass"
+            ErrorCode.IE_INVALID_PARAMETER, "get_final_regular_z_grid cannot be called with skipSecondPass"
         )
 
     p_redshift_range = parameters.get_redshiftrange(spectrum_model)
@@ -86,6 +88,7 @@ def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
 
 
 class BuilderPdfHandler:
+    @doc_method
     def add_params(self, abstract_output: AbstractOutput, spectrum_model, logsampling, first_pass=False):
         self.abstract_output = abstract_output
         self.spectrum_model = spectrum_model
@@ -93,6 +96,7 @@ class BuilderPdfHandler:
         self.first_pass = first_pass
         return self
 
+    @doc_method
     def build(self):
         dataset_prefix = ""
         name_prefix = ""
@@ -115,16 +119,19 @@ class PdfHandler:
         self._pdf = CLogZPdfResult(pdf_params, logsampling, pdf_proba)
 
     @property
+    @doc_method
     def redshifts(self):
         return self._pdf.redshifts.to_numpy()
 
     @property
+    @doc_method
     def valProbaLog(self):
         return self._pdf.valProbaLog.to_numpy()
 
     def isRegular(self):
         return self._pdf.isRegular()
 
+    @doc_method
     def convertToRegular(self, fine=True, zgrid_max=None):
         self._pdf.convertToRegular(fine)
 

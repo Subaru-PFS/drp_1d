@@ -37,6 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from typing import Generic, TypeVar, Optional
+from pylibamazed.DocDecorator import doc_method
 
 T = TypeVar("T")
 
@@ -49,10 +50,10 @@ class Container(Generic[T]):
                 self.append(kwargs[key], key)
 
     def __repr__(self):
-        repr = ""
+        rep = ""
         for key in self.data:
-            repr += f"\n{key}: {self.data[key]}"
-        return repr
+            rep += f"\n{key}: {self.data[key]}"
+        return rep
 
     def __eq__(self, __value__):
         if type(self) != type(__value__):
@@ -64,16 +65,20 @@ class Container(Generic[T]):
                 return False
         return True
 
+    @doc_method
     def append(self, dataToAppend: T, obs_id=""):
         self._check_type(dataToAppend)
         self.data[obs_id] = dataToAppend
 
+    @doc_method
     def get(self, obs_id="") -> Optional[T]:
         return self.data.get(obs_id)
 
+    @doc_method
     def keys(self):
         return self.data.keys()
 
+    @doc_method
     def size(self) -> int:
         return len(self.data)
 

@@ -46,12 +46,11 @@
 using namespace NSEpic;
 
 CTemplateFittingResult::CTemplateFittingResult(Int32 n)
-    : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n),
-      ReducedChiSquare(n), pValue(n), ChiSquarePhot(n), FitAmplitude(n),
-      FitAmplitudeError(n), FitAmplitudeSigma(n), FitEbmvCoeff(n),
-      FitMeiksinIdx(n), FitDtM(n), FitMtM(n), LogPrior(n), SNR(n),
-      ChiSquareIntermediate(n), IsmEbmvIdxIntermediate(n),
-      IgmMeiksinIdxIntermediate(n), Overlap(n) {
+    : CTwoPassResult("CTemplateFittingResult"), ChiSquare(n), FitQuality(n),
+      ChiSquarePhot(n), FitAmplitude(n), FitAmplitudeError(n),
+      FitAmplitudeSigma(n), FitEbmvCoeff(n), FitMeiksinIdx(n), FitDtM(n),
+      FitMtM(n), LogPrior(n), SNR(n), ChiSquareIntermediate(n),
+      IsmEbmvIdxIntermediate(n), IgmMeiksinIdxIntermediate(n), Overlap(n) {
   Redshifts.resize(n);
 }
 
@@ -77,8 +76,7 @@ Int32 CTemplateFittingResult::getIgmIndexInIntermediate(Int32 zIdx,
 void CTemplateFittingResult::set_at_redshift(Int32 i,
                                              TFittingIsmIgmResult val) {
   ChiSquare[i] = val.chiSquare;
-  ReducedChiSquare[i] = val.reducedChiSquare;
-  pValue[i] = val.pValue;
+  FitQuality[i] = val.fitQuality;
   ChiSquarePhot[i] = val.chiSquare_phot;
   FitAmplitude[i] = val.ampl;
   FitAmplitudeError[i] = val.ampl_err;
@@ -101,8 +99,17 @@ void CTemplateFittingResult::set_at_redshift(Int32 i,
 
     // here we have only one (ism,igm) computed in val.
     Int32 ismIdx = getIsmIndexInIntermediate(val.IsmCalzettiIdxInterm.front());
+    // Small trick here : usually, if igm is at -1 in first pass, second pass
+    // will be outside of igm range too and IgmMeiksinIdxIntermediate will
+    // contain only -1 values in second pass, so getIgmIndexInIntermediate will
+    // return 0. However if candidate is a the border of igm range, some part of
+    // the second pass window can be inside igm range. getIgmIndexInIntermediate
+    // will contain values from 0 to 6 and trying to find index -1 inside will
+    // throw an error. We therefore arbitrarily force igmIdx to 0.
     Int32 igmIdx =
-        getIgmIndexInIntermediate(i, val.IgmMeiksinIdxInterm.front());
+        val.IgmMeiksinIdxInterm.front() == -1
+            ? 0
+            : getIgmIndexInIntermediate(i, val.IgmMeiksinIdxInterm.front());
 
     ChiSquareIntermediate[i][ismIdx][igmIdx] =
         std::move(val.ChiSquareInterm[0][0]);
@@ -134,43 +141,52 @@ void CTemplateFittingResult::updateVectors(
   auto const &[insertionIdx, overwrittenSourceIndices, count, largeStepFactor] =
       secondPassIndices;
   Int32 ndup = overwrittenSourceIndices.size();
-  insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ReducedChiSquare, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(pValue, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(FitAmplitudeSigma, insertionIdx, count, NAN,
-                                ndup);
-  insertWithDuplicates<Float64>(FitEbmvCoeff, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Int32>(FitMeiksinIdx, insertionIdx, count, -1, ndup);
-  insertWithDuplicates<Float64>(FitDtM, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(FitMtM, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(LogPrior, insertionIdx, count, NAN, ndup);
-  insertWithDuplicates<Float64>(SNR, insertionIdx, count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquare, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<TFitQuality>(FitQuality, insertionIdx, count,
+                                                {}, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(ChiSquarePhot, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitude, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitudeError, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitAmplitudeSigma, insertionIdx,
+                                            count, NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitEbmvCoeff, insertionIdx, count,
+                                            NAN, ndup);
+  NSVectorOp::insertWithDuplicates<Int32>(FitMeiksinIdx, insertionIdx, count,
+                                          -1, ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitDtM, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(FitMtM, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(LogPrior, insertionIdx, count, NAN,
+                                            ndup);
+  NSVectorOp::insertWithDuplicates<Float64>(SNR, insertionIdx, count, NAN,
+                                            ndup);
 
-  insertWithDuplicates<std::vector<Float64>>(
+  NSVectorOp::insertWithDuplicates<std::vector<Float64>>(
       Overlap, insertionIdx, count,
       std::vector<Float64>(Overlap[0].size(), NAN), ndup);
 
-  auto const chi2ToInsert = interpolateBetweenDuplicates(
+  auto const chi2ToInsert = NSVectorOp::interpolateBetweenDuplicates(
       ChiSquareIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates(ChiSquareIntermediate, insertionIdx, chi2ToInsert, ndup);
+  NSVectorOp::insertWithDuplicates(ChiSquareIntermediate, insertionIdx,
+                                   chi2ToInsert, ndup);
 
-  auto const ismEbmvIdxToInsert = interpolateBetweenDuplicates(
+  auto const ismEbmvIdxToInsert = NSVectorOp::interpolateBetweenDuplicates(
       IsmEbmvIdxIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates(IsmEbmvIdxIntermediate, insertionIdx, ismEbmvIdxToInsert,
-                       ndup);
+  NSVectorOp::insertWithDuplicates(IsmEbmvIdxIntermediate, insertionIdx,
+                                   ismEbmvIdxToInsert, ndup);
 
-  auto const igmMeiksinIdxToInsert = interpolateBetweenDuplicates(
+  auto const igmMeiksinIdxToInsert = NSVectorOp::interpolateBetweenDuplicates(
       IgmMeiksinIdxIntermediate, insertionIdx, overwrittenSourceIndices, count,
       largeStepFactor);
-  insertWithDuplicates<TInt32List>(IgmMeiksinIdxIntermediate, insertionIdx,
-                                   igmMeiksinIdxToInsert, ndup);
+  NSVectorOp::insertWithDuplicates<TInt32List>(
+      IgmMeiksinIdxIntermediate, insertionIdx, igmMeiksinIdxToInsert, ndup);
 }
 
 std::pair<Int32, Int32> CTemplateFittingResult::getIsmIgmSizes() const {

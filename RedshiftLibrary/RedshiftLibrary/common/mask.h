@@ -39,6 +39,9 @@
 #ifndef _REDSHIFT_COMMON_WEIGHTS_
 #define _REDSHIFT_COMMON_WEIGHTS_
 
+#include <iterator>
+#include <numeric>
+
 #include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
@@ -53,15 +56,21 @@ public:
   CMask() = default;
   explicit CMask(Int32 weightsCount, Int32 defaultValue = 0)
       : m_Mask(weightsCount, defaultValue){};
-  const Mask *GetMasks() const;
+  CMask(TMaskList mask) : m_Mask(std::move(mask)){};
+  CMask(CMask const &other, Int32 start, Int32 end)
+      : m_Mask(other.m_Mask.begin() + start, other.m_Mask.begin() + end){};
+  CMask(CMask &&other, Int32 start, Int32 end)
+      : m_Mask(std::move_iterator(other.m_Mask.begin()) + start,
+               std::move_iterator(other.m_Mask.begin()) + end){};
+  CMask operator&(const CMask &other) const;
   CMask &operator&=(const CMask &other);
   Int32 GetMasksCount() const;
   Mask operator[](const Int32 i) const;
   Mask &operator[](const Int32 i);
-  Float64 CompouteOverlapFraction(const CMask &other) const;
+  Float64 ComputeOverlapFraction(const CMask &other) const;
   Float64 IntersectAndComputeOverlapFraction(const CMask &other) const;
-
-  bool IntersectWith(const CMask &other);
+  CMask extract(Int32 startIdx, Int32 endIdx) const;
+  void IntersectWith(const CMask &other);
   Int32 GetMaskedSampleCount() const;
   Int32 GetUnMaskedSampleCount() const;
   void SetSize(Int32 s);
@@ -71,6 +80,8 @@ private:
   TMaskList m_Mask;
 };
 
+inline void CMask::IntersectWith(const CMask &other) { *this &= other; }
+
 inline const TMaskList &CMask::getMaskList() const { return m_Mask; }
 
 inline Mask CMask::operator[](const Int32 i) const { return m_Mask[i]; }
@@ -79,8 +90,6 @@ inline Mask &CMask::operator[](const Int32 i) { return m_Mask[i]; }
 
 inline Int32 CMask::GetMasksCount() const { return m_Mask.size(); }
 
-inline const Mask *CMask::GetMasks() const { return m_Mask.data(); }
-
 inline Int32 CMask::GetMaskedSampleCount() const {
   return m_Mask.size() - GetUnMaskedSampleCount();
 }
@@ -88,11 +97,7 @@ inline Int32 CMask::GetMaskedSampleCount() const {
 inline void CMask::SetSize(Int32 s) { m_Mask.resize(s); }
 
 inline Int32 CMask::GetUnMaskedSampleCount() const {
-  Int32 n = 0;
-  for (Int32 i = 0; i < (Int32)m_Mask.size(); i++) {
-    n += m_Mask[i];
-  }
-  return n;
+  return std::reduce(m_Mask.cbegin(), m_Mask.cend(), 0, std::plus());
 }
 
 } // namespace NSEpic

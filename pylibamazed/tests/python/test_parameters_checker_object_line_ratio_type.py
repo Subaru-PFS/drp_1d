@@ -77,6 +77,7 @@ class TestLineModelSolve:
             if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("lineRatioType") in [
                 "tplRatio",
                 "tplCorr",
+                "ratioToFree",
             ]:
                 kwargs["lineModelSolve"]["lineModel"]["firstPass"] = {"tplRatioIsmFit": False}
             param_dict = make_parameter_dict_at_redshift_solver_level(**kwargs)
@@ -107,7 +108,7 @@ class TestLineModelSolve:
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_OK_if_lineRatioType_is_tplratio_and_tplratio_params_are_present(self, zflag, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{
@@ -123,7 +124,7 @@ class TestLineModelSolve:
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_catalog(self, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{
@@ -138,7 +139,7 @@ class TestLineModelSolve:
             with pytest.raises(APIException, match=r"Missing parameter lineModelSolve tplRatioCatalog"):
                 check_from_parameter_dict(param_dict)
 
-        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr"])
+        @pytest.mark.parametrize("tpl_ratio", ["tplRatio", "tplCorr", "ratioToFree"])
         def test_error_if_lineRatioType_is_tplratio_and_missing_tplratio_ismfit(self, tpl_ratio):
             param_dict = self._make_parameter_dict(
                 **{
@@ -161,7 +162,7 @@ class TestLineModelSolve:
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
-    class TestContinuumComponent:
+    class TestFittingMethod:
         def _make_parameter_dict(self, object_level_params=None, **kwargs):
             kwargs["linemeas_method"] = ""
             kwargs["method"] = "lineModelSolve"
@@ -170,12 +171,12 @@ class TestLineModelSolve:
             param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
             return param_dict
 
-        def test_error_if_continuumcomponent_is_fromspectrum_but_continuumreestimation_absent(self):
+        def test_error_if_fittingmethod_is_hybrid_but_continuumreestimation_absent(self):
             param_dict = self._make_parameter_dict(
                 **{
                     "lineModelSolve": {
                         "lineModel": {
-                            "continuumComponent": "fromSpectrum",
+                            "fittingMethod": "hybrid",
                         }
                     }
                 }
@@ -187,31 +188,34 @@ class TestLineModelSolve:
             ):
                 check_from_parameter_dict(param_dict)
 
-        def test_warning_if_continuumcomponent_is_not_fromspectrum_but_continuumreestimation_present(
-            self, zflag
-        ):
+        def test_warning_if_fittingmethod_hybrid_but_continuumreestimation_present(self, zflag):
             param_dict = self._make_parameter_dict(
-                **{
-                    "lineModelSolve": {
-                        "lineModel": {"continuumComponent": "sth", "continuumReestimation": "sth"}
-                    }
-                }
+                **{"lineModelSolve": {"lineModel": {"fittingMethod": "sth", "continuumReestimation": "sth"}}}
             )
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
-        def test_OK_if_continuumcomponent_is_fromspectrum_and_mandatory_fields_present(self, zflag):
+        def test_OK_if_fittingmethod_hybrid_and_mandatory_fields_present(self, zflag):
             param_dict = self._make_parameter_dict(
                 **{
                     "lineModelSolve": {
-                        "lineModel": {"continuumComponent": "fromSpectrum", "continuumReestimation": "sth"}
+                        "lineModel": {"fittingMethod": "hybrid", "continuumReestimation": "sth"}
                     }
                 }
             )
             param_dict["continuumRemoval"] = {}
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
+
+    class TestContinuumComponent:
+        def _make_parameter_dict(self, object_level_params=None, **kwargs):
+            kwargs["linemeas_method"] = ""
+            kwargs["method"] = "lineModelSolve"
+            if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("secondPass") is not None:
+                kwargs["lineModelSolve"]["lineModel"]["skipSecondPass"] = False
+            param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
+            return param_dict
 
         @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
         def test_error_if_continuumcomponent_is_tplfit_but_continuumfit_is_absent(self, continuum_component):

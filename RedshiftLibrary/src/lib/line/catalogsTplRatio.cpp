@@ -239,8 +239,6 @@ Float64 CLineCatalogsTplRatio::computeFitValue(
     const TFloat64List &ampsLM, const TFloat64List &errLM,
     const TFloat64List &ampsTPL, TFloat64List &ampsCorrected) const {
 
-  Float64 N = ampsLM.size();
-
   // // Normalize AmpsLM first
   // Float64 normalizeCoeff =
   //     std::accumulate(ampsLM.cbegin(), ampsLM.cend(), 0.0,

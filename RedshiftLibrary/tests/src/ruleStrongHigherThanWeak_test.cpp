@@ -95,6 +95,7 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
                         ScopeType::SPECTRUMMODEL);
   CAutoScope autoscope2(Context.m_ScopeStack, "stage", ScopeType::STAGE);
   CAutoScope autoscope3(Context.m_ScopeStack, "methodSolve", ScopeType::METHOD);
+  CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
   std::string const jsonString = {
       "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
       "\"velocityEmission\": 100,"
@@ -180,9 +181,6 @@ BOOST_AUTO_TEST_CASE(Correct_test_one_high_weak) {
 
   Float64 reductionCoef =
       lineStrong1InitialAmplitude / lineWeak2InitialAmplitude;
-  cout << "correctedAmpWeak1 " << correctedAmpWeak1
-       << "lineWeak1InitialAmplitude * reductionCoef "
-       << lineWeak1InitialAmplitude * reductionCoef;
   BOOST_CHECK(correctedAmpWeak1 == lineWeak1InitialAmplitude * reductionCoef);
   BOOST_CHECK(correctedAmpWeak2 == lineWeak2InitialAmplitude * reductionCoef);
   BOOST_CHECK(correctedAmpStrong1 == lineStrong1InitialAmplitude);

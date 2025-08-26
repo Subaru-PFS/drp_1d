@@ -197,7 +197,6 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot convolve: array is empty. ");
   }
 
-  Int32 n = arr.size();
   TFloat64List convolvedArr(fineLambdas.size());
 
   // determine the restframe convolution range, i.e., convolRange/(1+z_center)
@@ -208,7 +207,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     return convolvedArr;
 
   TInt32Range indices = getWaveRangeIndices(convRange_rest, false);
-  Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
+  Float64 z_center = zbin.GetMidRange();
   Float64 sigmaSupport =
       lsf->GetProfile()->GetNSigmaSupport() / 2. / (1.0 + z_center);
   for (Int32 i = indices.GetBegin(); i <= indices.GetEnd(); i++) {
@@ -257,8 +256,8 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
   m_fineLambdaSize = finelbdaGrid.size();
 
   // std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
+  m_corrections.clear();
   m_corrections.resize(m_rawCorrections.size());
-
   for (std::size_t i = 0; i < m_rawCorrections.size(); i++) {
     // z_center = (m_zbins[i + 1] + m_zbins[i]) / 2.;
     TFloat64Range zbin(m_zbins[i], m_zbins[i + 1]);

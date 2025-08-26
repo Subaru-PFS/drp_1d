@@ -38,7 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include <memory>
 
 namespace NSEpic {
 
@@ -70,10 +72,6 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
   auto const &inputContext = Context.GetInputContext();
   auto const &resultStore = Context.GetResultStore();
 
-  Float64 opt_nsigmasupport =
-      inputContext->GetParameterStore()->GetScoped<Float64>(
-          "lineModel.nSigmaSupport"); // try with 16 (-> parameters.json)
-
   m_linemodel.Init(m_redshifts, m_redshiftStep, m_zLogSampling);
 
   CLineModelSolution bestModelSolution;
@@ -83,17 +81,25 @@ std::shared_ptr<CSolveResult> CLineMeasSolve::compute() {
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
-
-  std::shared_ptr<CModelSpectrumResult> modelspc =
-      std::make_shared<CModelSpectrumResult>();
-  modelspc->addModel(
-      m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution),
-      inputContext->GetSpectrum()->getObsID());
+  auto const ps = Context.GetParameterStore();
+  std::string lineWidthType =
+      ps->GetScoped<std::string>("lineModel.lineWidthType");
+  bestModelSolution.computeSigmaUncertainty(lineWidthType);
+  bestModelSolution.computeEquivalentWidth();
+  auto &&[modelSpcResult, continuumSpcResult] = m_linemodel.getFittedModel(
+      bestModelSolution, inputContext->GetSpectrum()->getObsID());
   std::shared_ptr<const CLineModelSolution> res =
       std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
+  auto modelSpcResultPtr =
+      std::make_shared<const CModelSpectrumResult>(std::move(modelSpcResult));
+  auto continuumSpcResultPtr = std::make_shared<const CModelSpectrumResult>(
+      std::move(continuumSpcResult));
   resultStore->StoreScopedGlobalResult("linemeas", res);
-  resultStore->StoreScopedGlobalResult("linemeas_parameters", res);
-  resultStore->StoreScopedGlobalResult("linemeas_model", modelspc);
+  resultStore->StoreScopedGlobalResult("linemeas_parameters", std::move(res));
+  resultStore->StoreScopedGlobalResult("linemeas_model",
+                                       std::move(modelSpcResultPtr));
+  resultStore->StoreScopedGlobalResult("linemeas_continuum",
+                                       std::move(continuumSpcResultPtr));
   return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
 }
 

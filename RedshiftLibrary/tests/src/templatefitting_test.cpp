@@ -66,23 +66,23 @@ BOOST_FIXTURE_TEST_CASE(fitQuality_test,
       COperatorTemplateFitting(templateFittingSolve.m_redshifts);
 
   // Prepares arguments for BasicFit
-  std::shared_ptr<const CTemplate> tpl = fixture_SharedGalaxyTemplate().tpl;
+  auto const &tpl_ptr = fixture_SharedGalaxyTemplate().tpl;
   Float64 redshift = templateFittingSolve.m_redshifts[0];
   Float64 overlapThreshold = 1;
   bool opt_extinction = false;
   bool opt_dustFitting = false;
   CPriorHelper::TPriorEList logpriore = CPriorHelper::TPriorEList();
-  auto MeiksinList = {0};
-  auto EbmvList = {0};
+  auto MeiksinList = {undefIdx};
+  auto EbmvList = {undefIdx};
 
   auto result = templateFittingOperator.BasicFit(
-      tpl, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
+      *tpl_ptr, redshift, overlapThreshold, opt_extinction, opt_dustFitting,
       logpriore, MeiksinList, EbmvList);
 
   // Checks that fit quality values are set
   BOOST_CHECK_CLOSE(result.chiSquare, 335.74709, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 6.3348507, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 3.952430e-43, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 6.3348507, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 3.952430e-43, 1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

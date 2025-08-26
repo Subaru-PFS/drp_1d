@@ -48,6 +48,7 @@ from pylibamazed.Parameters import Parameters
 from pylibamazed.ParametersAccessor import ESolveMethod
 from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
+from pylibamazed.DocDecorator import doc_method
 
 root_stages = ["init", "classification", "load_result_store"]
 
@@ -70,6 +71,11 @@ zlog = CLog.GetInstance()
 
 @exception_class_decorator(logging=True)
 class AbstractOutput(metaclass=ABCMeta):
+    #: the ``Parameters`` object used to run the process flow
+    parameters: Parameters
+    #: result, per spectrum model
+    object_results: dict
+
     @exception_decorator
     def __init__(
         self,
@@ -82,6 +88,7 @@ class AbstractOutput(metaclass=ABCMeta):
         self.spectrum_id = spectrum_id
         self.root_results = dict()
         self.object_results = dict()
+        self.perfs = pd.DataFrame(columns=["stage", "clock", "user", "system"])
         self.extended_results = extended_results
         self.results_specifications = ResultsSpecifications(specs_path)
         self.object_types = self.parameters.get_spectrum_models()
@@ -118,12 +125,14 @@ class AbstractOutput(metaclass=ABCMeta):
     def load_errors(self):
         pass
 
+    @doc_method
     def has_error(self, object_type, stage):
         return self._has_error(object_type, stage)
 
     def _has_error(self, object_type, stage):
         return self._get_error_full_name(object_type, stage) in self.errors
 
+    @doc_method
     def get_error(self, object_type, stage):
         return self._get_error(object_type, stage)
 
@@ -149,6 +158,7 @@ class AbstractOutput(metaclass=ABCMeta):
             self._load_candidate_level(object_type)
         self.cache = True
 
+    @doc_method
     def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
         return self._get_attribute_short(attribute, lines_ids, pdf_builder)
 
@@ -170,8 +180,22 @@ class AbstractOutput(metaclass=ABCMeta):
             return self._get_attribute(None, "context_warningFlag", "ContextWarningFlags")
         elif root == "InitWarningFlags":
             return self._get_attribute(None, "init_warningFlag", "InitWarningFlags")
+        elif root == "objectInfo":
+            return self._get_attribute(None, "objectInfo", attr_name)
         elif "WarningFlags" in attr_name:
             return self._get_attribute(root, "warningFlag", attr_name)
+        elif root == "perfs":
+            if attr_parts[1] == "init":
+                perf = attr_parts[2]
+                return self.get_perfs(None, "init")[perf].at[0, perf]
+            else:
+                spectrum_model = attr_parts[1]
+                stage = attr_parts[2]
+                mode = None
+                if len(attr_parts) == 5:
+                    mode = attr_parts[3]
+                perf = attr_parts[-1]
+                return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
         else:
             object_type = root
             LINES_DATASETS = ["linemeas", "fitted_lines"]
@@ -205,7 +229,7 @@ class AbstractOutput(metaclass=ABCMeta):
                 col_name = attr_name
                 if line_name not in lines_ids:
                     raise APIException(
-                        ErrorCode.INTERNAL_ERROR, f"Line {line_name}  not found in {lines_ids}"
+                        ErrorCode.LINE_NOT_FOUND, f"Line {line_name}  not found in {lines_ids}"
                     )
                 if dataset == "linemeas":
                     index_col = "LinemeasLineID"
@@ -244,6 +268,7 @@ class AbstractOutput(metaclass=ABCMeta):
             pdf_attribute = pdfHandle.valProbaLog
         return pdf_attribute
 
+    @doc_method
     def get_attribute(self, object_type, dataset, attribute, rank=None):
         return self._get_attribute(object_type, dataset, attribute, rank)
 
@@ -279,6 +304,7 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             return getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
 
+    @doc_method
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         return self._has_attribute(object_type, dataset, attribute, rank)
 
@@ -306,6 +332,7 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             return False
 
+    @doc_method
     def get_dataset_size(self, object_type, dataset, rank=None):
         first_attr = None
         if rank is None:
@@ -314,7 +341,7 @@ class AbstractOutput(metaclass=ABCMeta):
                     return 0
                 first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
-                raise APIException(ErrorCode.INTERNAL_ERROR, "Dataset " + dataset + " does not exist")
+                raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Dataset " + dataset + " does not exist")
         else:
             if len(self.object_results[object_type][dataset][rank]):
                 first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
@@ -344,12 +371,14 @@ class AbstractOutput(metaclass=ABCMeta):
                     datasets.append(d)
             return datasets
         else:
-            raise APIException(ErrorCode.INTERNAL_ERROR, "Unknown level " + level)
+            raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Unknown level " + level)
 
+    @doc_method
     def get_candidate_data(self, object_type, rank, data_name):
         mp = self.object_results[object_type]["model_parameters"][rank][data_name]
         return mp
 
+    @doc_method
     def get_dataset(self, object_type, dataset, rank=None):
         if object_type:
             if rank is not None:
@@ -360,6 +389,7 @@ class AbstractOutput(metaclass=ABCMeta):
             return self.root_results[dataset]
 
     # TODO more robust version, should iterate over candidate datasets and check existence
+    @doc_method
     def get_nb_candidates(self, object_type):
         available_datasets = self._get_available_datasets("candidate", object_type)
         if len(available_datasets) > 0:
@@ -368,6 +398,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return 0
 
     def get_level(self, dataset):
+        if dataset == "objectInfo":
+            return "root"
         if dataset.startswith("reliability"):
             return "object"
         dataset_entries = self.results_specifications.get_df_by_dataset(dataset)
@@ -401,19 +433,11 @@ class AbstractOutput(metaclass=ABCMeta):
     def _filter_dataset_attributes(self, ds_name, object_type=None, method: Optional[str] = None):
         ds_attributes = self.results_specifications.get_df_by_dataset(ds_name)
         # filter ds_attributes by extended_results column
-        two_pass_solve = True
-        if (method is not None) and (object_type is not None):
-            two_pass_solve = self.parameters.is_two_pass_active(ESolveMethod(method), object_type)
-        if two_pass_solve:
-            filtered_df = ds_attributes
-        else:
-            # retrieves results which are not firstpass results
-            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
 
         if self.extended_results:
-            return filtered_df
-        filtered_df = filtered_df.loc[~ds_attributes["extended_results"]]
-        return filtered_df
+            return ds_attributes
+        ds_attributes = ds_attributes.loc[~ds_attributes["extended_results"]]
+        return ds_attributes
 
     def load_root(self):
         self._load_root()
@@ -592,6 +616,7 @@ class AbstractOutput(metaclass=ABCMeta):
     def get_candidate_group_name(self, rank):
         return "candidate" + chr(rank + 65)  # 0=A, 1=B,....
 
+    @doc_method
     def get_attributes(self, attributes, lines_ids):
         ret = dict()
         ret["ProcessingID"] = self.spectrum_id
@@ -603,3 +628,16 @@ class AbstractOutput(metaclass=ABCMeta):
             except Exception as e:
                 zlog.LogDebug(f"could not extract {attribute} : {e}")
         return ret
+
+    def get_all_perfs(self):
+        return self.perfs
+
+    def get_perfs(self, spectrum_model, stage, mode="normal"):
+        if spectrum_model is None:
+            name = stage
+        else:
+            name = ".".join((stage, spectrum_model))
+            if mode != "normal":
+                name = ".".join((name, mode))
+        row = self.perfs["stage"] == name
+        return self.perfs.loc[row]

@@ -46,7 +46,7 @@
 using namespace NSEpic;
 
 CContinuumFitStore::CContinuumFitStore(const TFloat64List &redshifts)
-    : m_redshiftgrid(redshifts) {
+    : COperatorResult("CContinuumFitStore"), m_redshiftgrid(redshifts) {
   initFitValues();
 }
 
@@ -167,8 +167,7 @@ CContinuumFitStore::FindMaxAmplitudeSigma() const {
   Float64 fitAmplitudeSigmaMAX = -INFINITY;
   Int32 i_max = undefIdx;
   for (Int32 i = 0; i < ssize(m_redshiftgrid); i++) {
-    const CContinuumModelSolution &continuum = m_fitValues[i][icontinuum];
-    Float64 fracAmplitudeSigma = getFracAmplitudeSigma(continuum);
+    Float64 const fracAmplitudeSigma = getFracAmplitudeSigma(i, icontinuum);
     if (fracAmplitudeSigma > fitAmplitudeSigmaMAX) {
       fitAmplitudeSigmaMAX = fracAmplitudeSigma;
       i_max = i;

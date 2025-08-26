@@ -42,16 +42,11 @@
 #include <memory>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/continuum/indexes.h"
-#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/continuumfitstore.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
-#include "RedshiftLibrary/operator/operator.h"
-#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/linemodel/ratiotofreemanager.h"
 #include "RedshiftLibrary/operator/twopassresult.h"
-#include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
@@ -81,10 +76,6 @@ public:
       Int32 index,
       const std::shared_ptr<const CContinuumFitStore> &tplFitStore);
   void SetChisquareContinuumResultFromPrevious(Int32 index);
-  void
-  SetChisquareTplratioResult(Int32 index,
-                             std::shared_ptr<CTplratioManager> tplratioManager);
-  void SetChisquareTplratioResultFromPrevious(Int32 index);
 
   TFloat64List getChisquareTplContinuumResult(Int32 index_z);
   TFloat64List getChisquareTplratioResult(Int32 index_z);

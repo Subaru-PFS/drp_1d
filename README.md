@@ -27,12 +27,11 @@ The pylibamazed algorithms are mainly developped in C++ and wrapped in Python. T
 
 Required third parties:
 * [boost](https://www.boost.org/) ==1.74
-* [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
 * [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.0
-* [lbfgspp](https://lbfgspp.statr.me) == 0.3.0
+* [lbfgspp](https://lbfgspp.statr.me) == 0.4.0
 
 lbfgspp needs to be installed from source
 Required python packages:
@@ -142,7 +141,6 @@ On ubuntu :
 ```sh
 sudo apt install -y \
 libboost-dev libboost-filesystem-dev libboost-thread-dev libboost-timer-dev libboost-program-options-dev libboost-test-dev \
-libcfitsio-dev \
 libgsl-dev \
 libfftw3-dev \
 libopenblas-dev \
@@ -155,33 +153,33 @@ libeigen3-dev \
 
     buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
-Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas` | `eigen` | `lbfgspp`].
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `gsl` | `fftw` | `openblas` | `eigen` | `lbfgspp`].
 
-For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
+For instance, to install the fftw third partie into the `thirdparty` directory, execute:
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio
+    python tools/buildandinstallthirdparty.py fftw
 
 Other command line options:
 
 `--workdir`: specifies the working directory for the third party building (absolute path)
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio --workdir=/tmp
+    python tools/buildandinstallthirdparty.py fftw --workdir=/tmp
 
 `--prefix`: specifies the installation directory for third parties (absolute path)
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio --prefix=/usr/local
+    python tools/buildandinstallthirdparty.py fftw --prefix=/usr/local
 
 `-j`: specifies the number of make jobs to run simultaneously 
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio -j 4
+    python tools/buildandinstallthirdparty.py fftw -j 4
 
 `--extra_flags`: specifies extra_flag to give to the build stage of third party
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio --extra_flags=
+    python tools/buildandinstallthirdparty.py fftw --extra_flags=
 
 `--force`: forces the library building and overwrites existing built library 
 
-    python tools/buildandinstallthirdparty.py fftw cfitsio --force
+    python tools/buildandinstallthirdparty.py fftw --force
 
 ## Python code coverage
 

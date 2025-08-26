@@ -71,7 +71,9 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
   // Gets evidences
   for (const std::string &spectrumModel : inputContext->m_categories) {
     if (hasResult[spectrumModel]) {
-      if (results[spectrumModel].lock()->getSwitchedToFromSpectrum())
+      auto spectrumModelResult = results[spectrumModel].lock();
+      if (spectrumModelResult &&
+          spectrumModelResult->getSwitchedToFromSpectrum())
         logEvidences[spectrumModel] =
             results[spectrumModel].lock()->getContinuumEvidence();
       else
@@ -93,7 +95,9 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute() {
     if (!hasResult[modelName])
       // Sorted evidences -> if does not have result, next ones neither
       break;
-    if (results[modelName].lock()->getSwitchedToFromSpectrum()) {
+    auto spectrumModelResult = results[modelName].lock();
+    if (spectrumModelResult &&
+        spectrumModelResult->getSwitchedToFromSpectrum()) {
       if (isSuccessive)
         successiveSwitchedModels[successiveSwitchedModels.size() - 1].push_back(
             modelName);

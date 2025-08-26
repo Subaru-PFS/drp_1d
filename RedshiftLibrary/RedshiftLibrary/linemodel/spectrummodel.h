@@ -57,7 +57,7 @@ class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
   CSpectrumModel(
-      const std::shared_ptr<CLineModelElementList> &elements,
+      const CLineModelElementList &elements,
       const std::shared_ptr<const CSpectrum> &spc,
       const CLineMap &m_RestLineList,
       const std::shared_ptr<CContinuumModelSolution> &continuumModelSolution,
@@ -79,7 +79,7 @@ public:
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
-  const CSpectrumFluxAxis &GetModelContinuum() const;
+  CSpectrumFluxAxis GetModelContinuum() const;
 
   CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
@@ -91,7 +91,7 @@ public:
   std::tuple<Float64, Float64, Float64>
   GetContinuumWeightedSumInRange(TInt32Range const &indexRange,
                                  TFloat64List const &weights,
-                                 TPolynomCoeffs const &polynomCoeffs) const;
+                                 CPolynomCoeffs const &polynomCoeffs) const;
 
   std::tuple<Float64, Float64, Float64>
   getContinuumSquaredResidualInRange(TInt32Range const &indexRange);
@@ -127,13 +127,15 @@ public:
     return m_spcFluxAxisNoContinuum;
   }
 
-  Int32 ApplyContinuumPowerLawOnGrid(
-      std::shared_ptr<CContinuumModelSolution> const &continuum);
+  void ApplyContinuumPowerLawOnGrid(CContinuumModelSolution const &continuum);
 
-  Int32 ApplyContinuumTplOnGrid(const std::shared_ptr<const CTemplate> &tpl,
-                                Float64 zcontinuum);
+  void ApplyContinuumTplOnGrid(const std::shared_ptr<const CTemplate> &tpl,
+                               Float64 zcontinuum);
   void initObserveGridContinuumFlux(Int32 size);
   const TPhotVal &getPhotValues() const { return m_photValues; };
+  void setElements(CLineModelElementList const &elements) {
+    m_Elements = elements;
+  };
 
 private:
   CSpectrumFluxAxis
@@ -145,8 +147,9 @@ private:
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
   CSpectrum m_SpectrumModel; // model
-  std::shared_ptr<CLineModelElementList> m_Elements;
+  CLineModelElementList m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
+  CSpectrumFluxAxis m_PolynomialUnderLinesFluxAxis;
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
@@ -168,12 +171,12 @@ public:
   void push_back(const CSpectrumModel &model) { m_models.push_back(model); }
 
   CSpectrumModel &getSpectrumModel() {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_models.at(m_spectraIndex.get());
   }
 
   const CSpectrumModel &getSpectrumModel() const {
-    m_spectraIndex.assertIsValid();
+    ASSERT_SpectraGlobalIndex_IS_VALID(m_spectraIndex);
     return m_models.at(m_spectraIndex.get());
   }
 
@@ -233,6 +236,12 @@ public:
   void setEnableAmplitudeOffsets(bool enableAmplitudeOffsets) {
     for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
       getSpectrumModel().m_enableAmplitudeOffsets = enableAmplitudeOffsets;
+    }
+  }
+
+  void setModelsElements(const CLineModelElementList &elements) {
+    for (auto &model : m_models) {
+      model.setElements(elements);
     }
   }
 

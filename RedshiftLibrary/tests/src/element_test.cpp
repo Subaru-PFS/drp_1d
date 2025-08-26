@@ -155,7 +155,6 @@ BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   rs.push_back(std::move(line));
 
   Float64 nsigmasupport = 8.;
-  Float64 resolution = 0.9;
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
@@ -205,7 +204,6 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {
   CLineModelElement element = CLineModelElement(fdata);
 
   Float64 nsigmasupport = 8.;
-  Float64 resolution = 0.9;
   TAsymParams _asymParams = {1., 4.5, 0.};
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};

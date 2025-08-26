@@ -46,6 +46,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "tests/src/tool/inputContextLight.h"
 
@@ -108,6 +109,8 @@ public:
   std::shared_ptr<CLSF> LSF =
       fixture_LSFGaussianConstantResolution(scopeStack).LSF;
   std::shared_ptr<CSpectrum> spc = fixture_SharedSpectrumExtended().spc;
+  std::shared_ptr<CFullSpectrum> fullSpc =
+      fixture_SharedSpectrumExtended().fullSpc;
   std::shared_ptr<CTemplateCatalog> catalog =
       fixture_sharedTemplateCatalog().catalog;
   std::shared_ptr<CPhotBandCatalog> photoBandCatalog =
@@ -138,9 +141,9 @@ BOOST_AUTO_TEST_CASE(context_test) {
                                       "templateFittingSolve",
                                       "solveResult") == false);
 
-  spc->SetLSF(LSF);
-  Context.addSpectrum(spc);
-  BOOST_CHECK(Context.GetSpectrum() == spc);
+  fullSpc->SetLSF(LSF);
+  Context.addFullSpectrum(fullSpc);
+  BOOST_CHECK(Context.GetFullSpectrum() == fullSpc);
 
   BOOST_CHECK(Context.getRebinnedSpectra().size() == 0);
 
@@ -162,14 +165,16 @@ BOOST_AUTO_TEST_CASE(context_test) {
               lineCatalog);
   Context.m_ScopeStack->push_back("redshiftSolver", ScopeType::STAGE);
   Context.m_ScopeStack->push_back("lineModelSolve", ScopeType::METHOD);
-  BOOST_CHECK(ssize(Context.getCLineMap()) ==
-              fixture_LineCatalog().lineCatalogSize);
-
+  {
+    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+    BOOST_CHECK(ssize(Context.getCLineMap()) ==
+                fixture_LineCatalog().lineCatalogSize);
+  }
   Context.setFluxCorrectionCalzetti(ismCorrectionCalzetti);
   Context.setFluxCorrectionMeiksin(igmCorrectionMeiksin);
 
   Context.Init();
-  BOOST_CHECK(Context.GetRebinnedSpectrum() = spc);
+  BOOST_CHECK(Context.GetRebinnedSpectrum() = fullSpc);
 
   std::shared_ptr<const TFloat64Range> lbdaRange =
       std::make_shared<const TFloat64Range>(4630, 4815);

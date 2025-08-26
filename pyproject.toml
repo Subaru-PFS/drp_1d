@@ -11,6 +11,7 @@ dynamic = ["version"]
 requires-python = ">= 3.9"
 dependencies = [
     "numpy>=1.25; python_version>'3.8'",
+    "scipy>=1.1.0",
     "astropy>=3.1.1",
     "cython>=0.17.0",
     "pandas>=1.0.0",
@@ -19,7 +20,8 @@ dependencies = [
     "pytest-mock>=3.11.1",
     "jsonschema>=4.17.3",
     "ninja>=1.11",
-    "decorator>=5.1.1"
+    "decorator>=5.1.1",
+    "scikit-learn>=1.2.1",
 ]
 authors = [
     {name = "LAM - Laboratoire d'Astrophysique de Marseille", email = "amazed-support@lam.fr"}]
@@ -50,7 +52,7 @@ wheel.packages = ["pylibamazed/python/pylibamazed"]
 
 [tool.setuptools_scm]
 version_file = "pylibamazed/python/pylibamazed/_version.py"
-fallback_version = "1.7"
+fallback_version = "1.13"
 
 
 [[tool.scikit-build.generate]]

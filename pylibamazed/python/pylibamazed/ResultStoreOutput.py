@@ -181,6 +181,8 @@ class ResultStoreOutput(AbstractOutput):
         if not len(ds_attributes):
             return False
 
+        if dataset == "continuum_quality" and stage != "redshiftSolver":
+            return False
         # Checks that at least one of the attributes of the selected rows is present in the result store
         has_dataset = False
         for rs_key in ds_attributes.ResultStore_key.unique():
@@ -231,7 +233,7 @@ class ResultStoreOutput(AbstractOutput):
             try:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
                 return getter(object_type, stage, method, attribute_info.ResultStore_key)
-            except:
+            except Exception:
                 raise APIException(
                     ErrorCode.OUTPUT_READER_ERROR, "Unknown OperatorResult type {}".format(str(or_type))
                 )
@@ -310,3 +312,13 @@ class ResultStoreOutput(AbstractOutput):
         self.errors[full_name]["line"] = -1
         self.errors[full_name]["filename"] = ""
         self.errors[full_name]["method"] = ""
+
+    def store_perfs(self, spectrum_model, stage, perfs, mode="normal"):
+        if spectrum_model is None:
+            perfs["stage"] = stage
+        else:
+            perfs["stage"] = ".".join((spectrum_model, stage))
+            if mode != "normal":
+                perfs["stage"] = ".".join((perfs["stage"], mode))
+
+        self.perfs.loc[len(self.perfs)] = perfs

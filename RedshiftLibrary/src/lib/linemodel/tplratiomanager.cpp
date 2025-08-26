@@ -58,9 +58,8 @@ CTplratioManager::CTplratioManager(
                         continuumManager, restLineList, spcIndex) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
-
   m_CatalogTplRatio = Context.GetTplRatioCatalog();
+  setNRatios(m_CatalogTplRatio->GetCatalogsCount());
   initTplratioCatalogs(
       Context.GetParameterStore()->GetScoped<bool>("tplRatioIsmFit"));
   SetTplratio_PriorHelper();
@@ -329,9 +328,7 @@ void CTplratioManager::setPassMode(Int32 iPass) {
 void CTplratioManager::SetForcedisableTplratioISMfit(bool opt) {
   m_forcedisableTplratioISMfit = opt;
 }
-Int32 CTplratioManager::getTplratio_count() const {
-  return m_CatalogTplRatio->GetCatalogsCount();
-}
+Int32 CTplratioManager::getTplratio_count() const { return m_nRatios; }
 
 TFloat64List CTplratioManager::getTplratio_priors() const {
   return m_CatalogTplRatio->getCatalogsPriors();
@@ -382,7 +379,7 @@ void CTplratioManager::fillHalphaArray(Int32 idx) {
   if (m_opt_haprior <= 0.)
     return;
   bool ha_strongest = false;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelHaStrongest()) {
       ha_strongest = true;
       break;
@@ -408,7 +405,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_ScaleMargCorrTplratio[idx] = m_elementsVector->getScaleMargCorrection();
 
   m_StrongELPresentTplratio[idx] = false;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     if (getElementList().GetModelStrongEmissionLinePresent()) {
       m_StrongELPresentTplratio[idx] = true;
       break;
@@ -599,4 +596,33 @@ void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
   // tplratio can override the lyafitting, see m_opt_lya_forcefit
   setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itplratio).GetList());
+}
+
+void CTplratioManager::setChiSquareRatioResult(
+    const Int32 index_z, const std::shared_ptr<CLineModelResult> &lmResult) {
+  if (GetChisquareTplratio().size() < 1)
+    return;
+
+  if (index_z >= ssize(lmResult->Redshifts))
+    THROWG(ErrorCode::INTERNAL_ERROR, "Invalid z index");
+
+  if (GetChisquareTplratio().size() != lmResult->ChiSquareTplratios.size() ||
+      GetChisquareTplratio().size() != GetScaleMargTplratio().size() ||
+      GetChisquareTplratio().size() != GetStrongELPresentTplratio().size() ||
+      GetChisquareTplratio().size() != GetNLinesAboveSNRTplratio().size() ||
+      GetChisquareTplratio().size() != GetPriorLinesTplratio().size())
+    THROWG(ErrorCode::INTERNAL_ERROR, "vector sizes do not match");
+
+  for (Int32 k = 0; k < ssize(GetChisquareTplratio()); k++) {
+    lmResult->ChiSquareTplratios[k][index_z] = GetChisquareTplratio()[k];
+    lmResult->ScaleMargCorrectionTplratios[k][index_z] =
+        GetScaleMargTplratio()[k];
+    lmResult->StrongELPresentTplratios[k][index_z] =
+        GetStrongELPresentTplratio()[k];
+    lmResult->StrongHalphaELPresentTplratios[k][index_z] =
+        getHaELPresentTplratio()[k];
+    lmResult->NLinesAboveSNRTplratios[k][index_z] =
+        GetNLinesAboveSNRTplratio()[k];
+    lmResult->PriorLinesTplratios[k][index_z] = GetPriorLinesTplratio()[k];
+  }
 }

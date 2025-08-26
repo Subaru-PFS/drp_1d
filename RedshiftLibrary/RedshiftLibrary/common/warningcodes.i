@@ -25,5 +25,6 @@ enum class WarningCode {
   FORCED_POWERLAW_TO_ZERO,                     // 18
   NULL_LINES_PROFILE,                          // 19
   STD_ESTIMATION_FAILED,                       // 20
-  VELOCITY_FIT_RANGE                           // 21
+  VELOCITY_FIT_RANGE,                          // 21
+  TOO_LITTLE_PIXELS     ,                      // 22      
 };
