@@ -1,11 +1,15 @@
 # Changelog
 
-## 1.13
+## 1.15
 ### Added
-* [5653] : Added the FFT template fitting when input spectrum has masked samples and also enable the option ignoreLineSupport
 ### Changed
 ### Deprecated
 ### Removed
+### Fixed
+
+## 1.14.0 (2025-08-26)
+### Added
+* [5653] : Added the FFT template fitting when input spectrum has masked samples and also enable the option ignoreLineSupport
 ### Fixed
 * [9869] : Fix linemeas bug with positive constraint on SVD fitter when using polynomials under lines
 
