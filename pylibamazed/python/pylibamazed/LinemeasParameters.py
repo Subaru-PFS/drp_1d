@@ -57,13 +57,13 @@ class LinemeasParameters:
     def _get_catalog_velocity_name(self, velocity_type: EVelocityType) -> str:
         return f"Velocity{velocity_type.value}"
 
-    def load_from_catalogs(self, source_id: str, catalogs: dict, catalog_columns: dict):
+    def load_from_catalogs(self, source_id: str, catalogs: dict, catalog_columns: dict) -> None:
         for spectrum_model in catalogs.keys():
             lm = pd.read_csv(catalogs[spectrum_model], sep="\t", dtype={"ProcessingID": object})
             lm = lm[lm.ProcessingID == source_id]
             if lm.empty:
                 raise APIException(
-                    ErrorCode.INVALID_PARAMETER, f"Uncomplete linemeas catalog, {source_id} missing"
+                    ErrorCode.LINEMEAS_CATALOG_ERROR, f"Uncomplete linemeas catalog, {source_id} missing"
                 )
 
             columns = catalog_columns[spectrum_model]
@@ -152,7 +152,7 @@ class LinemeasParameters:
         velocity = parameter.get_velocity(spectrum_model, solve_method, velocity_type)
         if velocity is None:
             raise APIException(
-                ErrorCode.INVALID_PARAMETER_FILE,
+                ErrorCode.IE_INVALID_PARAMETER,
                 f"missing parameter {spectrum_model}.lineMeasSolver.{solve_method.value}.lineModel"
                 f"{ParametersAccessor.get_velocity_name(velocity_type)}",
             )

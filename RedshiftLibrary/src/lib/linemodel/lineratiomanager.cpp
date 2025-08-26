@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
@@ -61,7 +62,6 @@ CLineRatioManager::CLineRatioManager(
       m_lambdaRanges(lambdaRanges), m_models(models), m_spectraIndex(spcIndex),
       m_continuumManager(continuumManager), m_RestLineList(restLineList) {
 
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";
@@ -209,7 +209,7 @@ void CLineRatioManager::setPassMode(Int32 iPass) {
 Float64 CLineRatioManager::getLeastSquareMerit() const {
   Float64 fit = 0.0;
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
@@ -292,7 +292,7 @@ void CLineRatioManager::logParameters() {
 }
 
 std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
-    const std::string &lineRatioType,
+    const EType &lineRatioType,
     const std::shared_ptr<CLMEltListVector> &elementsVector,
     const CSpcModelVectorPtr &models, const CCSpectrumVectorPtr &inputSpcs,
     const CTLambdaRangePtrVector &lambdaRanges,
@@ -300,29 +300,42 @@ std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(
     const CLineMap &restLineList, std::shared_ptr<CAbstractFitter> fitter,
     const CSpectraGlobalIndex &spcIndex) {
   std::shared_ptr<CLineRatioManager> ret;
-  if (lineRatioType == "tplRatio")
+  if (lineRatioType == EType::tplRatio)
     ret = std::make_shared<CTplratioManager>(
         CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                          continuumManager, restLineList, spcIndex));
-  else if (lineRatioType == "tplCorr")
+  else if (lineRatioType == EType::ratioToFree)
+    ret = std::make_shared<CRatioToFreeManager>(
+        CRatioToFreeManager(elementsVector, models, inputSpcs, lambdaRanges,
+                            continuumManager, restLineList, spcIndex));
+  else if (lineRatioType == EType::tplCorr)
     ret = std::make_shared<CTplCorrManager>(
         CTplCorrManager(elementsVector, models, inputSpcs, lambdaRanges,
                         continuumManager, restLineList, spcIndex));
-  else if (lineRatioType == "rules")
+  else if (lineRatioType == EType::rules)
     ret = std::make_shared<CRulesManager>(
         CRulesManager(elementsVector, models, inputSpcs, lambdaRanges,
                       continuumManager, restLineList, spcIndex));
   else
-    THROWG(ErrorCode::INVALID_PARAMETER,
-           "Only {tplratio, rules, tpcorr} values are "
-           "supported for linemodel.lineRatioType");
+    THROWG(ErrorCode::IE_INVALID_PARAMETER,
+           Formatter()
+               << "Only {tplratio, rules, tpcorr} values are "
+                  "supported for linemodel.lineRatioType. Parameter value is: "
+               << lineRatioType);
   ret->setFitter(fitter);
 
   return ret;
 }
 
 void CLineRatioManager::refreshAllModels() {
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getModel().refreshModel();
   }
 }
+
+const std::map<std::string, CLineRatioManager::EType>
+    CLineRatioManager::stringToType = {
+        {"tplRatio", CLineRatioManager::EType::tplRatio},
+        {"ratioToFree", CLineRatioManager::EType::ratioToFree},
+        {"tplCorr", CLineRatioManager::EType::tplCorr},
+        {"rules", CLineRatioManager::EType::rules}};

@@ -105,7 +105,7 @@ CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator/=(const Float64 op) {
   return *this;
 }
 CSpectrumSpectralAxis
-CSpectrumSpectralAxis::MaskAxis(const TFloat64List &mask) const {
+CSpectrumSpectralAxis::MaskAxis(const TMaskList &mask) const {
   CSpectrumSpectralAxis spc_axis = CSpectrumAxis::MaskAxis(mask);
   spc_axis.m_isSorted = m_isSorted;
   if (spc_axis.GetSamplesCount() < 2)
@@ -310,7 +310,6 @@ TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange(
  *
  */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength(Float64 waveLength) const {
-  Int32 m;
   Int32 lo = 0;
   Int32 hi = GetSamplesCount() - 1;
 
@@ -401,11 +400,11 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const {
 }
 
 // still TODO: check end-to-end redshift coverage
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
+TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
   return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount() - 1));
 }
 
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(
+TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(
     Int32 ssratio, TFloat64Range const &lambdarange) const {
   Int32 imin = -1, imax = m_Samples.size();
   lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
@@ -413,7 +412,7 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(
 }
 
 /*@ssratio stands for sub-samplingRatio*/
-TFloat64List
+TMaskList
 CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
                                           const TInt32Range &ilbda) const {
   if (!IsLogSampled()) {
@@ -426,8 +425,8 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
 
   Int32 s = GetSamplesCount();
   if (ssratio == 1)
-    return TFloat64List(s, 1.);
-  TFloat64List mask(s, 0.);
+    return TMaskList(s, 1);
+  TMaskList mask(s, 0);
   for (Int32 i = ilbda.GetEnd(); i >= ilbda.GetBegin();
        i -= ssratio) { // ensure that z[0] remains the same
     mask[i] = 1;

@@ -38,79 +38,138 @@
 # ============================================================================
 
 import pandas as pd
+import numpy as np
 import pytest
 from pylibamazed.Exception import APIException
-from pylibamazed.Filter import SpectrumFilterItem
+from pylibamazed.Filter import FilterItem, FilterMorphology
 
 
-class TestSpectrumFilterItem:
+class TestFilterItem:
     def test_init(self):
         # Init ok if known instruction
-        SpectrumFilterItem("T", "<", 1)
+        FilterItem("T", "<", 1)
 
         # Init raises error if unkown instruction
-        with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
-            SpectrumFilterItem("T", "unkown", 1)
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
+            FilterItem("T", "unkown", 1)
 
-    def test_compliant_lines(self):
+    def test_apply(self):
         df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
 
-        filter = SpectrumFilterItem("col1", "<", 2)
-        assert filter.compliant_lines(df).equals(pd.Series([True, False, False]))
+        filter = FilterItem("col1", "<", 2)
+        assert filter.apply(df).equals(pd.Series([True, False, False]))
 
         filter.instruction = ">"
-        assert filter.compliant_lines(df).equals(pd.Series([False, False, True]))
+        assert filter.apply(df).equals(pd.Series([False, False, True]))
 
         filter.instruction = "<="
-        assert filter.compliant_lines(df).equals(pd.Series([True, True, False]))
+        assert filter.apply(df).equals(pd.Series([True, True, False]))
 
         filter.instruction = ">="
-        assert filter.compliant_lines(df).equals(pd.Series([False, True, True]))
+        assert filter.apply(df).equals(pd.Series([False, True, True]))
 
         filter.instruction = "="
-        assert filter.compliant_lines(df).equals(pd.Series([False, True, False]))
+        assert filter.apply(df).equals(pd.Series([False, True, False]))
 
         filter.instruction = "!="
-        assert filter.compliant_lines(df).equals(pd.Series([True, False, True]))
+        assert filter.apply(df).equals(pd.Series([True, False, True]))
 
         filter.instruction = "in"
         filter.value = [2, 3, 4]
-        assert filter.compliant_lines(df).equals(pd.Series([False, True, True]))
+        assert filter.apply(df).equals(pd.Series([False, True, True]))
 
         filter.instruction = "~in"
         filter.value = [2, 3, 4]
-        assert filter.compliant_lines(df).equals(pd.Series([True, False, False]))
+        assert filter.apply(df).equals(pd.Series([True, False, False]))
 
         filter.instruction = "&"
         filter.value = 1
-        assert filter.compliant_lines(df).equals(pd.Series([True, False, True]))
+        assert filter.apply(df).equals(pd.Series([True, False, True]))
 
         df2 = pd.DataFrame({"col1": [0, 1, 2, 3]})
         filter.instruction = "0&"
-        assert filter.compliant_lines(df2).equals(pd.Series([True, True, False, True]))
+        assert filter.apply(df2).equals(pd.Series([True, True, False, True]))
 
         filter.instruction = "^"
-        assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, True]))
+        assert filter.apply(df2).equals(pd.Series([True, False, True, True]))
 
         filter.instruction = "~^"
-        assert filter.compliant_lines(df2).equals(pd.Series([False, True, False, False]))
+        assert filter.apply(df2).equals(pd.Series([False, True, False, False]))
 
         filter.value = 1
         filter.instruction = "~&"
-        assert filter.compliant_lines(df2).equals(pd.Series([True, False, True, False]))
+        assert filter.apply(df2).equals(pd.Series([True, False, True, False]))
 
         filter.key = "unexistant col"
-        with pytest.raises(APIException, match=r"INVALID_FILTER_KEY"):
-            filter.compliant_lines(df)
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_KEY"):
+            filter.apply(df)
+
+        with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
+            filter.apply()
 
     def test_repr(self):
-        filter = SpectrumFilterItem("col1", "<", 2)
+        filter = FilterItem("col1", "<", 2)
         assert filter.__repr__() == "Filter {'key': 'col1', 'instruction': '<', 'value': 2}"
 
     def test_check_instructions(self):
         # Instruction is registered -> OK
-        SpectrumFilterItem.check_instruction(">")
+        FilterItem.check_instruction(">")
 
         # Instruction is not registered -> error
-        with pytest.raises(APIException, match=r"INVALID_FILTER_INSTRUCTION"):
-            SpectrumFilterItem.check_instruction("unkown")
+        with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
+            FilterItem.check_instruction("unkown")
+
+
+class TestFilterMorphology:
+    def test_init(self):
+        FilterMorphology("opening", [1, 1])
+
+    # Init raises error if unkown instruction
+    with pytest.raises(APIException, match=r"IE_INVALID_FILTER_INSTRUCTION"):
+        FilterMorphology("unkown", [1, 1])
+
+    def test_apply_opening(self):
+        filter = FilterMorphology("opening", [1, 1])
+        mask = pd.Series(np.array([True, True, False], dtype=bool))
+
+        assert np.array_equal(filter.apply(mask=mask), mask)  # no change
+
+        mask = pd.Series([0, 1, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated removed
+
+        mask = pd.Series([1, 0, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated on left border removed
+
+        mask = pd.Series([0, 0, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 0])  # isolated on right border removed
+
+        # apply without mask raises error
+        with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
+            filter.apply()
+
+    def test_apply_closing(self):
+        filter = FilterMorphology("closing", [1, 1])
+        mask = pd.Series(np.array([False, False, True], dtype=bool))
+
+        assert np.array_equal(filter.apply(mask=mask), mask)  # no change
+
+        mask = pd.Series([0, 1, 0, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 1])  # isolated removed
+
+        mask = pd.Series([0, 1, 1])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1])  # isolated on left border not removed
+
+        mask = pd.Series([0, 1, 1, 0])
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 0])  # isolated on right border not removed
+
+    def test_apply_erosion(self):
+        filter = FilterMorphology("erosion", [1, 1, 1])
+        mask = pd.Series(np.array([False, True, True, True, False], dtype=bool))
+
+        assert np.array_equal(filter.apply(mask=mask), [0, 0, 1, 0, 0])
+
+    def test_apply_dilation(self):
+        filter = FilterMorphology("dilation", [1, 1, 1])
+        mask = pd.Series(np.array([False, False, True, False, False], dtype=bool))
+
+        assert np.array_equal(filter.apply(mask=mask), [0, 1, 1, 1, 0])

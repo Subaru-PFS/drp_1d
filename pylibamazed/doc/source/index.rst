@@ -6,14 +6,15 @@
 Welcome to PyLibAmazed's documentation!
 =======================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+ .. toctree::
 
-   modules
+   api
+   algorithms
+   parameters
+
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -36,32 +36,27 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <fstream>
-#include <iomanip> // std::setprecision
-#include <string>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
+#include <iterator>
 
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 
-/**
- * \brief Sets the model to CSpectrum ( spc ).
- **/
-void CModelSpectrumResult::addModel(const CSpectrum &spc,
-                                    const std::string &obsId) {
-  addModel(spc.GetSpectralAxis().GetSamplesVector(),
-           spc.GetFluxAxis().GetSamplesVector(), obsId);
-}
-
-void CModelSpectrumResult::addModel(TFloat64List lambda, TFloat64List flux,
-                                    const std::string &obsId) {
+CModelSpectrumResult::CModelSpectrumResult(TFloat64List lambda,
+                                           TFloat64List flux,
+                                           const std::string &obsId)
+    : CModelSpectrumResult() {
   if (lambda.size() != flux.size())
     THROWG(ErrorCode::INTERNAL_ERROR,
            "lambda and flux should have the same size");
   ModelLambda[obsId] = std::move(lambda);
   ModelFlux[obsId] = std::move(flux);
 }
+
+void CModelSpectrumResult::insert(CModelSpectrumResult &&other) {
+  ModelLambda.insert(std::move_iterator(other.ModelLambda.begin()),
+                     std::move_iterator(other.ModelLambda.end()));
+  ModelFlux.insert(std::move_iterator(other.ModelFlux.begin()),
+                   std::move_iterator(other.ModelFlux.end()));
+};

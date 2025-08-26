@@ -237,13 +237,14 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "simple");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b, 1);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, result.coefs.first.b);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.036904140734761,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -256,20 +257,19 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "simpleWeighted");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result2.coefs.first.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.second.a == result2.coefs.first.a);
-  BOOST_TEST(result2.coefs.second.b == result2.coefs.first.b);
+  BOOST_CHECK_CLOSE(result2.coefs.first.a, a, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.b, b, 1);
+  BOOST_CHECK_EQUAL(result2.coefs.second.a, result2.coefs.first.a);
+  BOOST_CHECK_EQUAL(result2.coefs.second.b, result2.coefs.first.b);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.18913104295547, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.036904140734761, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31517836228746177, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.036904140734761,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31517836228746177, 1e-4);
   Context.reset();
 }
 
 BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
   // We consider z = 0 here
-  Float64 a = 1.5e-16;
-  Float64 b = -0.5;
   nMinSamples = 10;
 
   TList<Float64> lambda = fixture_powerLawSimpleVar().lambda;
@@ -297,21 +297,16 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "simple");
 
   // Accepts a 1% error compared to the results found with python notebook
-  BOOST_TEST(result.coefs.first.a == 1.452346083570847e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == -0.4962537047556169,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.a == 1.452346083570847e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == -0.4962537047556169,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.stda == 5.634124732229189e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.stdb == 0.4533861348305359,
-             boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.coefs.first.a, 1.452346083570847e-16, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, -0.4962537047556169, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.a, 1.452346083570847e-16, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, -0.4962537047556169, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.stda, 5.634124732229189e-16, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.stdb, 0.4533861348305359, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.1169836581807304,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 
   Init(jsonString1, {spc});
@@ -323,21 +318,16 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "simpleWeighted");
 
   // Accepts a 1% error compared to the results found with python notebook
-  BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.b == -0.49983673257891786,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.a == 1.4963406789134072e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.b == -0.49983673257891786,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.stda == 1.0296994218492315e-17,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result2.coefs.first.stdb == 0.008048716415326033,
-             boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result2.coefs.first.a, 1.4963406789134072e-16, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.b, -0.49983673257891786, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.a, 1.4963406789134072e-16, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.b, -0.49983673257891786, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.stda, 1.0296994218492315e-17, 1);
+  BOOST_CHECK_CLOSE(result2.coefs.first.stdb, 0.008048716415326033, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 278.1289308870019, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.1169836581807304, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.091549255634287813, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.1169836581807304,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.091549255634287813, 1e-4);
   Context.reset();
 }
 
@@ -367,14 +357,14 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "full");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.second.a, a2, 10); // a2 has big errors
+  BOOST_CHECK_CLOSE(result.coefs.second.b, b2, 1);
   BOOST_CHECK_CLOSE(result.chiSquare, 258.0642219227999, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 1.0364024976819273, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.31712094704529448, 1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.0364024976819273,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31712094704529448, 1e-4);
   Context.reset();
 }
 
@@ -383,10 +373,6 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   bool opt_dustFitting = false;
 
   nMinSamples = 10;
-  Float64 a1 = 1.5e-16;
-  Float64 b1 = -0.5;
-  Float64 b2 = -0.2;
-  Float64 a2 = computea2(a1, b1, b2, xc);
 
   TList<Float64> lambda = fixture_powerLawDoubleVar().lambda;
   TList<Float64> flux = fixture_powerLawDoubleVar().flux;
@@ -410,26 +396,19 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "full");
 
   // Accepts a 1% error compared to the results found with python notebook
-  BOOST_TEST(result.coefs.first.a == 1.3593026417419627e-16,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == -0.4883729145733192,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == 1.1911841337173753e-17,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.b == -0.20508628168193455,
-             boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.coefs.first.a, 1.3593026417419627e-16, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, -0.4883729145733192, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.second.a, 1.1911841337173753e-17, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.second.b, -0.20508628168193455, 1e-2);
 
-  BOOST_TEST(result.coefs.first.stda == 6.6531274177064696e-18,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.stdb == 0.005769929304253846,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.stda == 6.868548415411009e-19,
-             boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.stdb == 0.0066342065076361876,
-             boost::test_tools::tolerance(0.01));
-  BOOST_CHECK_CLOSE(result.chiSquare, 594.61208512806786, 1e-4);
-  BOOST_CHECK_CLOSE(result.reducedChiSquare, 0.99102014188011311, 1e-4);
-  BOOST_CHECK_CLOSE(result.pValue, 0.54292694313783707, 1e-4);
+  BOOST_CHECK_CLOSE(result.coefs.first.stda, 6.6531274177064696e-18, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.first.stdb, 0.005769929304253846, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.second.stda, 6.868548415411009e-19, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.second.stdb, 0.0066342065076361876, 1e-2);
+  BOOST_CHECK_CLOSE(result.chiSquare, 594.61208512806786, 1e-2);
+  BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 0.99102014188011311,
+                    1e-4);
+  BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.54292694313783707, 1e-4);
   Context.reset();
 }
 
@@ -469,10 +448,10 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
       z, opt_extinction, opt_dustFitting, nullThreshold, "simple");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b, 1e-2);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, result.coefs.first.b);
   Context.reset();
 
   // With extinction
@@ -503,10 +482,10 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
   result = operatorPowerLaw2.BasicFit(z, true, true, nullThreshold, "simple");
 
   // accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a, 1e-2);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b, 1e-2);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, result.coefs.first.b);
 
   BOOST_CHECK_EQUAL(result.meiksinIdx, 2);
   BOOST_CHECK_EQUAL(result.ebmvCoef, 0.1);
@@ -567,11 +546,10 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
       operatorPowerLaw.BasicFit(z, true, true, nullThreshold, "full");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.second.a, a2, 100); // a2 has big errors
+  BOOST_CHECK_CLOSE(result.coefs.second.b, b2, 1);
   Context.reset();
 
   // Disjoint samples
@@ -607,11 +585,10 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
                                       nullThreshold, "full");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.first.b == b1, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
+  BOOST_CHECK_CLOSE(result.coefs.first.a, a1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.first.b, b1, 1);
+  BOOST_CHECK_CLOSE(result.coefs.second.a, a2, 100); // a2 has big errors
+  BOOST_CHECK_CLOSE(result.coefs.second.b, b2, 1);
   Context.reset();
 
   // Too small samples (left)
@@ -646,11 +623,10 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   result = operatorPowerLaw3.BasicFit(z, true, true, nullThreshold, "full");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.second.a == a2,
-             boost::test_tools::tolerance(10.)); // a2 has big errors
-  BOOST_TEST(result.coefs.second.b == b2, boost::test_tools::tolerance(0.01));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.second.b == result.coefs.first.b);
+  BOOST_CHECK_CLOSE(result.coefs.second.a, a2, 100); // a2 has big errors
+  BOOST_CHECK_CLOSE(result.coefs.second.b, b2, 1);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, result.coefs.first.b);
   Context.reset();
 }
 
@@ -660,7 +636,6 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   Float64 a1 = -1.5e-16;
   Float64 b1 = 0.0;
   Float64 b2 = 0.0;
-  Float64 a2 = computea2(a1, b1, b2, xc2);
 
   CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 50);
   CSpectrumSpectralAxis spectralAxisRest1 =
@@ -688,10 +663,10 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   TPowerLawResult result = operatorPowerLaw.BasicFit(
       z, opt_extinction, opt_dustFitting, nullThreshold, "full");
 
-  BOOST_TEST(result.coefs.first.a == a1, boost::test_tools::tolerance(0.5));
-  BOOST_TEST(result.coefs.second.a == result.coefs.first.a);
-  BOOST_TEST(result.coefs.first.b == 0);
-  BOOST_TEST(result.coefs.second.b == 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
 
   Context.reset();
 }
@@ -724,17 +699,17 @@ BOOST_AUTO_TEST_CASE(basicfit_default) {
       0, opt_extinction, opt_dustFitting, nullThreshold, "simple");
 
   // Accepts a 1% error for calculated coefs
-  BOOST_TEST(result.coefs.first.a == 0);
-  BOOST_TEST(result.coefs.first.stda == INFINITY);
-  BOOST_TEST(result.coefs.first.b == 0);
-  BOOST_TEST(result.coefs.first.stdb == INFINITY);
-  BOOST_TEST(result.coefs.second.a == 0);
-  BOOST_TEST(result.coefs.second.stda == INFINITY);
-  BOOST_TEST(result.coefs.second.b == 0);
-  BOOST_TEST(result.coefs.second.stdb == INFINITY);
-  BOOST_TEST(result.chiSquare == INFINITY);
-  BOOST_TEST(result.reducedChiSquare == INFINITY);
-  BOOST_TEST(result.pValue == 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.chiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, 0);
+  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 1);
   Context.reset();
 }
 

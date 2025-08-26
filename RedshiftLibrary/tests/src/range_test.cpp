@@ -745,7 +745,6 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
     myVector[i] = 1 + delta * i;
   }
 
-  const Float64 target = 8.;
   Int32 i_min = -1, i_max = -1;
 
   // Check errors

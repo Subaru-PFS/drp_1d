@@ -90,7 +90,7 @@ CTemplate::CTemplate(CTemplate &&other)
       m_computedMeiksingCoeff(std::move(other.m_computedMeiksingCoeff)),
       m_NoIsmIgmFluxAxis(std::move(other.m_NoIsmIgmFluxAxis)) {}
 
-CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
+CTemplate::CTemplate(const CTemplate &other, const TMaskList &mask)
     : CSpectrum(other, mask),
       m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
       m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
@@ -106,7 +106,7 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
                                           m_IsmIgm_kstart, m_Ism_kend);
     } catch (const AmzException &exception) {
       if (exception.getErrorCode() ==
-          ErrorCode::CRANGE_VECTBORDERS_OUTSIDERANGE) {
+          ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE) {
         rangeIsMasked = true;
       } else {
         throw exception;
@@ -123,9 +123,9 @@ CTemplate::CTemplate(const CTemplate &other, const TFloat64List &mask)
           CSpectrumFluxAxis(other.m_NoIsmIgmFluxAxis.MaskAxis(mask));
 
       m_computedDustCoeff =
-          CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff);
+          NSVectorOp::maskVector<Float64>(mask, other.m_computedDustCoeff);
       m_computedMeiksingCoeff =
-          CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff);
+          NSVectorOp::maskVector<Float64>(mask, other.m_computedMeiksingCoeff);
     }
   }
 }

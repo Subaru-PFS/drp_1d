@@ -14,6 +14,14 @@
       "key": "othercol2",
       "instruction": "<",
       "value": 20
+    },
+    {
+      "type": "morphology",
+      "instruction": "opening",
+      "value": [
+        1,
+        1
+      ]
     }
   ],
   "nbSamplesMin": 1,
@@ -50,6 +58,7 @@
     "galaxy"
   ],
   "autoCorrectInput": false,
+  "secondPassAfterClassification": false,
   "galaxy": {
     "redshiftRange": [
       0.9001832537307723,

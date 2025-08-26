@@ -55,10 +55,10 @@ class CustomParametersChecker(ParametersChecker):
         self,
         parameters: dict,
         FilterLoader=ParamJsonFilterLoader,
-        Accessor=ParametersAccessor,
+        accessor_class=ParametersAccessor,
     ):
         self.filter_loader = FilterLoader()
-        self.accessor = Accessor(parameters)
+        self.accessor = accessor_class(parameters)
 
     def check(self):
         self._check_general()
@@ -95,31 +95,16 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_filters(self, obs_id: str):
         filters = self.accessor.get_filters(default=[], obs_id=obs_id)
-        self._check_filters_format(filters)
 
-        DEFAULT_COLUMN_NAMES = ["waves", "fluxes", "errors"]
+        DEFAULT_COLUMN_NAMES = ["wave", "flux", "error", "unused"]
         if not filters:
             return
-        filter_keys = [filt["key"] for filt in filters]
+        filter_keys = [filt["key"] for filt in filters if filt.get("type", "byValue") == "byValue"]
         authorized_cols_names = DEFAULT_COLUMN_NAMES + self.accessor.get_additional_cols(default=[])
 
         for filter_name in filter_keys:
             if filter_name not in authorized_cols_names:
                 raise APIException(ErrorCode.INVALID_PARAMETER_FILE, f"Unknown filter key {filter_name}")
-
-    def _check_filters_format(self, json: list) -> None:
-        if type(json) is not list:
-            raise APIException(ErrorCode.INVALID_PARAMETER_FILE, "Input filters json must be a list")
-
-        for filt in json:
-            json_keys = self.filter_loader.keys
-            different_keys = set(filt.keys()) != set(json_keys)
-            different_length = len(filt.keys()) != len(json_keys)
-            if different_keys or different_length:
-                raise APIException(
-                    ErrorCode.INVALID_PARAMETER_FILE,
-                    f"Filters: each dictionary in json list must have exactly the following keys {json_keys}",
-                )
 
     def _check_lsf(self) -> None:
         self._check_lsf_section()
@@ -331,10 +316,10 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} reliabilitySolver deepLearningSolver",
         )
         self._check_dependant_condition(
-            "skLearnClassifier" in self.accessor.get_reliability_methods(spectrum_model),
-            self.accessor.get_sk_learn_classifier_solver_section(spectrum_model) is not None,
-            f"{spectrum_model} skLearnClassifier",
-            f"{spectrum_model} reliabilitySolver skLearnClassifier",
+            "skLearnSolver" in self.accessor.get_reliability_methods(spectrum_model),
+            self.accessor.get_sk_learn_solver_section(spectrum_model) is not None,
+            f"{spectrum_model} skLearnSolver",
+            f"{spectrum_model} reliabilitySolver skLearnSolver",
         )
 
     def _check_templateFittingSolve_section(self, spectrum_model: str) -> None:
@@ -511,7 +496,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_lineratiotype_tplratio_catalog(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_tplratio_catalog(spectrum_model) is not None,
             error_message=f"lineModelSolve tplRatioCatalog for object {spectrum_model}",
             warning_message=f"object {spectrum_model} lineModelSolve tplRatioCatalog",
@@ -519,18 +505,19 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_lineratiotype_tplratio_ismfit(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_tplratio_ismfit(spectrum_model) is not None,
             error_message=f"lineModelSolve tplRatioIsmFit for object {spectrum_model}",
             warning_message=f"object {spectrum_model} lineModelSolve tplRatioIsmFit",
         )
 
-    def linemodelsolve_continuumreestimation_presence_condition(self, spectrum_model):
+    def continuumreestimation_must_be_present(self, spectrum_model):
         return self.accessor.get_linemodel_fitting_method(spectrum_model) == "hybrid"
 
     def _check_linemodelsolve_continuumreestimation(self, spectrum_model):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_continuum_component(spectrum_model) == "fromSpectrum",
+            self.continuumreestimation_must_be_present(spectrum_model),
             self.accessor.get_linemodel_continuum_reestimation(spectrum_model) is not None,
             error_message=f"object {spectrum_model} lineModelSolve continuumReestimation",
             warning_message=f"object {spectrum_model} lineModelSolve continuumReestimation",
@@ -555,6 +542,18 @@ class CustomParametersChecker(ParametersChecker):
             error_message=f"object {spectrum_model} lineModelSolve continuumFit",
             warning_message=f"object {spectrum_model} continuumFit section",
         )
+        activate_ignoreLinesSupport = self.accessor.get_linemodel_continuumfit_ignoreLinesSupport(
+            spectrum_model
+        )
+        is_powerlaw = self.accessor.get_linemodel_continuum_component(spectrum_model) in [
+            "powerLaw",
+            "powerLawAuto",
+        ]
+        if is_powerlaw and not activate_ignoreLinesSupport:
+            raise APIException(
+                ErrorCode.INVALID_PARAMETER_FILE,
+                f"If continuumFit method is powerLaw or powerLawAuto, ignoreLineSupport must be set to true (object {spectrum_model})",
+            )
 
     def _check_linemodelsolve_secondpass_section(self, spectrum_model):
         self._check_dependant_condition(
@@ -588,7 +587,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_linemodelsolve_firstpass_tplratio_ismfit(self, spectrum_model: str):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_line_ratio_type(spectrum_model) in ["tplRatio", "tplCorr"],
+            self.accessor.get_linemodel_line_ratio_type(spectrum_model)
+            in ["tplRatio", "tplCorr", "ratioToFree"],
             self.accessor.get_linemodel_firstpass_tplratio_ismfit(spectrum_model) is not None,
             f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit",
             f"object {spectrum_model} lineModelSolve firstpass tplRatioIsmFit",

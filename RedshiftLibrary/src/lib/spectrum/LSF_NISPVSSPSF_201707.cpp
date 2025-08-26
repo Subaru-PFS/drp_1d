@@ -76,4 +76,6 @@ Float64 CLSFGaussianNISPVSSPSF201707::GetWidth(Float64 lambda,
   return width;
 }
 
-bool CLSFGaussianNISPVSSPSF201707::IsValid() const { return true; }
+std::pair<bool, std::string> CLSFGaussianNISPVSSPSF201707::IsValid() const {
+  return std::make_pair(true, "");
+}

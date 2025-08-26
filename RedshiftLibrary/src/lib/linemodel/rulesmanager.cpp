@@ -39,7 +39,6 @@
 
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -86,7 +85,6 @@ void CRulesManager::setRulesOption(std::string rulesOption) {
 
   m_Regulament.CreateRulesFromJSONFiles();
   if (rulesOption == "") {
-    CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
     std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
     m_rulesoption = ps->GetScoped<std::string>("rules");
   } else

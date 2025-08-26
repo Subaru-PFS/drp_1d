@@ -52,6 +52,12 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 
+#define ASSERT_CSpectrum_IS_VALID(spectrum)                                    \
+  do {                                                                         \
+    auto const &[isValid, msg] = (spectrum).IsValid();                         \
+    ASSERT(isValid, ErrorCode::INVALID_SPECTRUM, msg);                         \
+  } while (0)
+
 namespace Spectrum { // boost_test_suite
 // all boost_auto_test_case that use private method
 class constructor_test;
@@ -78,10 +84,10 @@ public:
   enum class EType { raw, continuumOnly, noContinuum };
 
   CSpectrum();
-  CSpectrum(const std::string &name);
+  CSpectrum(const std::string &name, const std::string &obsId = "");
   CSpectrum(const CSpectrum &other);
   CSpectrum(CSpectrum &&other);
-  CSpectrum(const CSpectrum &other, const TFloat64List &mask);
+  CSpectrum(const CSpectrum &other, const TMaskList &mask);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis,
             const std::shared_ptr<const CLSF> &lsf);
@@ -100,7 +106,7 @@ public:
   const std::string &GetName() const;
   const std::string &getObsID() const;
   void setObsID(const std::string &obsID);
-  const EType GetType() const;
+  EType GetType() const;
 
   bool InvertFlux();
 
@@ -125,7 +131,7 @@ public:
   bool IsNoiseEmpty() const;
   bool IsFluxEmpty() const;
   bool IsEmpty() const;
-  bool IsValid() const;
+  std::pair<bool, std::string> IsValid() const;
   void ValidateSpectrum(TFloat64Range lambdaRange, bool enableInputSpcCorrect,
                         const Int32 &nbSamplesMin);
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
@@ -143,12 +149,13 @@ public:
   bool RemoveContinuum(CContinuum &remover) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
+  virtual bool checkCorrectness(bool valid, Int32 index) const { return valid; }
   bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                        Float64 coeffCorr = 10.0);
 
   const std::string &GetFullPath() const;
-  const Float64 GetMedianWinsize() const;
-  const bool GetMedianEvenReflection() const;
+  Float64 GetMedianWinsize() const;
+  bool GetMedianEvenReflection() const;
   const std::string &GetContinuumEstimationMethod() const;
 
   void SetFullPath(const char *nameP);
@@ -204,6 +211,7 @@ protected:
   std::string m_FullPath;
 
   CSpectrumSpectralAxis m_SpectralAxis;
+
   mutable std::unique_ptr<CRebin> m_rebin;
   std::shared_ptr<const CPhotometricData> m_photData;
   std::string m_obsId = "";
@@ -305,11 +313,6 @@ inline const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const {
 
 inline bool CSpectrum::IsEmpty() const {
   return m_SpectralAxis.isEmpty() || GetFluxAxis().isEmpty();
-}
-
-inline bool CSpectrum::IsValid() const {
-  return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() &&
-         !IsEmpty() && m_SpectralAxis.isSorted();
 }
 
 inline bool CSpectrum::IsFluxEmpty() const { return GetFluxAxis().isEmpty(); }

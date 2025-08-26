@@ -54,7 +54,6 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
   Float64 dz = NAN;
   if (!redshifts.size())
     THROWG(ErrorCode::INTERNAL_ERROR, "Redshift range is empty");
-  Int32 ret = -1;
   Int32 deltaz_i = 0;
   Int32 maxIter = 2;
   while (deltaz_i < maxIter) { // iterate only twice
@@ -63,7 +62,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
     Int32 izmax = -1;
     dz = NAN;
     Int32 half_samples_nb = 5 / (deltaz_i + 1);
-    ret = GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
+    GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
 
     try {
       dz = gslfit ? Compute3ddl(pdf, redshifts, iz, izmin, izmax)
@@ -124,8 +123,9 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
   }
   c0 = sum / sum2;
   if (c0 <= 0)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
 
   sigma = sqrt(1.0 / c0);
   return sigma;
@@ -144,8 +144,9 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
 
   Int32 n = izmax - izmin + 1;
   if (n < 3)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
 
   X = gsl_matrix_alloc(n, 3);
   y = gsl_vector_alloc(n);
@@ -211,7 +212,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWG(ErrorCode::DZ_NOT_COMPUTABLE, Formatter()
-                                             << "impossible to compute sigma");
+    THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
+           Formatter() << "impossible to compute sigma");
   return sigma;
 }

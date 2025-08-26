@@ -39,13 +39,8 @@
 #ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 #define _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 
-#include <map>
-#include <ostream>
-#include <vector>
-
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/continuum/indexes.h"
 
 namespace NSEpic {
 
@@ -65,18 +60,18 @@ public:
   const std::string &getType() const { return m_type; }
   virtual const std::string &
   getCandidateDatasetType(const std::string &dataset) const {
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE,
+    THROWG(ErrorCode::IE_UNSUPPORTED_OPERATION,
            "This operator result does not support this operation");
   }
   virtual std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
                bool firstpassResults = false) const {
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE,
+    THROWG(ErrorCode::IE_UNSUPPORTED_METHOD,
            "This operator result does not support this operation");
   }
 
   virtual bool HasCandidateDataset(const std::string &dataset) const {
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE,
+    THROWG(ErrorCode::IE_UNSUPPORTED_METHOD,
            "This operator result does not support this operation");
   }
 

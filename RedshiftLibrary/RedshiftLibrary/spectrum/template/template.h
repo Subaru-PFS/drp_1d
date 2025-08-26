@@ -68,7 +68,7 @@ public:
             CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   CTemplate(const CTemplate &other);
   CTemplate(CTemplate &&other);
-  CTemplate(const CTemplate &other, const TFloat64List &mask);
+  CTemplate(const CTemplate &other, const TMaskList &mask);
   CTemplate &operator=(const CTemplate &other);
   CTemplate &operator=(CTemplate &&other);
   ~CTemplate() = default;

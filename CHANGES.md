@@ -1,23 +1,91 @@
 # Changelog
 
+## 1.14.0 (2025-08-26)
+### Added
+* [5653] : Added the FFT template fitting when input spectrum has masked samples and also enable the option ignoreLineSupport
+### Fixed
+* [9869] : Fix linemeas bug with positive constraint on SVD fitter when using polynomials under lines
+
+## 1.12.0 (2025-08-08)
+### Added
+* [6542] : Add a ratioToFree option to perform a "free" second pass after a "tplRatio" first pass (lineRatioType)
+* [9699] : Add a check on input parameters : ignoreLineSupport must be true if continuumComponent is powerlaw
+* [9874] : Add continuum model in lineMeasSolve outputs 
+* [9470] : Add attributes in line measurements, including Equivalent Width
+* [7712] : Implement flagged spectrum for templatefitting with FFT
+### Changed
+* [9851] : Rename & homogenize quality indicators in output specifications
+* [9859] : Update error codes & messages
+* [9917] : FitQuality: convert the error to a warning when there is less than 1 or 2 pixels
+### Fixed
+* [9945] : Fix memory leak in the convolution of the IGM extinction curves
+* [9899] : [api] Fix get_attribute_short for objectInfo and performances
+* [9970] : Fix linemeas continuum flux under line uncertainty
+
+## 1.10.0 (2025-07-02)
+### Added
+* [9715] : Add goodness of fit for template fitting with FFT processing algorithm
+* [9393] : Compute second pass after classification for templateFittingSolve
+### Changed
+* [9830] : Switch to lBFGSb v0.4.0
+* [9355] : Use lBFGSb inverse Hessian approximation to compute linemeas uncertainties
+### Deprecated
+### Removed
+* [9830] : Remove CFITSIO dependency
+* [8363] : Remove HDF5 writer
+### Fixed
+* [9615] : Fix unintentional numerous warnings when continuum is null and fitting absorption lines
+* [9616] : Fix linemeas "empty line element list to fit"
+* [9836] : Fix template fitting 2nd pass evidence saved in ResultStore
+* [9885] : Fix template fitting 2nd pass with candidate at igm border
+* [9878] : Fix morphology filters
+
+## 1.8.0 (2025-06-06)
+### Added
+* [9528] : Add several goodness of fit using normality of the residuals (mean, standard deviation, skewness, kurtosis, KS-test, Anderson-Darling test)
+* [9196] : Add a new Machine Learning reliability based on [sckit learn gradient boosting](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html)
+* [9259] : Compute second pass after classification (only for lineModelSolve redshift solver)
+* [9542] : Performances by stage and spectrum_model (clock, user and sytem times)
+* [8995] : Propagate some input spectrum info to output (nb pixel, lsf, ...)
+* [9625] : Add morphology operation on input masks (eg remove isolated pixels or enlarge/reduce masks)
+* [9529] : Store min over z continuum reduced Chi2, and max over z continuum amplitude (responsible for triggering median continuum removal)
+* [9553] : [api] Add a getter for pdf fine z grid
+* [9527] : Goodness of fit: add p value deduced from reduced Chi2 for all candidates, full model and continuum
+* [9219] : Fix classification in case of switching to median continuum removal
+* [8474] : Parameters checker: add a condition on emVelocityFitMin. Must be >0 if lineWidthType = velocityDriven. For both lineModelSolve and lineMeasSolve.
+### Changed
+* [9774] : API: added get_mask method to retrive the mask associated with the filters (and set get_dataframe private)
+* [9726] : Parameters: add a check to prevent the combination of fftProcessing and ignoreLinesupport in lineModelSolve.lineModel.continuumFit
+### Fixed
+* [9762] : [api] Fix filters for external usage
+* [9319] : Check lineMeasRunMode parameter when mandatory
+* [9570] : Fix zmax in log rebinning
+* [9313] : Fix linemodel skipsecondpass option
+* [9482] : Fix templatefitting second pass
+* [9471] : Fix velocity fit bins
+* [8808] : Implement ignoreLinesSupport in full multiobs
+* [9495] : Fix amzexportattribute for reliability
+* [9388] : PowerLaw : forces coefs to 0 if calculated coefs are extreme
+
+
 ## 1.6.0 (2025-01-23)
-## Added
+### Added
 * [#6715] : Add velocity uncertainty and lambda offset uncertainty
 * [#9300] : Template fitting solve : implements the two pass coarse/ fine zgrid fitting
 * [#9299] : Add python filename,method,line number in APIexceptions, fix some exception handling
 * [#9365] : [api] Add optional class AbstractExternalStorage
 * [#9360] : Filters should be defined by observation
 * [#8308] : Enable linemeas after template fitting
-## Changed
+### Changed
 * [#9245] : Switched to pyproject.toml installation and build procedure (compatible with python 3.12)
 * [#9255] : Refactor AbstractSpectrumReader
 * [#9311] : Makes referencing lib easily optional (if not using json scheme checker)
 * [#9033] : Add a minimal number of samples required to process spectra
 * [#9366] : Upgrading numpy : small code adaptations for upgrading numpy to 2.0.2
-## Removed
+### Removed
 * [#9218] : Removes parameters v1 support. Only v2 parameters format are now supported.
 * [#9310] : Remove linemodel firstpass b
-## Fixed
+### Fixed
 * [#9295] : Parameters converter : Fixes v1 to v2 parameters conversion
 * [#9271] : Fix when few samples in one of the power law
 * [#9294] : Handle negative or null spectrum in power Law fitting
@@ -26,11 +94,11 @@
 
 
 ## 1.4.0 (2024-11-07)
-## Added
+### Added
 * [9058] : Linemeas only for classified object
 * [8313] : Power law fit for QSO continuum 
 * [5803] : Evaluate the goodness of fit for the continuum, then raise an error if below a given threshold or switch to a median removal
-## Fixed
+### Fixed
 * [9093] : Parameters checker : change default columns name to check in filters
 * [9184] : In template ratio modes, all the line flux uncertainties and SNR with Gaussian fit are disabled (set to NAN), and (re-)enabled with direct integration 
 * [9223] : Mispelled error code
@@ -39,13 +107,13 @@
 * [9243] : Should check if the classified type has a lineMeasSolver listed in its stages
 
 ## 1.2.0 (2024-06-26)
-## Added
+### Added
 * [8312] : Change all the structure of the code to fit jointly several spectra of the same source to a unique model
 * [8117] : Implement amplitude uncertainty in lbfgsbfitter
 * [8641] : Add new error codes
 * [8235] : Set max number of candidates to retain after 1st pass to a dedicated parameter `lineModel.firstPass.extremaCount`
 * [8471] : Add new warning output `InitWarningFlags` related to warning raised during spectrum preprocessing stage
-## Changed
+### Changed
 * [8219] : Changes input parameters file structure. Keeps compatibility with old parameters file
 * [8536] : Improve the estimation of the continuum flux level and uncertainty under a line by averaging the fitted continuum weighted by the line profile and using the residual for the uncertainty. This has an impact on the estimated flux level and uncertainty of absorption lines since they depend on the estimated continuum level
 * [8470] : Upgrade boost version to 1.74
@@ -57,10 +125,10 @@
 * [8867] : Rename output "Evidence" to "LogEvidence"
 * [8005] : Do not switch to nocontinuum or fromspectrum in second pass continuum refit
 * [8528] : Change amazed output access API to retrieve fitted line fluxes, linemeas fluxes and PDF
-## Removed
+### Removed
 * [8541] : Remove line individual SNR for template ratio fitting
 * [6459] : Remove ism extinction application on amplitude of absorption lines
-## Fixed
+### Fixed
 * [8634] : Check spectra is in lambda range before validating its samples
 * [8476] : Fix parameter checker
 * [8669] : In linemeas, better deals with line offsets to ensure the lines remains in the wavelength range where the LSF is available
@@ -72,7 +140,7 @@
 * [8914] : Fix border effect for next spectrum affecting templates when continuum fitting fails (negative amplitude)
 
 ## 1.0.0 (2024-01-17)
-## Added
+### Added
 * The API is now checking the syntax of the json input parameter file, raising an error if the syntax is wrong or if some required parameters are missing, issueing a warning for each unused parameter
 * The API is now handling one lsf per observation (but the current multi-observation in interleave mode is only able to handle one lsf: the first of the list is chosen)
 * In full multi-observation mode, Amazed provides now one model per observation
@@ -81,11 +149,11 @@
 * String vectors type are now available in Amazed output
 * The flux uncertainty with direct integration method is now available in Amazed output
 * The cumulative SNR for all emission lines is now available in Amazed output
-## Changed
+### Changed
 * Change line ID as line number in linecatalog, ensuring uniqueness of line name, wavelength (rounded to 2 decimals) and type (E or A)
 * Change version of LBFGSpp to v0.3.0
 * Changes the way of dealing with redshifts candidates with overlapping integration ranges. In case of overlap greater than 30%, only the best candidates (i.e. highest proba) is selected. In other case, the overlap is equally splitted and candidates are both kept
-## Fixed
+### Fixed
 * The linemeas method is no more executed when redshift solver has failed
 * Better protect bad calibration directory content from segfault, and raise informative exceptions
 * The output of fitted Line ratio main amplitude of absorption lines is fixed
@@ -106,9 +174,9 @@
 * [7706] : Updates rule "strong higher than weak"
 * [8048] : Change parameters access. All accesses are made through object. There no dictionary access any more
 * [8222] : Change error enumeration
-## Removed
+### Removed
 * [8120] : End of support for python 3.6
-## Fixed
+### Fixed
 * [8070] : Fix wrong signatures of load_XXX methods in ASCIISpectrumReader
 * [8143] : Fix values accessor in AmazedSpectrumWriter
 * [8171] : Fix overlapping lines

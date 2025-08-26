@@ -50,7 +50,9 @@ CTplCorrManager::CTplCorrManager(
     const CTLambdaRangePtrVector &lambdaRanges,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex)
-    : CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
+    : CLineRatioManager(elementsVector, models, inputSpcs, lambdaRanges,
+                        continuumManager, restLineList, spcIndex),
+      CTplratioManager(elementsVector, models, inputSpcs, lambdaRanges,
                        continuumManager, restLineList, spcIndex) {}
 
 std::pair<Float64, Float64> CTplCorrManager::computeMerit(Int32 itratio) {

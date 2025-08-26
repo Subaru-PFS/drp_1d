@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/flagResult.h"
 
 #define FLAG_MSG_WORKING_BUFFER_SIZE 4096
 
@@ -74,3 +75,13 @@ void CFlagWarning::resetFlag() {
 }
 
 const TWarningMsgList &CFlagWarning::getListMessages() { return m_messageList; }
+
+CFlagLogResult NSEpic::operator+(CFlagLogResult &&left,
+                                 CFlagLogResult &&right) {
+  CFlagLogResult flag = std::move(left);
+  flag.flagValue &= right.flagValue;
+  flag.msgList.insert(flag.msgList.end(),
+                      std::move_iterator(right.msgList.begin()),
+                      std::move_iterator(right.msgList.end()));
+  return flag;
+}

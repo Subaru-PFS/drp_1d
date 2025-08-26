@@ -63,16 +63,46 @@ void CTwoPassSolve::createRedshiftGrid(const CInputContext &inputContext,
     CObjectSolve::createRedshiftGrid(
         inputContext, redshiftRange); // fall back to creating fine grid
     Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid auto disabled: "
+                << "Two-pass: 1st pass coarse zgrid auto disabled: "
                    "raw "
                 << m_redshifts.size() << " redshifts will be calculated");
   } else {
-    Log.LogInfo(Formatter()
-                << "Operator-Linemodel: 1st pass coarse zgrid enabled: "
-                << m_redshifts.size()
-                << " redshifts "
-                   "will be calculated on the coarse grid");
+    Log.LogInfo(Formatter() << "Two-pass: 1st pass coarse zgrid enabled: "
+                            << m_redshifts.size()
+                            << " redshifts "
+                               "will be calculated on the coarse grid");
   }
+}
+
+bool CTwoPassSolve::twoPassIsActive() const {
+  return !m_opt_singlePass && !m_opt_skipsecondpass;
+}
+
+bool CTwoPassSolve::secondPassFromResultStore() const {
+  return m_runSecondPassFromResultStore;
+}
+
+void CTwoPassSolve::initForClassificationAfterFirstPass() {
+  m_opt_skipsecondpass = true;
+}
+
+void CTwoPassSolve::setRunSecondPassFromResultStore() {
+  m_opt_skipsecondpass = false;
+  m_runSecondPassFromResultStore = true;
+  m_overwriteSolveResult = true;
+}
+
+COperatorPdfz CTwoPassSolve::initializePdfz(Int32 maxPeakPerWindow,
+                                            Int32 peakSeparation,
+                                            Int32 cutThreshold,
+                                            Int32 extremaCount) const {
+  COperatorPdfz pdfz(m_opt_pdfcombination, peakSeparation, cutThreshold,
+                     extremaCount, m_zLogSampling,
+                     "SPE",           // Id_prefix
+                     false,           // do not allow extrema at border
+                     maxPeakPerWindow // one peak/window only
+  );
+  return pdfz;
 }
 
 const std::unordered_map<std::string, EContinuumFit>

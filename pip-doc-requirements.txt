@@ -3,3 +3,4 @@ sphinx_rtd_theme
 json-schema-for-humans
 myst_parser
 linkify-it-py
+sphinx-autodoc-typehints

@@ -38,6 +38,7 @@
 // ============================================================================
 #include <boost/range/combine.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
@@ -55,11 +56,10 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(
 };
 
 // return tuple with photmetric values
-TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    Float64 ebmvCoef, Int32 meiksinIdx, Float64 amplitude,
-    const Float64 overlapThreshold, Int32 spcIndex,
-    const std::shared_ptr<CModelSpectrumResult> &models) {
+std::pair<CModelSpectrumResult, TPhotVal>
+COperatorTemplateFittingBase::ComputeSpectrumModel(
+    const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
+    Float64 amplitude, const Float64 overlapThreshold, Int32 spcIndex) {
   Log.LogDetail(
       Formatter()
       << "  Operator-COperatorTemplateFitting: building spectrum model "
@@ -70,9 +70,6 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   TFloat64Range currentRange;
   RebinTemplate(tpl, redshift, currentRange, overlapFraction, overlapThreshold,
                 spcIndex);
-
-  const TAxisSampleList &Xspc =
-      m_spcSpectralAxis_restframe[spcIndex].GetSamplesVector();
 
   if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
     Int32 kstart = undefIdx;
@@ -98,7 +95,7 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf[spcIndex].MeiksinInitFailed()) {
-      THROWG(ErrorCode::INTERNAL_ERROR, "IGM in not initialized");
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
     }
     ApplyMeiksinCoeff(meiksinIdx, spcIndex);
   }
@@ -110,16 +107,16 @@ TPhotVal COperatorTemplateFittingBase::ComputeSpectrumModel(
   CSpectrumSpectralAxis modelwav =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
           (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  models->addModel(std::move(modelwav.GetSamplesVector()),
-                   modelflux.GetSamplesVector(),
-                   m_spectra[spcIndex]->getObsID());
-  return spcIndex > 0 ? TPhotVal() : getIntegratedFluxes();
+  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+                             modelflux.GetSamplesVector(),
+                             m_spectra[spcIndex]->getObsID());
+  return std::make_pair(std::move(model),
+                        spcIndex > 0 ? TPhotVal() : getIntegratedFluxes());
 }
 
 void COperatorTemplateFittingBase::RebinTemplate(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 redshift,
-    TFloat64Range &currentRange, Float64 &overlapFraction,
-    const Float64 overlapThreshold, Int32 spcIndex) {
+    const CTemplate &tpl, Float64 redshift, TFloat64Range &currentRange,
+    Float64 &overlapFraction, const Float64 overlapThreshold, Int32 spcIndex) {
   Float64 onePlusRedshift = 1.0 + redshift;
 
   // shift lambdaRange backward to be in restframe
@@ -136,7 +133,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
       lambdaRange_restframe, spcLambdaRange_restframe);
 
   // the spectral and tpl axis should be in the same scale
-  const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
+  const CSpectrumSpectralAxis &tplSpectralAxis = tpl.GetSpectralAxis();
 
   // Compute clamped lambda range over template in restframe
   TFloat64Range tplLambdaRange;
@@ -146,19 +143,15 @@ void COperatorTemplateFittingBase::RebinTemplate(
   TFloat64Range::Intersect(tplLambdaRange, spcLambdaRange_restframe,
                            intersectedLambdaRange);
 
-  tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe[spcIndex],
-             m_templateRebined_bf[spcIndex], m_mskRebined_bf[spcIndex]);
+  tpl.Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe[spcIndex],
+            m_templateRebined_bf[spcIndex], m_mskRebined_bf[spcIndex]);
 
   // overlapFraction
   overlapFraction = m_spcSpectralAxis_restframe[spcIndex]
                         .IntersectMaskAndComputeOverlapFraction(
                             lambdaRange_restframe, m_mskRebined_bf[spcIndex]);
 
-  // Check for overlap rate
-  if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
-    THROWG(ErrorCode::OVERLAPFRACTION_NOTACCEPTABLE,
-           Formatter() << "tpl overlap rate is too small: " << overlapFraction);
-  }
+  checkTemplateOverlap(overlapFraction, overlapThreshold);
 
   // the spectral axis should be in the same scale
   currentRange = intersectedLambdaRange;
@@ -173,6 +166,25 @@ COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbda0) {
 void COperatorTemplateFittingBase::applyPositiveAndNonNullConstraint(
     const Float64 amp_sigma, Float64 &ampl) const {
   if (amp_sigma < m_continuum_null_amp_threshold)
-    ampl = 0.;
+    ampl = 0.; // will be the case for NAN amp_sigma
   return;
+}
+
+std::pair<TList<CMask>, Int32>
+COperatorTemplateFittingBase::getMaskListAndNSamples(Float64 redshift) const {
+  // get masks & determine number of samples actually used
+  TList<CMask> mask_list;
+  Int32 n_samples = 0; // total number of samples
+  mask_list.reserve(m_spectra.size());
+  for (Int32 spcIndex = 0; spcIndex < ssize(m_spectra); spcIndex++) {
+    const CMask &mask =
+        m_maskBuilder->getMask(m_spectra[spcIndex]->GetSpectralAxis(),
+                               *m_lambdaRanges[spcIndex], redshift, spcIndex);
+    n_samples +=
+        std::count(mask.getMaskList().begin() + m_kStart[spcIndex],
+                   mask.getMaskList().begin() + m_kEnd[spcIndex] + 1, Mask(1));
+    mask_list.push_back(std::move(mask));
+  }
+
+  return std::make_pair(std::move(mask_list), n_samples);
 }

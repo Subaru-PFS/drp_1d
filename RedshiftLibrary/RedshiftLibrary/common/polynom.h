@@ -39,47 +39,67 @@
 #ifndef _REDSHIFT_COMMON_POLYNOM_
 #define _REDSHIFT_COMMON_POLYNOM_
 
+#include <cmath>
+
+#include <Eigen/Core>
+#include <tuple>
+#include <vector>
+
 #include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 
-struct TPolynomCoeffs {
-  TPolynomCoeffs() = default;
-  TPolynomCoeffs(Float64 a0_, Float64 a1_ = 0.0, Float64 a2_ = 0.0)
-      : a0(a0_), a1(a1_), a2(a2_){};
-  TPolynomCoeffs(const TFloat64List &coeffs);
+class CPolynomCoeffs {
+public:
+  CPolynomCoeffs() = default;
+  CPolynomCoeffs(Float64 a0_, Float64 a1_ = 0.0, Float64 a2_ = 0.0,
+                 Eigen::Matrix3d covar_ = Eigen::Matrix3d::Zero())
+      : m_a0(a0_), m_a1(a1_), m_a2(a2_), m_covar(covar_){};
+  CPolynomCoeffs(const TFloat64List &coeffs);
 
-  Float64 getValue(Float64 x) const;
-
-  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
+  virtual Float64 getValue(Float64 x) const;
+  TFloat64List getPowers(Float64 x) const;
+  virtual TFloat64List getCoeffGradiant(Float64 x) const {
+    return getPowers(x);
+  };
+  virtual Float64 getVariance(Float64 x) const;
+  CPolynomCoeffs operator*(Float64 factor) const;
 
   static constexpr Int32 degree = 2;
 
-  Float64 a0 = NAN;
-  Float64 a1 = NAN;
-  Float64 a2 = NAN;
+  Float64 m_a0 = NAN;
+  Float64 m_a1 = NAN;
+  Float64 m_a2 = NAN;
+
+  Eigen::Matrix3d m_covar = Eigen::Matrix3d::Zero();
 };
 
-class CPolynomCoeffsNormalized {
+class CPolynomCoeffsNormalized : public CPolynomCoeffs {
 public:
   CPolynomCoeffsNormalized() = default;
-  CPolynomCoeffsNormalized(Float64 x0_, Float64 scale_ = 1.0)
-      : x0red(-x0_ / scale_), scale(scale_){};
+  CPolynomCoeffsNormalized(Float64 x0_, Float64 scale_ = 1.0);
+  CPolynomCoeffs getPolynomCoeffs() const;
+  void setFromPolynomCoeffs(const CPolynomCoeffs &);
 
-  void getCoeffs(Float64 &a0_, Float64 &a1_, Float64 &a2_) const;
-  void setCoeffs(Float64 a0_, Float64 a1_, Float64 a2_);
-  Float64 getValue(Float64 x) const;
-  Float64 getValueAndGrad(Float64 x, TFloat64List &grad) const;
+  Float64 getValue(Float64 x) const override {
+    return CPolynomCoeffs::getValue(getXred(x));
+  };
 
-  static constexpr Int32 degree = 2;
-
-  Float64 a0 = NAN;
-  Float64 a1 = NAN;
-  Float64 a2 = NAN;
+  TFloat64List getCoeffGradiant(Float64 x) const override {
+    return getPowers(getXred(x));
+  };
+  std::pair<Float64, TFloat64List> getValueAndGradiant(Float64 x) const;
+  Float64 getVariance(Float64 x) const override {
+    return CPolynomCoeffs::getVariance(getXred(x));
+  };
 
 private:
-  Float64 x0red = 0.0;
-  Float64 scale = 1.0;
+  Float64 getXred(Float64 x) const { return x / m_scale + m_x0red; };
+
+  Float64 m_x0red = 0.0;
+  Float64 m_scale = 1.0;
+  Eigen::Matrix3d m_convCoeff = Eigen::Matrix3d::Zero();
+  Eigen::Matrix3d m_convCoeffInv = Eigen::Matrix3d::Zero();
 };
 
 } // namespace NSEpic

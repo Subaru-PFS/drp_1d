@@ -112,8 +112,7 @@ private:
   void computeSecondPass(std::shared_ptr<const ExtremaResult> extremaResult);
 
   std::shared_ptr<CTemplateFittingResult>
-  Solve(std::shared_ptr<COperatorResultStore> resultStore,
-        const std::shared_ptr<const CTemplate> &tpl, Int32 FitEbmvIdx = allIdx,
+  Solve(const CTemplate &tpl, Int32 FitEbmvIdx = allIdx,
         Int32 FitMeiksinIdx = allIdx, std::string parentId = "",
         Int32 candidateIdx = undefIdx,
         std::shared_ptr<CTemplateFittingResult> const &result = nullptr);
@@ -132,7 +131,7 @@ private:
   getPerTemplateResultMapCopy(const std::string &resultName) const;
 
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
-  std::string m_opt_pdfcombination;
+
   Float64 m_redshiftSeparation;
   Int32 m_opt_maxCandidate;
   Float64 m_overlapThreshold;
@@ -144,7 +143,7 @@ private:
   bool m_usePhotometry = false;
   Float64 m_photometryWeight = NAN;
   EContinuumFit m_secondPassContinuumFit = EContinuumFit::undefined;
-  Float64 m_secondPass_halfwindowsize = NAN;
+
   Int32 m_opt_extremacount;
   Float64 m_opt_candidatesLogprobaCutThreshold = 0.0;
   bool m_isFirstPass = true;

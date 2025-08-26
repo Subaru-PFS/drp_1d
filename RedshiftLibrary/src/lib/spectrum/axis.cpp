@@ -37,20 +37,17 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <algorithm>
-#include <numeric>
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 
 using namespace NSEpic;
-using namespace std;
 
 CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    m_Samples[i] *= op;
-  }
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
   return *this;
 }
 
@@ -71,23 +68,7 @@ void CSpectrumAxis::clear() {
     maskedAxis is the output axis after applying the mask on the current object
 */
 CSpectrumAxis
-CSpectrumAxis::MaskAxis(const TFloat64List &mask) const // mask is 0. or 1.
+CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
 {
-  return CSpectrumAxis(maskVector(mask, m_Samples));
-}
-
-TFloat64List CSpectrumAxis::maskVector(const TFloat64List &mask,
-                                       const TFloat64List &inputVector) {
-  TFloat64List outputVector;
-  if (mask.size() != inputVector.size()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "mask and vector sizes do not match");
-  }
-  Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
-  outputVector.clear();
-  outputVector.reserve(sum);
-  for (Int32 i = 0; i < ssize(mask); i++) {
-    if (mask[i] == 1.)
-      outputVector.push_back(inputVector[i]);
-  }
-  return outputVector;
+  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
 }

@@ -47,6 +47,7 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 
 using namespace NSEpic;
+using namespace NSEpic::NSVectorOp;
 
 BOOST_AUTO_TEST_SUITE(vectorOperations)
 
@@ -203,6 +204,19 @@ BOOST_AUTO_TEST_CASE(interpolateBetweenDuplicates_float) {
   TFloat64List ref = {0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2};
   BOOST_CHECK(r == ref);
 
+  // invalid insertion idx
+  insertionIdx = -1;
+  BOOST_CHECK_THROW(interpolateBetweenDuplicates<Float64>(
+                        source, insertionIdx, overwrittenSourceIndices, nInterp,
+                        largeStepFactor),
+                    AmzException);
+
+  insertionIdx = 3;
+  BOOST_CHECK_THROW(interpolateBetweenDuplicates<Float64>(
+                        source, insertionIdx, overwrittenSourceIndices, nInterp,
+                        largeStepFactor),
+                    AmzException);
+
   // incomplete first and last segments
   insertionIdx = 2;
   overwrittenSourceIndices = {2};
@@ -218,7 +232,7 @@ BOOST_AUTO_TEST_CASE(interpolateBetweenDuplicates_float) {
                         largeStepFactor),
                     AmzException);
 
-  insertionIdx = 5;
+  insertionIdx = 4;
   BOOST_CHECK_THROW(interpolateBetweenDuplicates<Float64>(
                         source, insertionIdx, overwrittenSourceIndices, nInterp,
                         largeStepFactor),

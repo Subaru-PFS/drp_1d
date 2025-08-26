@@ -37,8 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/method/classificationresult.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
 

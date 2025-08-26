@@ -49,9 +49,6 @@ CParameterStore::CParameterStore(
     : CScopeStore(stack) {}
 
 void CParameterStore::Set(const std::string &name, const TFloat64List &v) {
-  boost::optional<bpt::ptree &> property =
-      m_PropertyTree.get_child_optional(name);
-
   bpt::ptree array;
 
   for (Int32 i = 0; i < ssize(v); i++) {
@@ -65,9 +62,6 @@ void CParameterStore::Set(const std::string &name, const TFloat64List &v) {
 }
 
 void CParameterStore::Set(const std::string &name, const TStringList &v) {
-  boost::optional<bpt::ptree &> property =
-      m_PropertyTree.get_child_optional(name);
-
   bpt::ptree array;
 
   for (Int32 i = 0; i < ssize(v); i++) {
@@ -90,9 +84,6 @@ void CParameterStore::Set(const std::string &name, const TFloat64Range &v) {
 }
 
 void CParameterStore::Set(const std::string &name, const TInt64List &v) {
-  boost::optional<bpt::ptree &> property =
-      m_PropertyTree.get_child_optional(name);
-
   bpt::ptree array;
 
   for (Int32 i = 0; i < ssize(v); i++) {
@@ -106,9 +97,6 @@ void CParameterStore::Set(const std::string &name, const TInt64List &v) {
 }
 
 void CParameterStore::Set(const std::string &name, const TBoolList &v) {
-  boost::optional<bpt::ptree &> property =
-      m_PropertyTree.get_child_optional(name);
-
   bpt::ptree array;
 
   for (Int32 i = 0; i < ssize(v); i++) {
@@ -122,21 +110,14 @@ void CParameterStore::Set(const std::string &name, const TBoolList &v) {
 }
 
 void CParameterStore::Set(const std::string &name, Float64 v) {
-  boost::optional<Float64> property =
-      m_PropertyTree.get_optional<Float64>(name);
-
   m_PropertyTree.put(name, v);
 }
 
 void CParameterStore::Set(const std::string &name, Int64 v) {
-  boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>(name);
-
   m_PropertyTree.put(name, v);
 }
 
 void CParameterStore::Set(const std::string &name, bool v) {
-  boost::optional<bool> property = m_PropertyTree.get_optional<bool>(name);
-
   m_PropertyTree.put(name, v);
 }
 

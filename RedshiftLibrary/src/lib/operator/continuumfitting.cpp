@@ -38,9 +38,7 @@
 // ============================================================================
 #include <boost/range/combine.hpp>
 
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
@@ -49,7 +47,9 @@ using namespace std;
 COperatorContinuumFitting::COperatorContinuumFitting()
     : m_maskBuilder(std::make_shared<CMaskBuilder>()),
       m_spectra(Context.getSpectra()),
-      m_lambdaRanges(Context.getClampedLambdaRanges()){};
+      m_lambdaRanges(Context.getClampedLambdaRanges()),
+      m_kStart(Context.getSpectra().size()),
+      m_kEnd(Context.getSpectra().size()){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the
@@ -79,4 +79,13 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
     cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
   }
   return cstLog;
+}
+
+const void COperatorContinuumFitting::checkTemplateOverlap(
+    const Float64 overlapFraction, const Float64 overlapThreshold) {
+  if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
+    THROWG(ErrorCode::TEMPLATE_OVERLAP_TOO_SMALL,
+           Formatter() << "tpl overlap rate is too small: " << overlapFraction
+                       << " < " << overlapThreshold);
+  }
 }

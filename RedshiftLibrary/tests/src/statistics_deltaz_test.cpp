@@ -65,7 +65,6 @@ BOOST_AUTO_TEST_CASE(GetIndices_test) {
   TFloat64List Redshifts_easy = {1., 2., 3., 4., 5., 6., 7.};
   Int32 iz, izmin, izmax;
   CDeltaz deltaz;
-  Int32 ret;
   Int32 half_samples_nb = 2;
 
   // Target outside redshifts range
@@ -82,18 +81,18 @@ BOOST_AUTO_TEST_CASE(GetIndices_test) {
 
   // Target in redshifts range
   redshift_target = 4.0;
-  ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz,
-                          izmin, izmax);
+  deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin,
+                    izmax);
   BOOST_CHECK(iz == 3 && izmin == 1 && izmax == 5);
 
   redshift_target = 7.0;
-  ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz,
-                          izmin, izmax);
+  deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin,
+                    izmax);
   BOOST_CHECK(iz == 6 && izmin == 4 && izmax == 6);
 
   redshift_target = 1.0;
-  ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz,
-                          izmin, izmax);
+  deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin,
+                    izmax);
   BOOST_CHECK(iz == 0 && izmin == 0 && izmax == 2);
 }
 
@@ -142,7 +141,6 @@ BOOST_AUTO_TEST_CASE(GetDeltaz_test) {
   Float64 redshift_target = 4.;
   CDeltaz deltaz;
   Float64 dz_1, dz_2, dz_ref;
-  Int32 ret;
 
   // redshifts size = 0
   BOOST_CHECK_THROW(deltaz.GetDeltaz({}, merits, redshift_target),

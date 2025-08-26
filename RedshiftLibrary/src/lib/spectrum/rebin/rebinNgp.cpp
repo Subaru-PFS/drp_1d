@@ -56,7 +56,6 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
 
   // nearest sample, lookup
   Int32 k = 0;
-  Int32 n = m_spectrum.GetSampleCount();
   const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {

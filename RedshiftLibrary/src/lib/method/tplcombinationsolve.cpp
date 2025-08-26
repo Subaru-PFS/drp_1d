@@ -37,11 +37,13 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <cfloat>
+#include <memory>
 
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -60,7 +62,6 @@ std::shared_ptr<CSolveResult> CTplCombinationSolve::compute() {
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
 
-  bool storeResult = false;
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>(
       "extremaRedshiftSeparation");
   m_opt_maxCandidate =
@@ -278,7 +279,6 @@ ChisquareArray CTplCombinationSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
   chisquarearray.cstLog = -1;
   chisquarearray.zstep = m_redshiftStep;
-  Int32 retPdfz = -1;
 
   Int32 nISM = result->nISM;
   Int32 nIGM = result->nIGM;
@@ -348,8 +348,6 @@ CTplCombinationSolve::buildExtremaResults(
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
   const TFloat64List &redshifts = TplFitResult->Redshifts;
 
-  bool foundRedshiftAtLeastOnce = false;
-
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
     THROWG(ErrorCode::INTERNAL_ERROR,
            "Size do not match among templatefitting results");
@@ -371,8 +369,24 @@ CTplCombinationSolve::buildExtremaResults(
     auto candidate = extremaResult->getRankedCandidatePtr(i);
     candidate->fittedContinuum.merit = TplFitResult->ChiSquare[idx];
     candidate->fittedContinuum.reducedChi2 =
-        TplFitResult->ReducedChiSquare[idx];
-    candidate->fittedContinuum.pValue = TplFitResult->pValue[idx];
+        TplFitResult->FitQuality[idx].reducedChiSquare;
+    candidate->fittedContinuum.pValue = TplFitResult->FitQuality[idx].pValue;
+    candidate->fittedContinuum.meanResiduals =
+        TplFitResult->FitQuality[idx].meanResiduals;
+    candidate->fittedContinuum.stdResiduals =
+        TplFitResult->FitQuality[idx].stdResiduals;
+    candidate->fittedContinuum.skewnessResiduals =
+        TplFitResult->FitQuality[idx].skewnessResiduals;
+    candidate->fittedContinuum.kurtosisResiduals =
+        TplFitResult->FitQuality[idx].kurtosisResiduals;
+    candidate->fittedContinuum.ksResiduals =
+        TplFitResult->FitQuality[idx].ksResiduals;
+    candidate->fittedContinuum.ksStdResiduals =
+        TplFitResult->FitQuality[idx].ksStdResiduals;
+    candidate->fittedContinuum.ksStdMeanResiduals =
+        TplFitResult->FitQuality[idx].ksStdMeanResiduals;
+    candidate->fittedContinuum.andersonResiduals =
+        TplFitResult->FitQuality[idx].andersonResiduals;
     candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
     candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
     candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];
@@ -384,18 +398,17 @@ CTplCombinationSolve::buildExtremaResults(
     candidate->FittedTplCovMatrix = TplFitResult->FitCOV[idx];
     candidate->fittedContinuum.tplLogPrior = NAN;
     candidate->fittedContinuum.SNR = TplFitResult->SNR[idx];
-    // make sure tpl is non-rebinned
+
     bool currentSampling = tplCatalog.m_logsampling;
-    tplCatalog.m_logsampling = false;
-    std::shared_ptr<CModelSpectrumResult> spcmodelPtr =
-        m_tplcombinationOperator.ComputeSpectrumModel(
-            spc, tplList, z, TplFitResult->FitEbmvCoeff[idx],
-            TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
-            lambdaRange, overlapThreshold);
+    tplCatalog.m_logsampling = false; // make sure tpl is non-rebinned
+    auto spcmodel = m_tplcombinationOperator.ComputeSpectrumModel(
+        spc, tplList, z, TplFitResult->FitEbmvCoeff[idx],
+        TplFitResult->FitMeiksinIdx[idx], TplFitResult->FitAmplitude[idx],
+        lambdaRange, overlapThreshold);
     tplCatalog.m_logsampling = currentSampling;
-    if (spcmodelPtr == nullptr)
-      THROWG(ErrorCode::INTERNAL_ERROR, "Couldnt compute spectrum model");
-    extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+
+    extremaResult->m_savedModelSpectrumResults[i] =
+        std::make_shared<CModelSpectrumResult>(std::move(spcmodel));
   }
 
   return extremaResult;

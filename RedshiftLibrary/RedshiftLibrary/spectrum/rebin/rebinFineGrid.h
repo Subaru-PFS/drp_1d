@@ -70,6 +70,11 @@ protected:
   void clearFineGrid();
 
   const std::string m_type = "preComputedFineGrid";
+
+  TFloat64List m_pfgFlux;
+  bool m_FineGridInterpolated = false;
+  const Float64 m_dLambdaFineGrid = 0.1; // oversampling step for fine grid
+                                         // check if enough to be private
 };
 
 } // namespace NSEpic

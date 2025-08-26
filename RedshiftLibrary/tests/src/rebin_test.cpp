@@ -62,20 +62,9 @@ BOOST_AUTO_TEST_CASE(rebin_test) {
   std::unique_ptr<CRebin> rebin =
       std::unique_ptr<CRebin>(new CRebinLinear(spc));
 
-  // test convert
-  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("lin"));
-  BOOST_CHECK(rebin->getType() == "lin");
-  BOOST_CHECK_NO_THROW(rebin =
-                           std::move(*rebin).convert("preComputedFineGrid"));
-  BOOST_CHECK(rebin->getType() == "preComputedFineGrid");
-  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("spline"));
-  BOOST_CHECK(rebin->getType() == "spline");
-  BOOST_CHECK_NO_THROW(rebin = std::move(*rebin).convert("ngp"));
-  BOOST_CHECK(rebin->getType() == "ngp");
-  BOOST_CHECK_THROW(std::move(*rebin).convert("linn"), AmzException);
-
   // test create
   BOOST_CHECK_NO_THROW(CRebin::create("lin", spc));
+  BOOST_CHECK_NO_THROW(CRebin::create("linFull", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("preComputedFineGrid", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("spline", spc));
   BOOST_CHECK_NO_THROW(CRebin::create("ngp", spc));

@@ -204,7 +204,14 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
-
+  // Checks fit quality indicators presence
+  BOOST_CHECK_CLOSE(res->fittedContinuum.merit, 72423.699937147598, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.reducedChi2, 208.71383267189509, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 0, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 3.7331571472092051,
+                    1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 13.976419812061115,
+                    1e-4);
   ctx.reset();
 }
 

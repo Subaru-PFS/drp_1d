@@ -117,9 +117,7 @@ bool CTemplatesOrthogonalization::prepareTplCatForOrthogonalization(
 
   // check if LSF has changed, if yes reorthog all
   bool differentLSF = false;
-  Float64 lambda = (inputContext.getLambdaRange()->GetBegin() +
-                    inputContext.getLambdaRange()->GetEnd()) /
-                   2;
+  Float64 lambda = inputContext.getLambdaRange()->GetMidRange();
   if (tplCatalog->m_ortho_LSFWidth !=
       m_LSF->GetWidth(lambda)) // true also if m_ortho_LSFWidth is NAN
   {
@@ -190,6 +188,8 @@ bool CTemplatesOrthogonalization::hasLogRebinnedTemplatesChanged(
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     const CTemplate &inputTemplate) {
 
+  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
+
   std::shared_ptr<CTemplate> tplOrtho =
       std::make_shared<CTemplate>(inputTemplate);
 
@@ -197,10 +197,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     return tplOrtho;
 
   std::string opt_continuumcomponent = "fromSpectrum";
-  Float64 opt_continuum_neg_threshold =
-      -INFINITY; // not relevant in the "fromSpectrum" case
-  Float64 opt_continuum_nullamp_threshold =
-      0.; // not relevant in the "fromSpectrum" case;
   tplOrtho->SetLSF(m_LSF);
 
   // double the template flux, and set the continuum as the initial template

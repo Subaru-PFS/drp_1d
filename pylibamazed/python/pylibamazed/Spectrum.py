@@ -49,13 +49,16 @@ from pylibamazed.redshift import (
     CPhotometricData,
     CProcessFlowContext,
     CSpectrum,
+    CFullSpectrum,
     CSpectrumFluxAxis_withError,
     CSpectrumSpectralAxis,
     ErrorCode,
     WarningCode,
+    TMaskList,
 )
 from pylibamazed.Filter import FilterList
 from pylibamazed.FilterLoader import AbstractFilterLoader, ParamJsonFilterLoader
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
@@ -65,6 +68,8 @@ class Spectrum:
     """
     class for spectrum interface
     """
+
+    source_id: str
 
     def __init__(
         self,
@@ -105,6 +110,7 @@ class Spectrum:
         return False
 
     @property
+    @doc_method
     def observation_ids(self):
         return self._dataframe.index.levels[0]
 
@@ -112,7 +118,7 @@ class Spectrum:
     def observation_number(self):
         return len(self.observation_ids)
 
-    def get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
+    def _get_dataframe(self, obs_id=None, filtered_only=True) -> pd.DataFrame:
         """
         Get spectra pandas dataframe
             * all spectra if obs_id=None or merge
@@ -128,27 +134,24 @@ class Spectrum:
             df = self._dataframe
         else:
             df = self._dataframe.loc[obs_id]
-            if filtered_only and "amazed_mask" in df:
-                return df[df["amazed_mask"]]
-            else:
-                return df
         if filtered_only and "amazed_mask" in df:
             return df[df["amazed_mask"]]
         else:
             return df
 
     def get_index(self, obs_id="", filtered_only=True) -> pd.Index:
-        df = self.get_dataframe(obs_id, filtered_only)
+        df = self._get_dataframe(obs_id, filtered_only)
         return df.index
 
     def get_samples_number(self, obs_id="", filtered_only=True) -> int:
         return len(self.get_index(obs_id, filtered_only))
 
+    @doc_method
     def get_wave(self, obs_id="", filtered_only=True, vacuum=True) -> pd.Series:
         """
         :return: wavelength
-        : if obs_id is None return the unmerged wavelength of all observations
-        : if obs_id is "" return the merged wavelength of all observations/
+            : if obs_id is None return the unmerged wavelength of all observations
+            : if obs_id is "" return the merged wavelength of all observations/
         :type: pandas.series
         """
         wave_column = "wave"
@@ -160,26 +163,40 @@ class Spectrum:
                 wave_column = "wave_air"
         if self._is_obs_id_merge(obs_id):
             wave_column = "wave_merged"
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         return spectrum[wave_column]
 
+    @doc_method
     def get_flux(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: wavelength
         :rtype: pandas.series
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
 
         return spectrum["flux"]
 
+    @doc_method
     def get_error(self, obs_id="", filtered_only=True) -> pd.Series:
         """
         :return: error
         :rtype: pandas.series
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         return spectrum["error"]
 
+    def get_mask(self, obs_id=""):
+        """
+        :return: amazed mask corresponding to filters listed in parameters applied
+                 (not original mask column if present, use get_others)
+        :rtype: pandas.series
+        """
+        df = self._get_dataframe(obs_id, filtered_only=False)
+        if "amazed_mask" not in df:
+            return pd.Series(True, df.index)
+        return df["amazed_mask"]
+
+    @doc_method
     def get_others(self, obs_id: str = "", filtered_only=True) -> pd.DataFrame:
         """
         Return a dataframe with the filtered non-mandatory columns of the spectrum.
@@ -187,7 +204,7 @@ class Spectrum:
         :param obs_id: name of the observation
         :return: dataframe with the data of the other columns of the spectrum
         """
-        spectrum = self.get_dataframe(obs_id, filtered_only)
+        spectrum = self._get_dataframe(obs_id, filtered_only)
         col = spectrum.columns != "amazed_mask"
         col &= spectrum.columns != "wave_air"
         col &= spectrum.columns != "wave_merged"
@@ -197,6 +214,7 @@ class Spectrum:
 
         return spectrum.loc[:, col]
 
+    @doc_method
     def get_lsf(self, obs_id=""):
         """
         :return: lsf
@@ -204,6 +222,7 @@ class Spectrum:
         """
         return self._lsf
 
+    @doc_method
     def get_photometric_data(self):
         return self._photometric_data
 
@@ -211,7 +230,10 @@ class Spectrum:
         ctx = CProcessFlowContext.GetInstance()
         cpp_spectra = self._make_cspectra()
         for cpp_spectrum in cpp_spectra.values():
-            ctx.addSpectrum(cpp_spectrum)
+            if self.parameters.full_spectrum_required():
+                ctx.addFullSpectrum(cpp_spectrum)
+            else:
+                ctx.addSpectrum(cpp_spectrum)
 
     def _make_clsf(self):
         lsf_factory = CLSFFactory.GetInstance()
@@ -251,16 +273,21 @@ class Spectrum:
         cpp_phot = self._make_photometric_data()
 
         obs_ids = self._get_obs_ids()
-
+        filtered_only = not self.parameters.full_spectrum_required()
         for obs_id in obs_ids:
-            spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id))
-            signal = CSpectrumFluxAxis_withError(self.get_flux(obs_id), self.get_error(obs_id))
+            spectralaxis = CSpectrumSpectralAxis(self.get_wave(obs_id, filtered_only))
+            signal = CSpectrumFluxAxis_withError(
+                self.get_flux(obs_id, filtered_only), self.get_error(obs_id, filtered_only)
+            )
             cpp_spectra[obs_id] = self._make_cspectrum(spectralaxis, signal, cpp_lsf, cpp_phot, obs_id)
 
         return cpp_spectra
 
     def _make_cspectrum(self, spectralaxis, signal, cpp_lsf, cpp_phot, obs_id="") -> CSpectrum:
-        cpp_spectrum = CSpectrum(spectralaxis, signal)
+        if self.parameters.full_spectrum_required():
+            cpp_spectrum = CFullSpectrum(spectralaxis, signal, TMaskList(self.get_mask(obs_id).tolist()))
+        else:
+            cpp_spectrum = CSpectrum(spectralaxis, signal)
         cpp_spectrum.SetName(self.source_id)
         cpp_spectrum.setObsID(obs_id)
         cpp_spectrum.SetLSF(cpp_lsf)
@@ -319,7 +346,7 @@ class Spectrum:
             raise APIException(ErrorCode.UNALLOWED_DUPLICATES, "Duplicates in multi-obs merged wavelengths")
 
         if not (np.diff(self._dataframe["wave_merged"]) > 0).all():
-            raise APIException(ErrorCode.UNSORTED_ARRAY, "Wavelenghts are not sorted")
+            raise APIException(ErrorCode.IE_UNSORTED_ARRAY, "Wavelenghts are not sorted")
 
     def _check_wavelengths(self):
         """Looks if lambda range specified in parameters is contained in spectrum range."""
@@ -353,6 +380,7 @@ class Spectrum:
             return
         self.masks[obs_id] = filters.apply(self._dataframe.loc[obs_id])
 
+    @doc_method
     def init(self):
         """
         Does three things :

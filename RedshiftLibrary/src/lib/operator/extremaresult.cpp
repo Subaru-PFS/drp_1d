@@ -37,8 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/extremaresult.h"
-#include "RedshiftLibrary/operator/modelphotvalueresult.h"
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/modelphotvalueresult.h" // to keep, wraps a .i file
+#include "RedshiftLibrary/operator/modelspectrumresult.h" // to keep, wraps a .i file
+
 using namespace NSEpic;
 
 std::shared_ptr<const COperatorResult>
@@ -57,7 +58,8 @@ ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
   // m_savedModelContinuumSpectrumResults[rank];
 
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 const std::string &
@@ -71,7 +73,8 @@ ExtremaResult::getCandidateDatasetType(const std::string &dataset) const {
   // else if (dataset == "continuum")  return
   // m_savedModelContinuumSpectrumResults[0]->getType();
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 bool ExtremaResult::HasCandidateDataset(const std::string &dataset) const {

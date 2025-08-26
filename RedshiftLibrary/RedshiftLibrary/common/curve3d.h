@@ -41,53 +41,34 @@
 
 #include "RedshiftLibrary/common/curve.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/defaults.h"
-#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 namespace NSEpic {
 
-struct T3DCurve {
+class T3DCurve : public TCurve {
+public:
   T3DCurve(Int32 nigm, Int32 nism);
-  T3DCurve(TCurve &&curve);
-
-  Int32 size() const { return lambda.size(); }
-
-  void extendIgmIsm(Int32 nIgm, Int32 nIsm);
-
-  void setLambda(TFloat64List inputLambda);
-  template <typename T>
-  void checkCurveElement(T3DList<T> const &inputElement,
-                         std::string elementName);
+  T3DCurve(TCurve &&curve, Int32 nIgm = 1, Int32 nIsm = 1);
 
   void setFlux(T3DList<Float64> inputFlux);
   void setFluxError(T3DList<Float64> inputFluxError);
   void setIsExtincted(T3DList<bool> inputIsExtincted);
-  void setIsSnrCompliant(TList<bool> inputIsSnrCompliant);
-  void setMask(TList<uint8_t> inputMask);
 
   void setFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx, Float64 value);
   void setFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
                       Float64 value);
 
-  TCurve toCurve(Int16 igmIdx, Int16 ismIdx) const;
+  TCurve toCurve(Int16 igmIdx = 0, Int16 ismIdx = 0) &&;
   TCurve toCoefCurve(Int16 igmIdx, Int16 ismIdx) const;
 
   bool pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
-  bool pixelIsChi2Valid(Int32 pixelIdx) const;
 
-  void checkIgmIdx(Int16 igmIdx) const;
-  void checkIsmIdx(Int16 ismIdx) const;
-  void checkPixelIdx(Int16 pixelIdx) const;
-  void checkIdxs(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+  const T3DList<Float64> &getFlux() const & { return flux; };
+  T3DList<Float64> getFlux() && { return std::move(flux); };
+  const T3DList<Float64> &getFluxError() const & { return fluxError; };
+  T3DList<Float64> getFluxError() && { return std::move(fluxError); };
+  const T3DList<bool> &getIsExtincted() const & { return isExtincted; };
+  T3DList<bool> getIsExtincted() && { return std::move(isExtincted); };
 
-  const TList<Float64> &getLambda() const { return lambda; };
-  const T3DList<Float64> &getFlux() const { return flux; };
-  const T3DList<Float64> &getFluxError() const { return fluxError; };
-  const T3DList<bool> &getIsExtincted() const { return isExtincted; };
-  const TList<bool> &getIsSnrCompliant() const { return isSnrCompliant; };
-  const TList<uint8_t> &getMask() const { return mask; };
-
-  Float64 getLambdaAt(Int32 pixelIdx) const;
   Float64 getFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
   Float64 getFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
   bool getIsExtinctedAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
@@ -96,14 +77,18 @@ struct T3DCurve {
   Int16 getNIsm() const { return nIsm; };
 
 private:
+  template <typename T>
+  void checkCurveElement(T3DList<T> const &inputElement,
+                         std::string elementName);
+  void checkIgmIdx(Int16 igmIdx) const;
+  void checkIsmIdx(Int16 ismIdx) const;
+  void checkIdxs(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
+
   Int32 nIgm;
   Int32 nIsm;
   T3DList<Float64> flux;
   T3DList<Float64> fluxError;
-  TList<Float64> lambda;
   T3DList<bool> isExtincted;
-  TList<bool> isSnrCompliant;
-  TList<uint8_t> mask;
 };
 
 } // namespace NSEpic

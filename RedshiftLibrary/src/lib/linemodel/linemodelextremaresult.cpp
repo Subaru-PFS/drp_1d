@@ -42,7 +42,8 @@
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
-#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include "RedshiftLibrary/operator/continuumfitting.h"
+
 using namespace NSEpic;
 
 void TLineModelResult::updateFromContinuumModelSolution(
@@ -80,7 +81,7 @@ void TLineModelResult::updateFromModel(
     bool estimateLeastSquareFast, int idx) {
   Merit = lmresult->ChiSquare[idx];
 
-  // LineModelSolutions
+  //  LineModelSolutions
   Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;
   Alv = lmresult->LineModelSolutions[idx].AbsorptionVelocity;
 
@@ -92,14 +93,14 @@ void TLineModelResult::updateFromModel(
 
   // store model Ha SNR & Flux
   lfHa = lmresult->LineModelSolutions[idx].lfHa;
-  if (lmel->getLineRatioType() == "rules")
+  if (lmel->isLineRatioRules())
     snrHa = lmresult->LineModelSolutions[idx].snrHa;
   lfHa_DI = lmresult->LineModelSolutions[idx].lfHa_DI;
   snrHa_DI = lmresult->LineModelSolutions[idx].snrHa_DI;
 
   // store model OII SNR & Flux
   lfOII = lmresult->LineModelSolutions[idx].lfOII;
-  if (lmel->getLineRatioType() == "rules")
+  if (lmel->isLineRatioRules())
     snrOII = lmresult->LineModelSolutions[idx].snrOII;
   lfOII_DI = lmresult->LineModelSolutions[idx].lfOII_DI;
   snrOII_DI = lmresult->LineModelSolutions[idx].snrOII_DI;
@@ -115,7 +116,7 @@ void TLineModelResult::updateFromModel(
   CorrScaleMarg = corrScaleMarg;
 
   Float64 static const cutThres = SNR_THRESHOLD_FOR_NLINESOVER;
-  if (lmel->getLineRatioType() == "rules")
+  if (lmel->isLineRatioRules())
     NLinesOverThreshold =
         lmresult->getNLinesOverCutThreshold(idx, cutThres, cutThres);
 
@@ -190,7 +191,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[rank];
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
@@ -207,7 +209,8 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "PhotometricModel")
     return this->m_modelPhotValues[0]->getType();
   else
-    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(ErrorCode::UNKNOWN_ATTRIBUTE, Formatter()
+                                             << "Unknown dataset " << dataset);
 }
 
 bool LineModelExtremaResult::HasCandidateDataset(

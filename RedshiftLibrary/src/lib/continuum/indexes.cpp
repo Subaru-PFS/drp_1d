@@ -88,7 +88,7 @@ CContinuumIndexes::getIndexes(const CSpectrum &spectrum, Float64 z) {
     Float64 a;
     Float64 b;
     bool retC = spectrum.GetLinearRegInRange(rangeA, a, b);
-    Float64 wlCenterB = (rangeB.GetEnd() + rangeB.GetBegin()) / 2.0;
+    Float64 wlCenterB = rangeB.GetMidRange();
     Float64 Fc = wlCenterB * a + b;
 
     SContinuumIndex sci;

@@ -93,7 +93,7 @@ struct TFittingResult {
   TCrossProductResult cross_result;
 };
 
-struct TFittingIsmIgmResult : TFittingResult {
+struct TFittingIsmIgmResult : TFittingResult, TContinuumResult {
   TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize,
                        Int32 spcsize = 1)
       : overlapFraction(spcsize, NAN),
@@ -102,10 +102,6 @@ struct TFittingIsmIgmResult : TFittingResult {
         IgmMeiksinIdxInterm(MeiksinListSize, undefIdx) {}
 
   TFloat64List overlapFraction;
-  Float64 reducedChiSquare = INFINITY;
-  Float64 pValue = 0;
-  Float64 ebmvCoef = NAN;
-  Int32 meiksinIdx = undefIdx;
   std::vector<TFloat64List> ChiSquareInterm;
   TInt32List IsmCalzettiIdxInterm;
   TInt32List IgmMeiksinIdxInterm;
@@ -115,15 +111,17 @@ class COperatorTemplateFitting : public COperatorTemplateFittingBase {
 
 public:
   COperatorTemplateFitting(const TFloat64List &redshifts)
-      : COperatorTemplateFittingBase(redshifts), m_kStart(m_spectra.size()),
-        m_kEnd(m_spectra.size()){
-
-        };
+      : COperatorTemplateFittingBase(redshifts){};
   virtual ~COperatorTemplateFitting() = default;
+  COperatorTemplateFitting(const COperatorTemplateFitting &) = default;
+  COperatorTemplateFitting(COperatorTemplateFitting &&) = default;
+  COperatorTemplateFitting &
+  operator=(const COperatorTemplateFitting &) = default;
+  COperatorTemplateFitting &operator=(COperatorTemplateFitting &&) = default;
 
   std::shared_ptr<CTemplateFittingResult> Compute(
-      const std::shared_ptr<const CTemplate> &tpl, Float64 overlapThreshold,
-      std::string opt_interp, bool opt_extinction, bool opt_dustFitting,
+      const CTemplate &tpl, Float64 overlapThreshold, std::string opt_interp,
+      bool opt_extinction, bool opt_dustFitting,
       Float64 opt_continuum_null_amp_threshold = 0.,
       const CPriorHelper::TPriorZEList &logprior = CPriorHelper::TPriorZEList(),
       Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx,
@@ -132,15 +130,12 @@ public:
 
 protected:
   friend class templateFitting_test::fitQuality_test;
-  TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate> &tpl,
-                                Float64 redshift, Float64 overlapThreshold,
-                                bool opt_extinction, bool opt_dustFitting,
+  TFittingIsmIgmResult BasicFit(const CTemplate &tpl, Float64 redshift,
+                                Float64 overlapThreshold, bool opt_extinction,
+                                bool opt_dustFitting,
                                 const CPriorHelper::TPriorEList &logpriore,
                                 const TInt32List &MeiksinList,
                                 const TInt32List &EbmvList);
-
-  virtual std::pair<TList<CMask>, Int32>
-  getMaskListAndNSamples(Float64 redshift) const;
 
   virtual void init_fast_igm_processing(Int32 EbmvListSize);
 
@@ -156,11 +151,13 @@ protected:
                           const CPriorHelper::SPriorTZE &logpriorTZ) const;
 
   bool m_option_igmFastProcessing;
-  TInt32List m_kStart, m_kEnd;
-
   std::vector<TFloat64List> m_sumCross_outsideIGM;
   std::vector<TFloat64List> m_sumT_outsideIGM;
   std::vector<TFloat64List> m_sumS_outsideIGM;
+
+private:
+  void updateQualityFitWithResult(TFittingIsmIgmResult &result,
+                                  std::vector<CMask> &&maskList, Int32 nPixels);
 };
 
 } // namespace NSEpic

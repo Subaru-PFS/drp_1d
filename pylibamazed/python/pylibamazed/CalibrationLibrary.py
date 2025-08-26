@@ -40,6 +40,8 @@
 import glob
 import json
 import os
+from typing import Dict
+
 
 import h5py
 import numpy as np
@@ -71,6 +73,8 @@ from pylibamazed.redshift import (
     VecTFloat64List,
     undefStr,
 )
+from pylibamazed.DocDecorator import doc_method
+
 
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
@@ -88,8 +92,26 @@ def _get_linecatalog_strid(lineCatalog_df):
     ]
 
 
+@doc_method
+def load_sklearn_classifier(path, classifier):
+    zlog.LogInfo(f"reliability: loading scikit-learn {classifier} for galaxy")
+    try:
+        from sklearn.base import ClassifierMixin  # Mixin class for all classifiers in scikit-learn.
+        import joblib
+    except ImportError:
+        raise APIException(ErrorCode.IMPORT_ERROR, "scikit-learn is required to compute the reliability")
+    ret = dict()
+    clf = joblib.load(path)
+    if not isinstance(clf, ClassifierMixin):
+        raise APIException(ErrorCode.BAD_FILEFORMAT, "classifier is not sklearn.base.ClassifierMixin type")
+    ret["classifier"] = clf
+    ret["classes"] = ["failure", "success"]
+    return ret
+
+
+@doc_method
 def load_reliability_model(model_path, parameters: Parameters, object_type):
-    zlog.LogInfo(f"Loading reliability neural network for {object_type}")
+    zlog.LogInfo(f"reliability: loading neural network for {object_type}")
     try:
         # to avoid annoying messages about gpu/cuda availability
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -100,7 +122,7 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
             ErrorCode.RELIABILITY_NEEDS_TENSORFLOW, "Tensorflow is required to compute the reliability"
         ) from None
     ret = dict()
-    model_ha = h5py.File(model_path).attrs
+    model_ha: Dict[str, str] = h5py.File(model_path).attrs
     keras_model_version = model_ha["keras_version"].split(".")
     keras_system_version = keras.__version__.split(".")
     if keras_model_version[0] > keras_system_version[0]:
@@ -124,7 +146,7 @@ def load_reliability_model(model_path, parameters: Parameters, object_type):
             "redshift step of reliability model must be identical to solver one : "
             f"{redshift_range_step} != {s_redshift_range_step}",
         )
-    model = models.load_model(model_path)
+    model = models.load_model(model_path, compile=False)
     ret["model"] = model
     ret["parameters"] = dict()
     ret["parameters"]["zgrid_end"] = model_ha["zgrid_end"]
@@ -149,6 +171,10 @@ class CalibrationLibrary:
     :type calibration_dir: path
     """
 
+    #: Contains the lines catalog corresponding to each spectrum model and solve method
+    line_catalogs_df: dict
+    parameters: Parameters
+
     @exception_decorator
     def __init__(self, parameters: Parameters, calibration_dir):
         self.parameters = parameters
@@ -170,8 +196,7 @@ class CalibrationLibrary:
 
         self.calzetti = None
         self.meiksin = None
-        self.reliability_models = {}
-        self.reliability_parameters = dict()
+        self.reliability = dict()
 
     def _load_templates(self, object_type, path):
         """
@@ -259,11 +284,11 @@ class CalibrationLibrary:
             )
         except pd.errors.ParserError as e:
             raise APIException(
-                ErrorCode.BAD_FILEFORMAT, f"bad line catalog {line_catalog_file} cause :{e}"
+                ErrorCode.LINE_CATALOG_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
             ) from None
         except Exception as e:
             raise APIException(
-                ErrorCode.PYTHON_API_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
+                ErrorCode.LINE_CATALOG_ERROR, f"bad line catalog {line_catalog_file} cause :{e}"
             ) from None
 
         # force "-1" to undefStr (for compatibility)
@@ -283,7 +308,7 @@ class CalibrationLibrary:
             elif row.Profile == "ASYMFIT":
                 asymParams = TAsymParams(2.0, 2.0, 0.0)
             elif row.Profile == "ASYMFIXED":
-                raise APIException(ErrorCode.PYTHON_API_ERROR, "Profile in linecatalog cannot be asymFixed")
+                raise APIException(ErrorCode.LINE_CATALOG_ERROR, "Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
             self.line_catalogs[object_type][solve_method.value].AddLineFromParams(
@@ -514,13 +539,29 @@ class CalibrationLibrary:
                         self.load_linecatalog(object_type, linemeas_method)
                 # Load the reliability model
                 if self.parameters.get_reliability_enabled(object_type) and reliability:
-                    model_path = os.path.join(
-                        self.calibration_dir, self.parameters.get_reliability_model(object_type)
-                    )
-                    mp = load_reliability_model(model_path, self.parameters, object_type)
-                    self.reliability_models[object_type] = mp["model"]
-                    self.reliability_parameters[object_type] = mp["parameters"]
-
+                    for reliability_solver in self.parameters.get_reliability_methods(object_type):
+                        zlog.LogInfo(f"reliability:solver initialisation for {reliability_solver}")
+                        if reliability_solver == "deepLearningSolver":
+                            self.reliability["deep"] = dict()
+                            self.reliability["deep"][object_type] = dict()
+                            self.reliability["deep"][object_type]["models"] = list()
+                            model_path = os.path.join(
+                                self.calibration_dir, self.parameters.get_reliability_model(object_type)
+                            )
+                            mp = load_reliability_model(model_path, self.parameters, object_type)
+                            self.reliability["deep"][object_type]["models"].append(mp["model"])
+                            self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
+                        if reliability_solver == "skLearnSolver":
+                            self.reliability["sklearn"] = dict()
+                            self.reliability["sklearn"][object_type] = dict()
+                            classifier = self.parameters.get_sk_learn_classifier(object_type)
+                            classifier_file = os.path.join(
+                                self.calibration_dir,
+                                self.parameters.get_sk_learn_classifier_file(object_type),
+                            )
+                            clf_dict = load_sklearn_classifier(classifier_file, classifier)
+                            self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
+                            self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
             if self.parameters.get_lsf_type() != "fromSpectrumData":
                 self.load_lsf()
 
@@ -539,10 +580,11 @@ class CalibrationLibrary:
             return tpl_ratio_conf["sub_type"]
         except KeyError:
             raise APIException(
-                ErrorCode.PYTHON_API_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
+                ErrorCode.INTERNAL_ERROR, f"Could not find {line_ratio_catalog} in tpl ratio catalog"
             ) from None
 
     @exception_decorator
+    @doc_method
     def get_lines_ids(self, attributes):
         lines_ids = dict()
         lines = None
@@ -583,6 +625,6 @@ class CalibrationLibrary:
                     lines_ids[line_name] = line_id
                 except Exception:
                     raise APIException(
-                        ErrorCode.PYTHON_API_ERROR, f"Could not find {line_name} in catalog"
+                        ErrorCode.LINE_NOT_FOUND, f"Could not find {line_name} in catalog"
                     ) from None
         return lines_ids

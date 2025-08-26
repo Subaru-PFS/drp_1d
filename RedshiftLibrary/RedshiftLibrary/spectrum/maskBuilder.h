@@ -56,6 +56,7 @@ public:
   virtual CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
                         const TFloat64Range &lamdbdaRange,
                         const Float64 &redshift, Int32 spc_index = 0);
+  virtual bool isDefaultMask() const { return true; };
 };
 
 } // namespace NSEpic

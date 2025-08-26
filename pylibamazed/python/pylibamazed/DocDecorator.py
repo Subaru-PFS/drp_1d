@@ -36,12 +36,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+from functools import wraps
 
-from pylibamazed.Utils import LogicUtils
 
+def doc_method(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
 
-class TestLogicUtils:
-    def test_cumulate_conditions(self):
-        assert LogicUtils.cumulate_conditions(None) is None
-        assert not LogicUtils.cumulate_conditions([True, False, True])
-        assert LogicUtils.cumulate_conditions([True, True, True])
+    wrapper.is_doc_method = True
+    return wrapper

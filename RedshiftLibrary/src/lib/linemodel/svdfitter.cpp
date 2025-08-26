@@ -43,7 +43,6 @@
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/svdfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -104,7 +103,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   Int32 ncol_polynome = 0;
   if (useAmpOffset) {
-    ncol_polynome = TPolynomCoeffs::degree + 1;
+    ncol_polynome = CPolynomCoeffs::degree + 1;
     nddl_ini += ncol_polynome;
   }
 
@@ -171,10 +170,10 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
     if (useAmpOffset) {
       gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size(), 1.0);
-      if (TPolynomCoeffs::degree == 0)
+      if (CPolynomCoeffs::degree == 0)
         continue;
       gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size() + 1, xi);
-      if (TPolynomCoeffs::degree == 1)
+      if (CPolynomCoeffs::degree == 1)
         continue;
       gsl_matrix_set(Xini, i, EltsIdxToFit_ini.size() + 2, xi * xi);
     }
@@ -253,13 +252,15 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   bool allPositive = true;
 
+  auto const eltSize = ssize(EltsIdxToFit);
   ampsfitted.assign(EltsIdxToFit_ini.size(), NAN);
   errorsfitted.assign(EltsIdxToFit_ini.size(), NAN);
-  for (Int32 iddl = 0; iddl < ssize(EltsIdxToFit); iddl++) {
+  for (Int32 iddl = 0; iddl < eltSize; iddl++) {
     Float64 const a = gsl_vector_get(c, iddl) / normFactor;
     if (a < 0)
       allPositive = false;
-    Float64 const var = gsl_matrix_get(cov, iddl, iddl);
+#define COV(i, j) (gsl_matrix_get(cov, i, j))
+    Float64 const var = COV(iddl, iddl);
     Float64 const std = sqrt(var) / normFactor;
     m_ElementsVector->SetElementAmplitude(EltsIdxToFit[iddl], a, std);
     ampsfitted[valid_col_indices[iddl]] = a;
@@ -267,18 +268,24 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   }
 
   if (useAmpOffset) {
-    Float64 x0 = gsl_vector_get(c, EltsIdxToFit.size()) / normFactor;
+    Float64 x0 = gsl_vector_get(c, eltSize);
     Float64 x1 = 0.0;
     Float64 x2 = 0.0;
-    if (TPolynomCoeffs::degree > 0)
-      x1 = gsl_vector_get(c, EltsIdxToFit.size() + 1) / normFactor;
-    if (TPolynomCoeffs::degree > 1)
-      x2 = gsl_vector_get(c, EltsIdxToFit.size() + 2) / normFactor;
+    if (CPolynomCoeffs::degree > 0)
+      x1 = gsl_vector_get(c, eltSize + 1);
+    if (CPolynomCoeffs::degree > 1)
+      x2 = gsl_vector_get(c, eltSize + 2);
     // set the polynomial coeffs for all elements, even those not fitted and
     // fixed at zero
+    auto const s = eltSize;
+    Eigen::Matrix3d polyCoeffsCovar{
+        {COV(s, s), COV(s, s + 1), COV(s, s + 2)},
+        {COV(s + 1, s), COV(s + 1, s + 1), COV(s + 1, s + 2)},
+        {COV(s + 2, s), COV(s + 2, s + 1), COV(s + 2, s + 2)}};
+    CPolynomCoeffs polyCoeffs{x0, x1, x2, polyCoeffsCovar};
     for (Int32 iddl = 0; iddl < ssize(EltsIdx); ++iddl)
       m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
-          {x0, x1, x2});
+          polyCoeffs * (1 / normFactor));
   }
 
   gsl_matrix_free(X);
@@ -331,9 +338,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     return;
   }
   for (Int32 irefit = 0; irefit < ssize(idx_positive); ++irefit) {
-    if (ampsfitted[irefit] > 0) {
-      fitAmplitude(ValidEltsIdx[idx_positive[irefit]], redshift, undefIdx);
-    }
+    // set at zero negative amplitudes
     if (isfinite(ampsfitted[irefit]) && ampsfitted[irefit] < 0) {
       m_ElementsVector->SetElementAmplitude(ValidEltsIdx[idx_positive[irefit]],
                                             0.0, errorsfitted[irefit]);

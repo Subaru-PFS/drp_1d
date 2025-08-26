@@ -84,7 +84,6 @@ void CProcessFlowContext::reset() {
 }
 
 CLineMap CProcessFlowContext::getCLineMap() {
-  CAutoScope autoscope(m_ScopeStack, "lineModel");
   return m_inputContext->GetFilteredLineMap(
       GetCurrentCategory(), GetCurrentMethod(),
       m_parameterStore->GetScoped<std::string>("lineTypeFilter"),

@@ -472,3 +472,12 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
 
   return nonOverlappingIndexRangeList;
 }
+
+void CLineModelElementList::setLSF(std::shared_ptr<const CLSF> const &lsf) {
+  for (auto &elt : m_Elements)
+    elt->SetLSF(lsf);
+}
+
+const std::shared_ptr<CLSF const> &CLineModelElementList::getLSF(Int32 eltIdx) {
+  return m_Elements[eltIdx]->GetLSF();
+}

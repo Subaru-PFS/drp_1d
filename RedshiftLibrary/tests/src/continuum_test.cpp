@@ -219,7 +219,6 @@ BOOST_AUTO_TEST_CASE(evenMirror_test) {
   CContinuumIrregularSamplingMedian sample;
   TFloat64List y_in;
   TFloat64List y_out;
-  Int32 beg;
   Int32 N;
   Int32 Nreflex;
 
@@ -227,7 +226,6 @@ BOOST_AUTO_TEST_CASE(evenMirror_test) {
 
   // TEST Nreflex < N
   y_in = {1., 2., 3., 2., 1.};
-  beg = 0;
   N = y_in.size();
   Nreflex = 2;
   y_out = sample.EvenMirror(y_in.begin(), y_in.end(), Nreflex);
@@ -253,7 +251,6 @@ BOOST_AUTO_TEST_CASE(evenMirror_test) {
 
   // TEST Nreflex = N
   y_in = {1., 2., 3., 2., 1.};
-  beg = 0;
   N = y_in.size();
   Nreflex = y_in.size();
   y_out = sample.EvenMirror(y_in.begin(), y_in.end(), Nreflex);
@@ -282,7 +279,6 @@ BOOST_AUTO_TEST_CASE(oddMirror_test) {
   CContinuumIrregularSamplingMedian sample;
   TFloat64List y_in;
   TFloat64List y_out;
-  Int32 beg;
   Int32 N;
   Int32 Nreflex;
 
@@ -290,7 +286,6 @@ BOOST_AUTO_TEST_CASE(oddMirror_test) {
 
   // TEST Nreflex < N
   y_in = {1., 2., 3., 2., 1.};
-  beg = 0;
   N = y_in.size();
   Nreflex = 2;
   y_out = sample.OddMirror(y_in.begin(), y_in.end(), Nreflex, y_in.front(),
@@ -317,7 +312,6 @@ BOOST_AUTO_TEST_CASE(oddMirror_test) {
 
   // TEST Nreflex = N
   y_in = {1., 2., 3., 2., 1.};
-  beg = 0;
   N = y_in.size();
   Nreflex = y_in.size();
   y_out = sample.OddMirror(y_in.begin(), y_in.end(), Nreflex, y_in.front(),
@@ -383,9 +377,6 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   sample.SetMedianEvenReflection(false);
   bool result;
   Float32 width;
-
-  // Cspectrum
-  Float64 meanResolution;
 
   // -------- FUNCTIONAL TESTS ------------
 

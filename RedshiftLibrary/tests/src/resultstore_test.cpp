@@ -229,11 +229,11 @@ BOOST_AUTO_TEST_CASE(StoreFlagMethods_test) {
   COperatorResultStore store_1(scopeStack_1);
 
   // test store flag in context
-  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == false);
+  BOOST_CHECK(store_1.hasCurrentScopeWarningFlag() == false);
   store_1.StoreScopedGlobalResult("warningFlag", result_in);
   BOOST_CHECK(store_1.GetScopedName("warningFlag") ==
               "spectrumModel.stage.method.warningFlag");
-  BOOST_CHECK(store_1.hasCurrentMethodWarningFlag() == true);
+  BOOST_CHECK(store_1.hasCurrentScopeWarningFlag() == true);
 
   std::shared_ptr<const COperatorResult> result_out = store_1.GetFlagLogResult(
       "spectrumModel", "stage", "method", "warningFlag");

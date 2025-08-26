@@ -36,15 +36,17 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from typing import Callable, List, Any
-
+from typing import Callable, List, Any, Optional
+from abc import ABCMeta, abstractmethod
+from scipy.ndimage import binary_closing, binary_opening, binary_dilation, binary_erosion
 import pandas as pd
+import numpy as np
+
 from pylibamazed.Exception import APIException
 from pylibamazed.redshift import ErrorCode
-from pylibamazed.Utils import LogicUtils
 
 
-class FilterItem:
+class AbstractFilterItem(metaclass=ABCMeta):
     """Creates a filter object.
 
     This filter object is composed of 3 items:
@@ -53,7 +55,7 @@ class FilterItem:
     - value: with which value we want to make the comparison
     """
 
-    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
+    allowed_instructions = []
 
     def __init__(self, key: str, instruction: str, value: Any):
         self.check_instruction(instruction)
@@ -72,19 +74,56 @@ class FilterItem:
 
     def __eq__(self, __value: object) -> bool:
         return (
-            type(self) == type(__value)
+            type(self) is type(__value)
             and self.key == __value.key
             and self.instruction == __value.instruction
             and self.value == __value.value
         )
 
-    def compliant_lines(self, df: pd.DataFrame) -> pd.Series:
-        if self.key not in df:
-            raise APIException(ErrorCode.INVALID_FILTER_KEY, f"Column {self.key} does not exist")
-        comparator = self._comparator_from_instruction()
-        return comparator(df[self.key])
+    @abstractmethod
+    def apply(self, df: Optional[pd.DataFrame] = None, mask: Optional[pd.Series] = None) -> pd.Series:
+        raise NotImplementedError("Implement in derived class")
 
-    def _comparator_from_instruction(self) -> Callable:
+    @abstractmethod
+    def _action_from_instruction(self) -> Callable:
+        raise NotImplementedError("Implement in derived class")
+
+    @classmethod
+    def check_instruction(cls, instruction: str):
+        if instruction not in cls.allowed_instructions:
+            raise APIException(
+                ErrorCode.IE_INVALID_FILTER_INSTRUCTION,
+                f"Instruction {instruction} is not registered."
+                f"Allowed instructions are: {cls.allowed_instructions}",
+            )
+
+
+def filterFactory(filterDict: dict) -> AbstractFilterItem:
+    filterType = filterDict.get("type", "byValue")
+    if filterType == "byValue":
+        return FilterItem(filterDict["key"], filterDict["instruction"], filterDict["value"])
+    elif filterType == "morphology":
+        return FilterMorphology(filterDict["instruction"], filterDict["value"])
+    else:
+        raise APIException(ErrorCode.INTERNAL_ERROR, f"Wrong filter type: {filterType}")
+
+
+class FilterItem(AbstractFilterItem):
+    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
+
+    def apply(self, df: Optional[pd.DataFrame] = None, mask: Optional[pd.Series] = None) -> pd.Series:
+        if df is None:
+            raise APIException(ErrorCode.INTERNAL_ERROR, "df parameter is None, should be a pandas DataFrame")
+        if self.key not in df:
+            raise APIException(ErrorCode.IE_INVALID_FILTER_KEY, f"Column {self.key} does not exist")
+        action = self._action_from_instruction()
+        newMask = action(df[self.key])
+        if mask is None:
+            return newMask
+        else:
+            return newMask & mask
+
+    def _action_from_instruction(self) -> Callable:
         str_to_action = {
             "<": self._inf,
             ">": self._sup,
@@ -141,18 +180,39 @@ class FilterItem:
     def _bitwise_not_xor(self, a):
         return ~(a ^ self.value).astype(bool)
 
-    @classmethod
-    def check_instruction(cls, instruction: str):
-        if instruction not in cls.allowed_instructions:
-            raise APIException(
-                ErrorCode.INVALID_FILTER_INSTRUCTION,
-                f"Instruction {instruction} is not registered."
-                f"Allowed instructions are: {cls.allowed_instructions}",
-            )
 
+class FilterMorphology(AbstractFilterItem):
+    allowed_instructions = ["opening", "closing", "erosion", "dilation"]
 
-class SpectrumFilterItem(FilterItem):
-    pass
+    def __init__(self, instruction: str, value: List):
+        super().__init__("unused", instruction, value)
+
+    def apply(self, df: pd.DataFrame = None, mask: pd.Series = None) -> pd.Series:
+        if mask is None:
+            raise APIException(ErrorCode.INTERNAL_ERROR, "mask parameter is None, should be a pandas Series")
+        action = self._action_from_instruction()
+        return action(mask)
+
+    def _action_from_instruction(self) -> Callable:
+        str_to_action = {
+            "opening": self._opening,
+            "closing": self._closing,
+            "erosion": self._erosion,
+            "dilation": self._dilation,
+        }
+        return str_to_action[self.instruction]
+
+    def _opening(self, a):
+        return binary_opening(a, self.value)
+
+    def _closing(self, a):
+        return binary_closing(a, self.value)
+
+    def _erosion(self, a):
+        return binary_erosion(a, self.value)
+
+    def _dilation(self, a):
+        return binary_dilation(a, self.value)
 
 
 class FilterList:
@@ -176,5 +236,7 @@ class FilterList:
     def apply(self, df: pd.DataFrame):
         if not self.items:
             return None
-        condition_list = [filt.compliant_lines(df) for filt in self.items]
-        return LogicUtils.cumulate_conditions(condition_list)
+        currentMask = pd.Series(np.ones(len(df), dtype=bool), index=df.index)
+        for filt in self.items:
+            currentMask = filt.apply(df, currentMask)
+        return currentMask

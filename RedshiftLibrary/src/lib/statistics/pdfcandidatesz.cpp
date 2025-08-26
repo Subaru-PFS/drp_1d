@@ -38,14 +38,12 @@
 // ============================================================================
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <iostream>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
@@ -205,7 +203,6 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
   TCandidateZRangebyID zranges;
   TStringList duplicates =
       SetIntegrationRanges(TFloat64Range(PdfRedshifts), zranges);
-  CDeltaz deltaz_op;
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
     std::shared_ptr<TCandidateZ> &cand = c.second;
@@ -433,14 +430,15 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   gsl_vector_view w = gsl_vector_view_array(weights.data(), n);
 
   // This is the data to be fitted;
-  double y[n], z[n];
+  TFloat64List y(n);
+  TFloat64List z(n);
   for (Int32 i = 0; i < n; i++) {
     Float64 idx = i + kmin;
     y[i] = exp(valprobalog[idx]) / normFactor;
     z[i] = redshifts[idx];
   }
 
-  struct pdfz_lmfitdata d = {n, y, z, zc};
+  struct pdfz_lmfitdata d = {n, y.data(), z.data(), zc};
   gsl_multifit_function_fdf f;
   f.f = &pdfz_lmfit_f;
   f.df = &pdfz_lmfit_df;

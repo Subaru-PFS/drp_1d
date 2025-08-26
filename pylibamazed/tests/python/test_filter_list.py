@@ -38,7 +38,7 @@
 # ============================================================================
 
 import pandas as pd
-from pylibamazed.Filter import FilterList, SpectrumFilterItem
+from pylibamazed.Filter import FilterList, FilterItem, FilterMorphology
 from tests.python.utils import ComparisonUtils
 
 
@@ -49,8 +49,8 @@ class TestFilterList:
 
         # Result is as expected
         filter = FilterList()
-        filter.add_filter(SpectrumFilterItem("col1", ">", 12))
-        filter.add_filter(SpectrumFilterItem("col2", "<", 10))
+        filter.add_filter(FilterItem("col1", ">", 12))
+        filter.add_filter(FilterItem("col2", "<", 10))
 
         df["amazed_mask"] = filter.apply(df)
         expected["amazed_mask"] = [False, True, True]
@@ -70,8 +70,8 @@ class TestFilterList:
         assert filter.__repr__() == "FilterList []"
 
     class TestEquality:
-        default_filter_item_1 = SpectrumFilterItem("col1", ">", 12)
-        default_filter_item_2 = SpectrumFilterItem("col2", "<", 10)
+        default_filter_item_1 = FilterItem("col1", ">", 12)
+        default_filter_item_2 = FilterItem("col2", "<", 10)
 
         def test_eq_true_for_empty_filters(self):
             filter1 = FilterList()
@@ -100,3 +100,18 @@ class TestFilterList:
 
             assert filter1 != filter2
             assert filter2 != filter1
+
+
+class TestFilterListMorphology:
+    def test_apply(self):
+        df = pd.DataFrame({"col1": [1, 22, 1, 22, 111], "col2": [30, 1, 30, 1, 1]})
+        expected = df.copy()
+
+        # Result is as expected
+        filter = FilterList()
+        filter.add_filter(FilterItem("col1", ">", 12))
+        filter.add_filter(FilterItem("col2", "<", 10))
+        filter.add_filter(FilterMorphology("opening", [1, 1]))
+        df["amazed_mask"] = filter.apply(df)
+        expected["amazed_mask"] = [False, False, False, True, True]
+        ComparisonUtils.compare_dataframe_without_index(df, expected)

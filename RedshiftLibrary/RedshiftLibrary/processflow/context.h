@@ -76,6 +76,9 @@ public:
   void addSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
     m_inputContext->addSpectrum(spectrum);
   }
+  void addFullSpectrum(const std::shared_ptr<CFullSpectrum> &spectrum) {
+    m_inputContext->addFullSpectrum(spectrum);
+  }
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
     m_inputContext->setTemplateCatalog(templateCatalog);
@@ -120,8 +123,11 @@ public:
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
 
-  std::shared_ptr<const CSpectrum> GetSpectrum(bool rebinned = false) const {
-    return m_inputContext->GetSpectrum(rebinned);
+  std::shared_ptr<const CSpectrum> GetSpectrum() const {
+    return m_inputContext->GetSpectrum();
+  }
+  std::shared_ptr<const CSpectrum> GetFullSpectrum() const {
+    return m_inputContext->GetFullSpectrum();
   }
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
     return m_inputContext->GetRebinnedSpectrum();
@@ -156,7 +162,7 @@ public:
 
   const std::string &GetCurrentCategory() const {
     if (!m_ScopeStack->has_type(ScopeType::SPECTRUMMODEL))
-      THROWG(ErrorCode::SCOPESTACK_ERROR,
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
              Formatter() << "cannot get current " << ScopeType::SPECTRUMMODEL
                          << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::SPECTRUMMODEL);
@@ -164,17 +170,17 @@ public:
 
   const std::string &GetCurrentStage() const {
     if (!m_ScopeStack->has_type(ScopeType::STAGE))
-      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
-                                                      << ScopeType::STAGE
-                                                      << " since not in scope");
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
+             Formatter() << "cannot get current " << ScopeType::STAGE
+                         << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::STAGE);
   }
 
   const std::string &GetCurrentMethod() const {
     if (!m_ScopeStack->has_type(ScopeType::METHOD))
-      THROWG(ErrorCode::SCOPESTACK_ERROR, Formatter() << "cannot get current "
-                                                      << ScopeType::METHOD
-                                                      << " since not in scope");
+      THROWG(ErrorCode::IE_SCOPESTACK_ERROR,
+             Formatter() << "cannot get current " << ScopeType::METHOD
+                         << " since not in scope");
     return m_ScopeStack->get_type_value(ScopeType::METHOD);
   }
 
@@ -195,14 +201,22 @@ public:
     return m_inputContext->getRebinnedClampedLambdaRanges();
   }
 
+  const std::vector<std::shared_ptr<const TFloat64Range>> &
+  getRebinnedFullClampedLambdaRanges() const {
+    return m_inputContext->getRebinnedFullClampedLambdaRanges();
+  }
+
   const std::vector<std::shared_ptr<const CSpectrum>> &
   getSpectra(bool rebinned = false) const {
     if (rebinned)
       return m_inputContext->getRebinnedSpectra();
-    else
-      return m_inputContext->getSpectra();
+    return m_inputContext->getSpectra();
   }
 
+  const std::vector<std::shared_ptr<const CFullSpectrum>> &
+  getRebinnedFullSpectra() const {
+    return m_inputContext->getRebinnedFullSpectra();
+  }
   const std::vector<std::shared_ptr<const CSpectrum>> &
   getRebinnedSpectra() const {
     return m_inputContext->getRebinnedSpectra();

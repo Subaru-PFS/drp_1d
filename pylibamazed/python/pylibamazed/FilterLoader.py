@@ -41,21 +41,19 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, List, Optional
 
-from pylibamazed.Filter import FilterItem, FilterList, SpectrumFilterItem
+from pylibamazed.Filter import AbstractFilterItem, FilterList, filterFactory
 
 if TYPE_CHECKING:
     from pylibamazed.Parameters import Parameters
 
 
 class AbstractFilterLoader:
-    keys = ["key", "instruction", "value"]
-
     def __init__(
         self,
-        FilterItemClass=type[FilterItem],
+        filterFactory=filterFactory,
     ):
         # dictionary name of the key in FilterItem object: name of the key in json
-        self.FilterItemClass = FilterItemClass
+        self.filterFactory = filterFactory
 
     @abstractmethod
     def get_filters(self, params: Parameters, obs_id: str) -> Optional[FilterList]:
@@ -73,14 +71,14 @@ class ParamJsonFilterLoader(AbstractFilterLoader):
     ]
     """
 
-    def __init__(self, FitlerItemClass=SpectrumFilterItem):
-        super().__init__(FitlerItemClass)
+    def __init__(self, filterFactory=filterFactory):
+        super().__init__(filterFactory)
 
     def get_filters(self, params: Parameters, obs_id: str) -> Optional[FilterList]:
-        filters: List[FilterItem] = []
+        filters: List[AbstractFilterItem] = []
         json_filters = params.get_filters(obs_id=obs_id)
         if not json_filters:
             return None
-        for filter in json_filters:
-            filters.append(self.FilterItemClass(filter["key"], filter["instruction"], filter["value"]))
+        for filterDict in json_filters:
+            filters.append(self.filterFactory(filterDict))
         return FilterList(filters)

@@ -41,7 +41,7 @@ from typing import List, Optional
 from enum import Enum
 from pylibamazed.Exception import APIException, exception_decorator
 from pylibamazed.redshift import CLog, ErrorCode
-
+from pylibamazed.DocDecorator import doc_method
 
 zlog = CLog.GetInstance()
 
@@ -54,9 +54,9 @@ class ESolveMethod(Enum):
 
 
 class EContinuumFit(Enum):
-    FROM_FIRST_PASS = "fromFirstPass"
+    FROM_FIRST_PASS = "fromFirstPass"  # nosec B105
     RETRY_ALL = "retryAll"
-    REFIT_FIRST_PASS = "reFitFirstPass"
+    REFIT_FIRST_PASS = "reFitFirstPass"  # nosec B105
 
 
 class EVelocityType(Enum):
@@ -71,7 +71,7 @@ class EVelocityFitParam(Enum):
 
 
 class ParametersAccessor:
-    velocity_fit_prefix_dict = {
+    _velocity_fit_prefix_dict = {
         EVelocityType.Absorption: "abs",
         EVelocityType.Emission: "em",
     }
@@ -107,15 +107,18 @@ class ParametersAccessor:
         return self.parameters.get("photometryBand", [])
 
     @exception_decorator
+    @doc_method
     def get_multiobs_method(self) -> Optional[str]:
         return self.parameters.get("multiObsMethod")
 
+    @doc_method
     def get_spectrum_models(self, default=None) -> List[str]:
         return self.parameters.get("spectrumModels", default)
 
     def get_linemeas_runmode(self) -> Optional[str]:
         return self.parameters.get("lineMeasRunMode")
 
+    @doc_method
     def get_spectrum_model_section(self, spectrum_model, create=False) -> dict:
         spectrum_model_section = self.parameters.get(spectrum_model, {})
         if create and spectrum_model_section == {}:
@@ -130,6 +133,7 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "redshiftSolver", create, spectrum_model
         )
 
+    @doc_method
     def get_redshift_solver_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "redshiftSolver" not in self.get_stages(spectrum_model):
             return None
@@ -145,6 +149,7 @@ class ParametersAccessor:
             self.get_spectrum_model_section, "lineMeasSolver", create, spectrum_model
         )
 
+    @doc_method
     def get_linemeas_method(self, spectrum_model: str) -> Optional[ESolveMethod]:
         if "lineMeasSolver" not in self.get_stages(spectrum_model):
             return None
@@ -197,20 +202,16 @@ class ParametersAccessor:
     def get_reliability_model(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_deep_learning_solver_section(spectrum_model), "reliabilityModel")
 
-    def get_sk_learn_classifier_solver_section(self, spectrum_model: str, create: bool = False) -> str:
+    def get_sk_learn_solver_section(self, spectrum_model: str, create: bool = False) -> str:
         return self._get_or_create_section(
-            self.get_reliability_section, "skLearnClassifier", create, spectrum_model
+            self.get_reliability_section, "skLearnSolver", create, spectrum_model
         )
 
     def get_sk_learn_classifier(self, spectrum_model: str) -> str:
-        return self._get_on_None(
-            self.get_sk_learn_classifier_solver_section(spectrum_model), "skLearnClassifier"
-        )
+        return self._get_on_None(self.get_sk_learn_solver_section(spectrum_model), "skLearnClassifier")
 
     def get_sk_learn_classifier_file(self, spectrum_model: str) -> str:
-        return self._get_on_None(
-            self.get_sk_learn_classifier_solver_section(spectrum_model), "classifierFile"
-        )
+        return self._get_on_None(self.get_sk_learn_solver_section(spectrum_model), "classifierFile")
 
     def get_template_dir(self, spectrum_model: str) -> Optional[str]:
         return self.get_spectrum_model_section(spectrum_model).get("templateDir")
@@ -462,6 +463,9 @@ class ParametersAccessor:
     def get_linemodel_continuumfit_fft(self, spectrum_model: str) -> dict:
         return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "fftProcessing")
 
+    def get_linemodel_continuumfit_ignoreLinesSupport(self, spectrum_model: str) -> dict:
+        return self._get_on_None(self.get_linemodel_continuumfit_section(spectrum_model), "ignoreLineSupport")
+
     def get_firstpass_section(self, solve_method: ESolveMethod, spectrum_model: str) -> Optional[dict]:
         solve_section: dict
         if solve_method == ESolveMethod.LINE_MODEL:
@@ -559,7 +563,7 @@ class ParametersAccessor:
 
     @classmethod
     def get_velocity_fit_param_name(cls, velocity_type: EVelocityType, param: EVelocityFitParam) -> str:
-        return f"{cls.velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
+        return f"{cls._velocity_fit_prefix_dict[velocity_type]}VelocityFit{param.value}"
 
     def get_velocity_fit_param(
         self,
@@ -651,6 +655,7 @@ class ParametersAccessor:
     def get_redshift_sampling(self, spectrum_model):
         return self.get_spectrum_model_section(spectrum_model).get("redshiftSampling")
 
+    @doc_method
     def get_observation_ids(self):
         try:
             return list(self.parameters["lambdaRange"].keys())
@@ -676,3 +681,6 @@ class ParametersAccessor:
     def get_large_grid_ratio(self, spectrum_model: str, method: ESolveMethod):
         section = self.get_firstpass_section(method, spectrum_model)
         return self._get_on_None(section, "largeGridStepRatio")
+
+    def second_pass_after_classification(self):
+        return self.parameters["secondPassAfterClassification"]

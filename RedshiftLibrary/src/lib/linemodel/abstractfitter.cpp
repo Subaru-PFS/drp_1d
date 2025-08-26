@@ -68,7 +68,6 @@ CAbstractFitter::CAbstractFitter(
   m_nbElements = m_ElementsVector->getNbElements();
 
   std::string method = Context.GetCurrentMethod();
-  CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   bool useAsymProfile = ps->GetScoped<std::string>("lya.profile") == "asym";
   if (useAsymProfile &
@@ -180,7 +179,7 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
   m_ElementsVector->resetLambdaOffsets();
   m_ElementsVector->resetAsymfitParams();
 
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     // prepare the elements support
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     for (auto const &elt_ptr : getElementList()) {
@@ -274,7 +273,7 @@ void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
   param->m_FittedAmplitudesStd.assign(nLines, NAN);
 
   Int32 num = 0;
-  for (auto &spcIndex : m_spectraIndex) {
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
     const CSpectrumFluxAxis &noContinuumfluxAxis =
         getModel().getSpcFluxAxisNoContinuum();
@@ -517,7 +516,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
     }
     if (fitIsValid) {
       TInt32List elt_indices;
-      for (auto const [elt_idx, _] : idxLines)
+      for (auto const &[elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
       m_models->refreshAllModelsUnderElements(elt_indices);
       Float64 m = getModelResidualRmsUnderElements(elt_indices, true);

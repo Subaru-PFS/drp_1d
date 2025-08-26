@@ -44,12 +44,15 @@ public:
 
  CModelSpectrumResult() : COperatorResult("CModelSpectrumResult"){};
 
+ CModelSpectrumResult(TFloat64List lambda, TFloat64List flux, const std::string &obs_id="");
+ CModelSpectrumResult(const CSpectrum &spc, const std::string &obs_id = "")
+     : CModelSpectrumResult(spc.GetSpectralAxis().GetSamplesVector(),
+                            spc.GetFluxAxis().GetSamplesVector(), obs_id) {};
 
-  std::map<std::string, TFloat64List> ModelLambda;
-  std::map<std::string,  TFloat64List> ModelFlux;
+ void insert(CModelSpectrumResult &&other);
 
-  void addModel(const CSpectrum &spc,const std::string &obs_id="");
-  void addModel(TFloat64List lambda, TFloat64List flux, const std::string &obs_id="");
+ std::map<std::string, TFloat64List> ModelLambda;
+ std::map<std::string, TFloat64List> ModelFlux;
   
 };
 

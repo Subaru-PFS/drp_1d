@@ -43,6 +43,7 @@ from pylibamazed.PdfHandler import BuilderPdfHandler
 from pylibamazed.redshift import ErrorCode
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.AbstractReliabilitySolver import AbstractReliabilitySolver, register_reliability_solver
+from pylibamazed.DocDecorator import doc_method
 
 
 class DeepLearningSolve(AbstractReliabilitySolver):
@@ -54,11 +55,12 @@ class DeepLearningSolve(AbstractReliabilitySolver):
             auto_load=False,
             extended_results=False,
         )
+        model = self.calibration_library.reliability["deep"][self.object_type]["models"][0]
+        model_parameters = self.calibration_library.reliability["deep"][self.object_type]["parameters"]
+        success = model_parameters["classes"][-1]
+        return self.get_probas(output, model, model_parameters)[success]
 
-        model = self.calibration_library.reliability_models[self.object_type]
-        model_parameters = self.calibration_library.reliability_parameters[self.object_type]
-        return self.get_probas(output, model, model_parameters)["success"]
-
+    @doc_method
     def get_probas(self, output, model, model_parameters):
         c_zgrid_zend = model_parameters["zgrid_end"]
 

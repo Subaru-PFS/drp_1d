@@ -11,13 +11,27 @@
     "smoothWidth",
     "autoCorrectInput",
     "spectrumModels",
-    "nbSamplesMin"
+    "nbSamplesMin",
+    "secondPassAfterClassification"
   ],
   "additionalProperties": false,
   "patternProperties": {
     "^spectrumModel_": {
       "type": "object",
       "$ref": "spectrum_model.json"
+    }
+  },
+  "$defs": {
+    "lambdaRange": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "title": "wavelength",
+        "description": "wavelength in Angstroms",
+        "type": "number",
+        "minimum": 0
+      }
     }
   },
   "properties": {
@@ -39,22 +53,22 @@
       "description": "\n * **\"\"**: no multiobs \n * **\"full\"**: giving one spectra by observation to the lib \n * **\"merge\"**: merge observations in a single spectra"
     },
     "lambdaRange": {
-      "type": [
-        "array",
-        "object"
-      ],
       "title": "Lambda range in Angstroms. Is an array (range) for mono obs, and a dictionary of ranges for multiobs. ",
-      "minItems": 2,
-      "maxItems": 2,
-      "prefixItems": [
+      "anyOf": [
         {
-          "type": "number"
+          "title": "lambda range",
+          "$ref": "#/$defs/lambdaRange"
         },
         {
-          "type": "number"
+          "type": "object",
+          "title": "Dictionnary of lambda ranges",
+          "description": "each key corresponds to one observation",
+          "additionalProperties": {
+            "title": "lambda range",
+            "$ref": "#/$defs/lambdaRange"
+          }
         }
-      ],
-      "items": false
+      ]
     },
     "airVacuumMethod": {
       "type": "string",
@@ -116,51 +130,23 @@
       }
     },
     "filters": {
-      "type": [
-        "array",
-        "object"
-      ],
       "title": "Filters",
-      "description": "List of filters to apply for pixel selection on spectra.\n Example: we want to select the pixels for which \n 1. flag corresponding to 8 is absent \n 2. flag corresponding to 4 is present or flag is 0 : \n [{\"key\": \"Flag\", \"instruction\": \"^\", \"value\": \"8\"}, {\"key\": \"Flag\", \"instruction\": \"0&\", \"value\": \"4\"}]",
-      "items": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Column name",
-            "description": "Name of the spectrum column to filter on"
-          },
-          "instruction": {
-            "type": "string",
-            "enum": [
-              "<",
-              ">",
-              "<=",
-              ">=",
-              "=",
-              "in",
-              "~in",
-              "!=",
-              "~&",
-              "&",
-              "0&",
-              "^",
-              "~^"
-            ],
-            "title": "Comparison type",
-            "description": "\n * **in**: value must the be a list of possible value \n * **~in**: not in \n * **!=**: different \n * **& / ~&**: binary and / not binary and \n * **0&**: binary and or 0 \n * **^ / ~^**: xor / not xor"
-          },
-          "value": {
-            "title": "Value to compare with",
-            "description": "Possible values are int - float - list of numbers (for `in` and `!in` only)"
-          }
+      "description": "List (or for multiobs a dictionary of List) of filters to apply for pixel selection on spectra.",
+      "anyOf": [
+        {
+          "title": "filters list",
+          "$ref": "filters.json"
         },
-        "required": [
-          "key",
-          "instruction",
-          "value"
-        ]
-      }
+        {
+          "type": "object",
+          "title": "dictionnary of filters list",
+          "description": "each key corresponds to one observation",
+          "additionalProperties": {
+            "title": "filters list",
+            "$ref": "filters.json"
+          }
+        }
+      ]
     },
     "additionalCols": {
       "type": "array",
@@ -197,6 +183,11 @@
       "type": "integer",
       "title": "Minimum number of samples in a spectrum",
       "description": ""
+    },
+    "secondPassAfterClassification": {
+      "type": "boolean",
+      "title": "Second pass after classification",
+      "description": "Run second pass only on classified spectrum model"
     }
   }
 }

@@ -92,7 +92,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
                                          redshift);
   // TODO multiobs loop here
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
-  for (auto &spcIndex : m_spectraIndex)
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex)
     getModel().initModelWithContinuum();
 }
 
@@ -123,8 +123,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
-    THROWG(ErrorCode::EMPTY_LIST, Formatter()
-                                      << "Input elements list is empty");
+    THROWG(ErrorCode::IE_EMPTY_LIST, Formatter()
+                                         << "Input elements list is empty");
   Int32 nddl_ini =
       EltsIdx.size() + 1 +
       std ::max(m_fitc_polyOrder + 1,
@@ -161,7 +161,6 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
     Float64 const yi = fluxAxis[idx] * normFactor;
     Float64 const ei = ErrorNoContinuum[idx] * normFactor;
-    Float64 const ci = continuumfluxAxis[idx];
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
@@ -244,8 +243,6 @@ void CSvdlcFitter::fillMatrix(Int32 imin, Int32 imax, Float64 redshift,
                               const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &continuumfluxAxis,
                               gsl_matrix *X) const {
-  Int32 n = imax - imin + 1;
-
   for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
     Float64 xi = spectralAxis[idx];
     Float64 ci = continuumfluxAxis[idx];
