@@ -100,8 +100,8 @@ class DeepLearningSolve(AbstractReliabilitySolver):
         results = list()
         classes = model_parameters["classes"]
         for model in models:
-            p = model.predict(np.exp(pdfval[None, :, None]))
-            results.append(p.reshape(len(classes)))
+            p = model.predict(np.exp([pdfval])).reshape(len(classes))
+            results.append(p)
 
         probas = np.mean(np.array(results), axis=0)
         return {c: p for c, p in zip(classes, probas)}
