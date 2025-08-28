@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
@@ -198,16 +197,6 @@ COperatorResultStore::GetClassificationResult(const std::string &spectrumModel,
                                               const std::string &method,
                                               const std::string &name) const {
   return std::dynamic_pointer_cast<const CClassificationResult>(
-      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
-          .lock());
-}
-
-std::shared_ptr<const CReliabilityResult>
-COperatorResultStore::GetReliabilityResult(const std::string &spectrumModel,
-                                           const std::string &stage,
-                                           const std::string &method,
-                                           const std::string &name) const {
-  return std::dynamic_pointer_cast<const CReliabilityResult>(
       GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
           .lock());
 }
