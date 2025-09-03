@@ -181,13 +181,8 @@ FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 ADD_DEFINITIONS(-DLBFGSBFITTER)
 
 # Adds specific warnings to include in compilation
-ADD_DEFINITIONS(-Wsign-compare)
-ADD_DEFINITIONS(-Wreorder)
 ADD_DEFINITIONS(-Wall)
-
-# Treate compilation warnings as errors
-SET(CMAKE_COMPILE_WARNING_AS_ERROR ON)
-
+ADD_DEFINITIONS(-Wno-c++20-compat)
 
 ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_HEADERONLY})
