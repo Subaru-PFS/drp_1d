@@ -112,6 +112,12 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   // get masks & determine number of samples actually used
   auto &&[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
+  if (n_samples == 0) {
+    result.ampl = 0.0;
+    result.ampl_sigma = 0.0;
+    return result;
+  }
+
   if (opt_extinction)
     opt_extinction = igmIsInRange(currentRanges);
   m_option_igmFastProcessing =
@@ -357,7 +363,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   }
 
   if (sumT == 0.0) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "empty leastsquare sum");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty leastsquare sum");
   }
 
   return fitResult;

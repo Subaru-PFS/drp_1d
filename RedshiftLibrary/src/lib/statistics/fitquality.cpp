@@ -124,11 +124,16 @@ Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
 Float64 andersonDarlingTest(const TFloat64List &data, Float64 mean,
                             Float64 stdev) {
   // NB this method can also take mean and std if needed
+  const Int32 n = data.size();
+  if (n < 2)
+    return NAN;
   return anderson_darling_normality_statistic(data, mean, stdev);
 }
 
 Float64 ksTest(const TFloat64List &data, const Float64 mean,
                const Float64 stdev, const bool sorted) {
+  if (data.size() < 2)
+    return NAN;
   auto dataBis = data;
   auto empiricalCdf =
       empirical_cumulative_distribution_function(std::move(dataBis), sorted);
