@@ -146,10 +146,10 @@ def load_reliability_models(model_path, parameters: Parameters, object_type):
             ret["parameters"]["classes"] = ["failure", "success"]
             continue
         if not all(res):
-            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Missing {k} attribute")
+            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, f"Missing {k} attribute")
         result = [m[k] for m in models_ha]
         if len(set(result)) != 1:
-            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, "Multiple values for {k} attribute")
+            raise APIException(ErrorCode.INCONSISTENT_MODEL_ATTRIBUTE, f"Multiple values for {k} attribute")
         if k == "classes":
             ret["parameters"][k] = json.loads(str(result[0]))
         else:
