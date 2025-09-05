@@ -862,9 +862,11 @@ void CLineModelFitting::processSingleLine(
   modelSolution.FluxDirectIntegrationUncertainty[iRestLine] =
       std::abs(fluxDI) / snrDI;
 
-  accumulateLineFluxes(flux, fluxError, isEmission, eIdx, line_index, line_id,
-                       modelSolution, eIdx_ha, subeIdx_ha, flux_ha, fluxVar_ha,
-                       eIdx_oii, subeIdx_oii, flux_oii, fluxVar_oii);
+  if (isEmission)
+    accumulateLineFluxes(flux, fluxError, eIdx, line_index, line_id,
+                         modelSolution, eIdx_ha, subeIdx_ha, flux_ha,
+                         fluxVar_ha, eIdx_oii, subeIdx_oii, flux_oii,
+                         fluxVar_oii);
 
   modelSolution.fittingGroupInfo[iRestLine] = elt_param->m_fittingGroupInfo;
 }
@@ -925,8 +927,9 @@ CLineModelFitting::computeLineFlux(Int32 iRestLine,
         modelSolution.Sigmas[iRestLine] = sigma;
         const auto &profile =
             eltList[eIdx]->getElementParam()->getLineProfile(line_index);
-        flux = amp * profile->GetLineFlux(mu, sigma);
-        fluxError = ampError * profile->GetLineFlux(mu, sigma);
+        auto const &rawFlux = profile->GetLineFlux(mu, sigma);
+        flux = amp * rawFlux;
+        fluxError = ampError * rawFlux;
         break;
       }
     }
@@ -936,47 +939,44 @@ CLineModelFitting::computeLineFlux(Int32 iRestLine,
 }
 
 void CLineModelFitting::accumulateLineFluxes(
-    Float64 flux, Float64 fluxError, bool isEmission, Int32 eIdx,
-    Int32 line_index, Int32 line_id, CLineModelSolution &modelSolution,
-    TInt32List &eIdx_ha, TInt32List &subeIdx_ha, Float64 &flux_ha,
-    Float64 &fluxVar_ha, TInt32List &eIdx_oii, TInt32List &subeIdx_oii,
-    Float64 &flux_oii, Float64 &fluxVar_oii) {
+    Float64 flux, Float64 fluxError, Int32 eIdx, Int32 line_index,
+    Int32 line_id, CLineModelSolution &modelSolution, TInt32List &eIdx_ha,
+    TInt32List &subeIdx_ha, Float64 &flux_ha, Float64 &fluxVar_ha,
+    TInt32List &eIdx_oii, TInt32List &subeIdx_oii, Float64 &flux_oii,
+    Float64 &fluxVar_oii) {
   auto const &line = m_RestLineList.at(line_id);
-  if (isEmission) {
-    if (line.GetName() == linetags::halpha_em ||
-        line.GetName() == linetags::niia_em ||
-        line.GetName() == linetags::niib_em) {
-      eIdx_ha.push_back(eIdx);
-      subeIdx_ha.push_back(line_index);
-      if (flux > 0.0)
-        flux_ha += flux;
-      if (fluxError > 0.0)
-        fluxVar_ha += fluxError * fluxError;
-      if (eIdx_ha.size() == 3) {
-        auto [fluxDI, snrDI] = getFluxDirectIntegration(eIdx_ha, subeIdx_ha, 0);
-        modelSolution.snrHa_DI = snrDI;
-        modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
-        modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
-        if (isLineRatioRules())
-          modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
-      }
-    } else if (line.GetName() == linetags::oII3726_em ||
-               line.GetName() == linetags::oII3729_em) {
-      eIdx_oii.push_back(eIdx);
-      subeIdx_oii.push_back(line_index);
-      if (flux > 0.0)
-        flux_oii += flux;
-      if (fluxError > 0.0)
-        fluxVar_oii += fluxError * fluxError;
-      if (eIdx_oii.size() == 2) {
-        auto [fluxDI, snrDI] =
-            getFluxDirectIntegration(eIdx_oii, subeIdx_oii, 0);
-        modelSolution.snrOII_DI = snrDI;
-        modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
-        modelSolution.lfOII = flux_oii > 0 ? log10(flux_oii) : -INFINITY;
-        if (isLineRatioRules())
-          modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
-      }
+  if (line.GetName() == linetags::halpha_em ||
+      line.GetName() == linetags::niia_em ||
+      line.GetName() == linetags::niib_em) {
+    eIdx_ha.push_back(eIdx);
+    subeIdx_ha.push_back(line_index);
+    if (flux > 0.0)
+      flux_ha += flux;
+    if (fluxError > 0.0)
+      fluxVar_ha += fluxError * fluxError;
+    if (eIdx_ha.size() == 3) {
+      auto [fluxDI, snrDI] = getFluxDirectIntegration(eIdx_ha, subeIdx_ha, 0);
+      modelSolution.snrHa_DI = snrDI;
+      modelSolution.lfHa_DI = fluxDI > 0.0 ? log10(fluxDI) : -INFINITY;
+      modelSolution.lfHa = flux_ha > 0.0 ? log10(flux_ha) : -INFINITY;
+      if (isLineRatioRules())
+        modelSolution.snrHa = flux_ha / std::sqrt(fluxVar_ha);
+    }
+  } else if (line.GetName() == linetags::oII3726_em ||
+             line.GetName() == linetags::oII3729_em) {
+    eIdx_oii.push_back(eIdx);
+    subeIdx_oii.push_back(line_index);
+    if (flux > 0.0)
+      flux_oii += flux;
+    if (fluxError > 0.0)
+      fluxVar_oii += fluxError * fluxError;
+    if (eIdx_oii.size() == 2) {
+      auto [fluxDI, snrDI] = getFluxDirectIntegration(eIdx_oii, subeIdx_oii, 0);
+      modelSolution.snrOII_DI = snrDI;
+      modelSolution.lfOII_DI = fluxDI > 0 ? log10(fluxDI) : -INFINITY;
+      modelSolution.lfOII = flux_oii > 0 ? log10(flux_oii) : -INFINITY;
+      if (isLineRatioRules())
+        modelSolution.snrOII = flux_oii / std::sqrt(fluxVar_oii);
     }
   }
 }

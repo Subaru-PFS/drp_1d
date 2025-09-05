@@ -299,16 +299,16 @@ bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
   Int32 max = std::max(x1, y1);
   Int32 min = std::min(x2, y2);
 
-  if (max - min < 0) {
-    m_StartNoOverlap[i] = std::min(x1, y1);
-    m_EndNoOverlap[i] = std::max(x2, y2);
+  if (max - min >= 0)
+    return false;
 
-    // deactivate j
-    m_StartNoOverlap[j] = m_EndNoOverlap[i];
-    m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1;
-    return true;
-  }
-  return false;
+  m_StartNoOverlap[i] = std::min(x1, y1);
+  m_EndNoOverlap[i] = std::max(x2, y2);
+
+  // deactivate j
+  m_StartNoOverlap[j] = m_EndNoOverlap[i];
+  m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1;
+  return true;
 }
 
 void CLineModelElement::resolveOverlaps() {

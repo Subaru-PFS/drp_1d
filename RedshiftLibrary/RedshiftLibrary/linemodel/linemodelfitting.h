@@ -278,8 +278,8 @@ private:
   std::tuple<Float64, Float64, bool>
   computeLineFlux(Int32 iRestLine, CLineModelSolution &modelSolution,
                   Int32 eIdx, Int32 line_index);
-  void accumulateLineFluxes(Float64 flux, Float64 fluxError, bool isEmission,
-                            Int32 eIdx, Int32 line_index, Int32 line_id,
+  void accumulateLineFluxes(Float64 flux, Float64 fluxError, Int32 eIdx,
+                            Int32 line_index, Int32 line_id,
                             CLineModelSolution &modelSolution,
                             TInt32List &eIdx_ha, TInt32List &subeIdx_ha,
                             Float64 &flux_ha, Float64 &fluxVar_ha,
