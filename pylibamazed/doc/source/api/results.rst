@@ -15,13 +15,13 @@ We use here :
 * :math:`r_i = \frac{s_i - m_i}{\sigma_i}` residual at pixel :math:`i`
 
 **LeastSquare**
-: Merit, sum of squared residuals. :math:`\chi^2 = \sum_{i=0}^{n} r_i^2`
+: Merit, sum of squared residuals. :math:`\chi^2 = \sum r_i^2`
 
 **ReducedLeastSquare**
-: Reduced merit, sum of squared residuals divided by number of pixels. :math:`\chi^2_{red} = \frac{\chi^2}{n}`
+: Reduced merit, sum of squared residuals divided by number of pixels. Strictly it should be divided by the degree of freedom of the chi square statistics that is the number of samples minus the number of fitted parameters in the model, which is small compared to the number of samples. :math:`\chi^2_{red} = \frac{\chi^2}{n}`
 
 **PValue**
-: p-value of the hypothesis "residuals follow a normal distribution" :math:`\mathcal{N} (0,1)`
+: p-value is the probability of getting the observed LeastSquare value (or greater) under the null hypothesis: "the data comes from the fitted model and noise". This is equivalent to "the LeastSquare statistics follows a Chi-Square distribution with :math:`n` degree of freedom" i.e. "the residuals follows a standard normal distribution" :math:`\mathcal{N} (0,1)`"
 
 **ResidualsMean**
 : Mean :math:`\bar{\mu}` of the residuals
@@ -36,13 +36,13 @@ We use here :
 : Kurtosis excess of the residuals :math:`\gamma_2 = \frac{1}{n}\sum \left(\frac{r_i - \bar{\mu}}{\bar{\sigma}}\right)^4 - 3`
 
 **Ks**
-: Kolmogorov-Smirnov statistic of the residuals :math:`D = \sup_i | F_n(r_i) - F(r_i) |` where :math:`F_n` is the empirical cumulative distribution function of the residuals and :math:`F` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(0,1)`
+: Kolmogorov-Smirnov statistic of the residuals :math:`D = \sup_i | F_n(r_i) - F(r_i) |` where :math:`F_n` is the empirical cumulative distribution function of the residuals and :math:`F` is the cumulative distribution function of the standard normal distribution :math:`\mathcal{N}(0,1)`
 
 **KsStd**
-: Same as above but the standard deviation of the residuals is used instead of 1. :math:`F` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(0,\bar{\sigma}^2)`
+: Same as above but the standard deviation of the residuals is used for the reference normal distribution instead of the standard normal distribution. :math:`F` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(0,\bar{\sigma}^2)`
 
 **KsStdMean**
-: Same as above but the mean and standard deviation of the residuals are used instead of 0 and 1. :math:`F` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(\bar{\mu},\bar{\sigma}^2)`
+: Same as above but the mean and standard deviation of the residuals are used for the reference normal distribution instead of the standard normal distribution. :math:`F` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(\bar{\mu},\bar{\sigma}^2)`
 
 **Anderson**
 : Anderson-Darling statistic of the residuals :math:`A^2 = n \sum \frac{(F_n(r_i) - F(r_i))^2F'(r_i)}{F(r_i)(1-F(r_i))}` where :math:`r_{i}` are the ordered residuals and :math:`F(x)` is the cumulative distribution function of the normal distribution :math:`\mathcal{N}(\bar{\mu},\bar{\sigma}^2)`
