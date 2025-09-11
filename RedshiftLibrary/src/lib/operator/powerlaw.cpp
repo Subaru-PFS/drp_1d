@@ -143,9 +143,12 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     curve =
         TCurve(std::move(emittedCurve), chi2Result.igmIdx, chi2Result.ismIdx);
   }
-  auto modelFlux =
-      computeModelFlux(curve.computeUnmaskedLambda(), redshift,
-                       result.meiksinIdx, result.ebmvCoef, result.coefs);
+
+  // Step 5. compute fit quality from residuals
+  // compute power law model without isgm/igm since flux & error has been
+  // inverse corrected
+  auto modelFlux = computeModelFlux(curve.computeUnmaskedLambda(), redshift,
+                                    undefIdx, 0.0, result.coefs);
   T2DPowerLawCoefsPair coefs(1, TList<TPowerLawCoefsPair>(1, result.coefs));
   auto flux = curve.computeUnmaskedFlux();
   auto error = curve.computeUnmaskedFluxError();
@@ -749,8 +752,10 @@ TFloat64List COperatorPowerLaw::computeModelFlux(
     const TFloat64List &lambdaRestAxis, const Float64 redshift,
     const Int32 meiksinIdx, const Float64 ebmvCoef,
     const TPowerLawCoefsPair &coefs) const {
-  TList<Float64> const correctionCoefs =
-      computeIsmIgmCorrection(redshift, lambdaRestAxis, meiksinIdx, ebmvCoef);
+  TList<Float64> correctionCoefs(lambdaRestAxis.size(), 1.0);
+  if (meiksinIdx || ebmvCoef)
+    correctionCoefs =
+        computeIsmIgmCorrection(redshift, lambdaRestAxis, meiksinIdx, ebmvCoef);
   TList<Float64> fluxObs(lambdaRestAxis.size(), NAN);
   for (size_t pixelIdx = 0; pixelIdx < lambdaRestAxis.size(); pixelIdx++) {
     fluxObs[pixelIdx] = computeDoublePowerLaw(coefs, lambdaRestAxis[pixelIdx]) *
