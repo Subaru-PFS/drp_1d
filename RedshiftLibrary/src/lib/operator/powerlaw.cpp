@@ -147,8 +147,9 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   // Step 5. compute fit quality from residuals
   // compute power law model without isgm/igm since flux & error has been
   // inverse corrected
-  auto modelFlux = computeModelFlux(curve.computeUnmaskedLambda(), redshift,
-                                    undefIdx, 0.0, result.coefs);
+  auto modelFlux =
+      computeModelFlux(CSpectrumSpectralAxis(curve.computeUnmaskedLambda()),
+                       redshift, undefIdx, 0.0, result.coefs);
   T2DPowerLawCoefsPair coefs(1, TList<TPowerLawCoefsPair>(1, result.coefs));
   auto flux = curve.computeUnmaskedFlux();
   auto error = curve.computeUnmaskedFluxError();
@@ -749,15 +750,16 @@ TBoolList COperatorPowerLaw::computeSNRCompliantPixels(
 }
 
 TFloat64List COperatorPowerLaw::computeModelFlux(
-    const TFloat64List &lambdaRestAxis, const Float64 redshift,
+    const CSpectrumSpectralAxis &lambdaRestAxis, const Float64 redshift,
     const Int32 meiksinIdx, const Float64 ebmvCoef,
     const TPowerLawCoefsPair &coefs) const {
-  TList<Float64> correctionCoefs(lambdaRestAxis.size(), 1.0);
+  TList<Float64> correctionCoefs(lambdaRestAxis.GetSamplesCount(), 1.0);
   if (meiksinIdx || ebmvCoef)
     correctionCoefs =
         computeIsmIgmCorrection(redshift, lambdaRestAxis, meiksinIdx, ebmvCoef);
-  TList<Float64> fluxObs(lambdaRestAxis.size(), NAN);
-  for (size_t pixelIdx = 0; pixelIdx < lambdaRestAxis.size(); pixelIdx++) {
+  TList<Float64> fluxObs(lambdaRestAxis.GetSamplesCount(), NAN);
+  for (Int32 pixelIdx = 0; pixelIdx < lambdaRestAxis.GetSamplesCount();
+       pixelIdx++) {
     fluxObs[pixelIdx] = computeDoublePowerLaw(coefs, lambdaRestAxis[pixelIdx]) *
                         correctionCoefs[pixelIdx];
   }
@@ -769,8 +771,7 @@ CModelSpectrumResult COperatorPowerLaw::ComputeSpectrumModel(
 
   auto const &lambdaObsAxis = m_spectra[spcIndex]->GetSpectralAxis();
   auto const &lambdaObs = lambdaObsAxis.GetSamplesVector();
-  auto const lambdaRestAxis =
-      lambdaObsAxis.blueShift(continuum.redshift).GetSamplesVector();
+  auto const lambdaRestAxis = lambdaObsAxis.blueShift(continuum.redshift);
 
   auto fluxObs = computeModelFlux(
       lambdaRestAxis, continuum.redshift, continuum.meiksinIdx,

@@ -201,7 +201,7 @@ private:
       TCurve const &lnCurve,
       std::optional<TPowerLawCoefs> const &coefsFirstEstim =
           std::nullopt) const;
-  TFloat64List computeModelFlux(const TFloat64List &lambdaRestAxis,
+  TFloat64List computeModelFlux(const CSpectrumSpectralAxis &lambdaRestAxis,
                                 const Float64 redshift, const Int32 meiksinIdx,
                                 const Float64 ebmvCoef,
                                 const TPowerLawCoefsPair &coefs) const;
