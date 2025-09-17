@@ -108,6 +108,11 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                          });
   TPowerLawResult result;
   if (N < m_nSamplesMinForContinuumFit) {
+    auto const N_unmasked = curve.computeUnmaskedFlux().size();
+    if (N_unmasked < 1) {
+      result.coefs = DEFAULT_COEFS_PAIR;
+      return result;
+    }
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
     auto const constantLawsCoef = computeConstantLawCoefs(curve);
@@ -321,6 +326,8 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 
 TPowerLawCoefsPair
 COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
+  // Computes a constant law. Use all unmasked pixels to compute the mean flux
+  // (including the ones with low SNR)
   auto const flux = emittedCurve.computeUnmaskedFlux();
   auto const error = emittedCurve.computeUnmaskedFluxError();
   TFloat64List inverse_var(error.size());

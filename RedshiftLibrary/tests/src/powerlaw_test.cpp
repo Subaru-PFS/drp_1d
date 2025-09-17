@@ -369,6 +369,56 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   Context.reset();
 }
 
+class CTestMaskBuilder : public CMaskBuilder {
+public:
+  using CMaskBuilder::CMaskBuilder;
+
+  CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
+                const TFloat64Range &lamdbdaRange, const Float64 &redshift,
+                Int32 spc_index = 0) override {
+    CMask mask(spectralAxis.GetSamplesCount(), 0);
+    return mask;
+  };
+  bool isDefaultMask() const override { return false; };
+}; // namespace NSEpic
+
+BOOST_AUTO_TEST_CASE(basicfit_double_default) {
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  nMinSamples = 10;
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(4100, 4500, 1);
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, 1, 0, 0, xc);
+  ;
+  addNoiseAxis(fluxAxis);
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  operatorPowerLaw.m_maskBuilder = std::make_shared<CTestMaskBuilder>();
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "full");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
+  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, INFINITY);
+  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 0);
+  Context.reset();
+}
+
 BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
   bool opt_extinction = false;
   bool opt_dustFitting = false;
