@@ -101,6 +101,7 @@ protected:
   void checkTemplateOverlap(const Float64 overlapFraction,
                             const Float64 overlapThreshold);
   virtual Float64 EstimateLikelihoodCstLog() const;
+  Int32 m_nSamplesMinForContinuumFit;
 };
 } // namespace NSEpic
 

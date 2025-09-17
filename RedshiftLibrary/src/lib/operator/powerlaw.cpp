@@ -69,8 +69,6 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   m_nPixels.resize(m_nSpectra);
   m_kStart.resize(m_nSpectra);
   m_kEnd.resize(m_nSpectra);
-  m_nLogSamplesMin =
-      Context.GetParameterStore()->Get<Int32>("nbSamplesMinForContinuumFit");
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
@@ -109,7 +107,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return curve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
   TPowerLawResult result;
-  if (N < m_nLogSamplesMin) {
+  if (N < m_nSamplesMinForContinuumFit) {
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
     auto const constantLawsCoef = computeConstantLawCoefs(curve);
@@ -260,7 +258,7 @@ void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int32 igmIdx,
                                                 const char *funcName) const {
   Flag.warning(WarningCode::FORCED_POWERLAW_TO_ZERO,
                Formatter() << "COperatorPowerLaw::" << funcName << ": only "
-                           << N << " < " << m_nLogSamplesMin
+                           << N << " < " << m_nSamplesMinForContinuumFit
                            << " samples with significant flux values. Power "
                               "law coefs are forced to zero. igmIdx = "
                            << igmIdx << ", "
@@ -297,7 +295,7 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
           });
       auto const N2 = N - N1;
 
-      if (N < m_nLogSamplesMin) {
+      if (N < m_nSamplesMinForContinuumFit) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
         powerLawsCoefs[igmIdx][ismIdx] = DEFAULT_COEFS_PAIR;
       } else {
@@ -349,7 +347,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
   TPowerLawCoefsPair powerLawsCoefs;
   TCurve lnPartCurve;
   lnPartCurve.reserve(N1 + N2);
-  if (N1 < m_nLogSamplesMin) {
+  if (N1 < m_nSamplesMinForContinuumFit) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) > lnxc) {
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));
@@ -357,7 +355,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
     powerLawsCoefs = {coefs, coefs};
-  } else if (N2 < m_nLogSamplesMin) {
+  } else if (N2 < m_nSamplesMinForContinuumFit) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) < lnxc) {
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));

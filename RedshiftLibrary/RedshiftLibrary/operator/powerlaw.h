@@ -155,7 +155,6 @@ private:
   Float64 m_lambdaCut;
   Int32 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
-  Int32 m_nLogSamplesMin;
 
   void initIgmIsm(bool opt_extinction, bool opt_dustFitting, Int32 FitEbmvIdx,
                   Int32 FitMeiksinIdx);

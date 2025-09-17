@@ -976,11 +976,13 @@ void COperatorTemplateFittingLog::FitRangez(
       TFloat64List amp_sigma(nshifts);
       TFloat64List amp_err(nshifts, DBL_MAX);
       for (Int32 k = 0; k < nshifts; k++) {
-        if (mtm_vec[k] == 0.0) {
+        if (ssize(nValidSamples_vec) < m_nSamplesMinForContinuumFit) {
           amp[k] = 0.0;
           amp_err[k] = 0.0;
           amp_sigma[k] = 0.0;
           chi2[k] = dtd; // keep at maximum
+        } else if (mtm_vec[k] == 0.0) {
+          THROWG(ErrorCode::INTERNAL_ERROR, "mtm_vec[k] == 0");
         } else {
           amp[k] = dtm_vec[k] / mtm_vec[k];
           amp_err[k] = sqrt(1. / mtm_vec[k]);
