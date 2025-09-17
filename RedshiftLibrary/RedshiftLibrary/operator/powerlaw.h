@@ -172,8 +172,7 @@ private:
                                       Float64 nullFluxThreshold) const;
   T3DCurve computeLnCurve(T3DCurve const &emittedCurve) const;
   T2DList<Float64> computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs,
-                               const bool applySNRThreshold = true);
+                               T2DPowerLawCoefsPair const &coefs);
   TChi2Result findMinChi2OnIgmIsm(T3DCurve const &curve,
                                   T2DPowerLawCoefsPair const &coefs);
   Float64 computeDoublePowerLaw(TPowerLawCoefsPair const &coefs,

@@ -115,7 +115,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // Create a temporary 3D curve to compute chi2
     auto curve3D = T3DCurve(std::move(curve));
-    auto const chi2 = computeChi2(curve3D, coefs, false);
+    auto const chi2 = computeChi2(curve3D, coefs);
     curve = TCurve(std::move(curve3D));
 
     result.chiSquare = chi2[0][0];
@@ -187,17 +187,11 @@ COperatorPowerLaw::findMinChi2OnIgmIsm(T3DCurve const &curve3D,
 
 T2DList<Float64>
 COperatorPowerLaw::computeChi2(T3DCurve const &curve3D,
-                               T2DPowerLawCoefsPair const &coefs,
-                               const bool applySNRThreshold) {
+                               T2DPowerLawCoefsPair const &coefs) {
   std::function<bool(Int32)> considerPixel;
-  if (applySNRThreshold)
-    considerPixel = [&curve3D](Int32 pixelIdx) {
-      return curve3D.pixelIsChi2AndSNRValid(pixelIdx);
-    };
-  else
-    considerPixel = [&curve3D](Int32 pixelIdx) {
-      return curve3D.pixelIsChi2Valid(pixelIdx);
-    };
+  considerPixel = [&curve3D](Int32 pixelIdx) {
+    return curve3D.pixelIsChi2Valid(pixelIdx);
+  };
   Int32 nIgmCurves = curve3D.getNIgm();
   Int32 nIsmCurves = curve3D.getNIsm();
   T2DList<Float64> chi2_all(nIgmCurves, TList<Float64>(nIsmCurves, INFINITY));
