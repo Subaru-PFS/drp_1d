@@ -25,6 +25,7 @@
     }
   ],
   "nbSamplesMin": 1,
+  "nbSamplesMinForContinuumFit": 20,
   "multiObsMethod": "",
   "lambdaRange": [
     12510,

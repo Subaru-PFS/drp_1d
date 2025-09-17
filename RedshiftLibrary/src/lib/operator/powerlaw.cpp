@@ -69,6 +69,8 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   m_nPixels.resize(m_nSpectra);
   m_kStart.resize(m_nSpectra);
   m_kEnd.resize(m_nSpectra);
+  m_nLogSamplesMin =
+      Context.GetParameterStore()->Get<Int32>("nbSamplesMinForContinuumFit");
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();

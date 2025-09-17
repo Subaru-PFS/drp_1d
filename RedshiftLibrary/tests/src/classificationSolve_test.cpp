@@ -57,6 +57,7 @@ std::string jsonStringBase =
     "\"multiObsMethod\" : \"\","
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","

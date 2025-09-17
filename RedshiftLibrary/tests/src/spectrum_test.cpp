@@ -73,6 +73,7 @@ void print_flux(TAxisSampleList sample) {
 const std::string jsonString =
     "{\"smoothWidth\" : 0.5,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"continuumRemoval\" : { \"medianKernelWidth\" : 74.0, "
     "\"medianEvenReflection\" : false, "
     "\"method\" : \"irregularSamplingMedian\"}}";

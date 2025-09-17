@@ -6,6 +6,7 @@
     18500
   ],
   "nbSamplesMin": 1,
+  "nbSamplesMinForContinuumFit": 20,
   "smoothWidth": 0.0,
   "templateCatalog": {
     "continuumRemoval": {
