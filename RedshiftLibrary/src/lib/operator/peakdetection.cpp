@@ -200,15 +200,14 @@ void CPeakDetection::FindPossiblePeaks(
     // Int32 start = std::max( 0, i - halfWindowSampleCount );
     // Int32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), i +
     // halfWindowSampleCount ); irregular sampling compatible
-    Int32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(
-                                  spectralAxis[i] - m_winsize / 2.0));
-    Int32 stop = std::min(s, spectralAxis.GetIndexAtWaveLength(
-                                 spectralAxis[i] + m_winsize / 2.0));
+    TFloat64Range lambda_range{spectralAxis[i] - m_winsize / 2.0,
+                               spectralAxis[i] + m_winsize / 2.0};
+    auto const &irange = spectralAxis.GetIndexesAtWaveLengthRange(lambda_range);
 
-    med[i] = medianFilter.Find(fluxVector.begin() + start,
-                               fluxVector.begin() + stop);
-    xmad[i] =
-        XMad(fluxVector.begin() + start, fluxVector.begin() + stop, med[i]);
+    med[i] = medianFilter.Find(fluxVector.begin() + irange.GetBegin(),
+                               fluxVector.begin() + irange.GetEnd() + 1);
+    xmad[i] = XMad(fluxVector.begin() + irange.GetBegin(),
+                   fluxVector.begin() + irange.GetEnd() + 1, med[i]);
     xmad[i] +=
         m_detectionnoiseoffset; // add a noise level, useful for simulation data
   }

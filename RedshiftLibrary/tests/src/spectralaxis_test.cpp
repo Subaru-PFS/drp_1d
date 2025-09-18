@@ -38,7 +38,6 @@
 // ============================================================================
 #include <algorithm>
 #include <cmath>
-#include <iterator>
 
 #include <boost/test/unit_test.hpp>
 
@@ -48,6 +47,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "tests/src/tool/checkException.h"
 
 using namespace NSEpic;
 
@@ -326,6 +326,13 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapFraction) {
 }
 
 BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
+  auto check_error_OUTSIDERANGE = [](AmzException const &e) {
+    return check_error_code(e, ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE);
+  };
+  auto check_error_NO_INTERSECTION = [](AmzException const &e) {
+    return check_error_code(e, ErrorCode::IE_CRANGE_NO_INTERSECTION);
+  };
+
   // GetIndexAtWaveLength tests
   const TFloat64List arr{0.0, 2.0, 3.0, 6.0};
   const CSpectrumSpectralAxis axis(arr);
@@ -355,27 +362,26 @@ BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
   TInt32Range irange1 = axis.GetIndexesAtWaveLengthRange(range1);
   BOOST_TEST_MESSAGE("index:" << irange1.GetBegin() << "," << irange1.GetEnd());
   BOOST_CHECK(irange1.GetBegin() == 1);
-  BOOST_CHECK(irange1.GetEnd() == 3);
+  BOOST_CHECK(irange1.GetEnd() == 2);
   const TFloat64Range range2(-2.0, -1.0);
-  TInt32Range irange2 = axis.GetIndexesAtWaveLengthRange(range2);
-  BOOST_TEST_MESSAGE("index:" << irange2.GetBegin() << "," << irange2.GetEnd());
-  BOOST_CHECK(irange2.GetBegin() == 0);
-  BOOST_CHECK(irange2.GetEnd() == 0);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range2), AmzException,
+                        check_error_OUTSIDERANGE);
   const TFloat64Range range3(10.0, 20.0);
-  TInt32Range irange3 = axis.GetIndexesAtWaveLengthRange(range3);
-  BOOST_TEST_MESSAGE("index:" << irange3.GetBegin() << "," << irange3.GetEnd());
-  BOOST_CHECK(irange3.GetBegin() == 3);
-  BOOST_CHECK(irange3.GetEnd() == 3);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range3), AmzException,
+                        check_error_OUTSIDERANGE);
   const TFloat64Range range4(-1.0, 2.2);
   TInt32Range irange4 = axis.GetIndexesAtWaveLengthRange(range4);
   BOOST_TEST_MESSAGE("index:" << irange4.GetBegin() << "," << irange4.GetEnd());
   BOOST_CHECK(irange4.GetBegin() == 0);
-  BOOST_CHECK(irange4.GetEnd() == 2);
+  BOOST_CHECK(irange4.GetEnd() == 1);
   const TFloat64Range range5(2.2, 10.0);
   TInt32Range irange5 = axis.GetIndexesAtWaveLengthRange(range5);
   BOOST_TEST_MESSAGE("index:" << irange5.GetBegin() << "," << irange5.GetEnd());
   BOOST_CHECK(irange5.GetBegin() == 2);
   BOOST_CHECK(irange5.GetEnd() == 3);
+  const TFloat64Range range6(2.2, 2.9);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range6), AmzException,
+                        check_error_NO_INTERSECTION);
 }
 
 BOOST_AUTO_TEST_CASE(LambdaRange) {

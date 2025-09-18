@@ -264,20 +264,20 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop(
     Int32 i, const TInt32RangeList &peaksBorders, Int32 len,
     const CSpectrumSpectralAxis spectralAxis) {
   Int32 fitStart = peaksBorders[i].GetBegin();
-  Int32 fitStop = peaksBorders[i].GetEnd() + 1;
+  Int32 fitStop = peaksBorders[i].GetEnd();
 
   Float64 width = fitStop - fitStart;
   Int32 center = fitStart + width / 2;
-  Int32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(
-                                spectralAxis[center] - m_maxsize / 2.0));
-  Int32 stop =
-      std::min((Int32)len, spectralAxis.GetIndexAtWaveLength(
-                               spectralAxis[center] + m_maxsize / 2.0));
-  Int32 maxwinsizeIndexes = stop - start;
+  auto const &lambda_range =
+      TFloat64Range(spectralAxis[center] - m_maxsize / 2.0,
+                    spectralAxis[center] + m_maxsize / 2.0);
+  auto const &irange = spectralAxis.GetIndexesAtWaveLengthRange(lambda_range);
+
+  Int32 maxwinsizeIndexes = irange.GetLength() + 1;
 
   if (width > maxwinsizeIndexes) {
-    fitStart = max(0, (int)start);
-    fitStop = min(len, (int)stop);
+    fitStart = irange.GetBegin();
+    fitStop = irange.GetEnd();
   }
 
   if (i > 0) {
@@ -337,19 +337,16 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   // int left = max(0, (Int32)(maxIndex-windowSampleCount/2.0+0.5) ) ;
   // int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(maxIndex +
   // windowSampleCount/2.0) )+1; irreg. sampling
-  Int32 const left = std::max(range.GetBegin(),
-                              max(0, specAxis.GetIndexAtWaveLength(
-                                         specAxis[maxIndex] - winsize / 2.0)));
-  Int32 const right = std::min(
-      range.GetEnd() + 1,
-      min((Int32)fluxAxis.GetSamplesCount(),
-          specAxis.GetIndexAtWaveLength(specAxis[maxIndex] + winsize / 2.0) +
-              1));
+  TFloat64Range const lambda_range{specAxis[maxIndex] - winsize / 2.0,
+                                   specAxis[maxIndex] + winsize / 2.0};
+  auto const &index_range = specAxis.GetIndexesAtWaveLengthRange(lambda_range);
+  Int32 const left = std::max(range.GetBegin(), index_range.GetBegin());
+  Int32 const right = std::min(range.GetEnd(), index_range.GetEnd());
 
   TFloat64List fluxMasked;
   fluxMasked.reserve(fluxAxis.GetSamplesCount());
   int n = 0;
-  for (int i = left; i < right; i++) {
+  for (int i = left; i <= right; i++) {
     if (mask[i] != 0) {
       fluxMasked.push_back(fluxAxis[i]);
       n++;
@@ -365,7 +362,7 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   if (!error.empty()) {
     // check if noise file has been loaded
     bool isNoiseOnes = true;
-    for (Int32 i = left; i < right; i++)
+    for (Int32 i = left; i <= right; i++)
       if (error[i] != 1.0) {
         isNoiseOnes = false;
         break;
@@ -374,7 +371,7 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
     if (!isNoiseOnes) {
       Float64 mean_noise = 0.0;
       Int32 n_mean_noise = 0;
-      for (Int32 i = left; i < right; i++)
+      for (Int32 i = left; i <= right; i++)
         if (mask[i] != 0) {
           mean_noise += error[i];
           n_mean_noise++;

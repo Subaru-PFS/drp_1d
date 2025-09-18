@@ -1795,10 +1795,10 @@ void COperatorLineModel::addFitQualityToCandidate(
   for ([[maybe_unused]] auto &obs : m_fittingManager->getSpectraIndex()) {
     auto const &spectrum = m_fittingManager->getSpectrum();
     auto const &lambdaRange = m_fittingManager->getLambdaRange();
-    kStartAll.push_back(spectrum.GetSpectralAxis().GetIndexAtWaveLength(
-        lambdaRange.GetBegin()));
-    kEndAll.push_back(
-        spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd()));
+    auto const &krange =
+        spectrum.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdaRange);
+    kStartAll.push_back(krange.GetBegin());
+    kEndAll.push_back(krange.GetEnd());
   }
 
   std::vector<TFloat64List> spcFlux;
@@ -1814,16 +1814,17 @@ void COperatorLineModel::addFitQualityToCandidate(
     auto const kEnd = kEndAll[obs];
 
     auto const &fluxBegin = spc.GetFluxAxis().GetSamplesVector().cbegin();
-    spcFlux.push_back(TFloat64List(fluxBegin + kStart, fluxBegin + kEnd));
+    spcFlux.push_back(TFloat64List(fluxBegin + kStart, fluxBegin + kEnd + 1));
 
     auto const &errorBegin =
         spc.GetFluxAxis().GetError().GetSamplesVector().cbegin();
     spcFluxError.push_back(
-        TFloat64List(errorBegin + kStart, errorBegin + kEnd));
+        TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
 
     auto const modelBegin =
         candidateModel->ModelFlux.at(spc.getObsID()).cbegin();
-    modelFlux.push_back(TFloat64List(modelBegin + kStart, modelBegin + kEnd));
+    modelFlux.push_back(
+        TFloat64List(modelBegin + kStart, modelBegin + kEnd + 1));
   }
 
   TFitQuality fitQuality = NSFitQuality::computeFitQuality(

@@ -258,10 +258,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII;
-  BOOST_CHECK_CLOSE(snrOII, 16.196486940733053, 1e-6);
+  BOOST_CHECK_CLOSE(snrOII, 16.133673282026134, 1e-6);
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.658215485050579, 1e-6);
+  BOOST_CHECK_CLOSE(lfOII, -15.656149251090058, 1e-6);
 
   ctx.reset();
 }
@@ -284,9 +284,9 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
       Context.GetResultStore()->GetLineModelSolution(
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
-  BOOST_CHECK_CLOSE(res->snrOII_DI, 21.480993641608535, 1);
+  BOOST_CHECK_CLOSE(res->snrOII_DI, 22.998600370737098, 1);
 
-  BOOST_CHECK_CLOSE(res->lfOII_DI, -15.78954228328228, 0.1); // 0.1%
+  BOOST_CHECK_CLOSE(res->lfOII_DI, -15.792660594203932, 0.1); // 0.1%
 
   BOOST_CHECK_CLOSE(res->lfOII, -15.778872598441525, 0.1); // 0.1%
 
