@@ -117,7 +117,7 @@ void COperatorTplcombination::BasicFit(
                 fittingResults.overlapFraction.front(), overlapThreshold);
 
   // I consider here that all templates share the same spectralAxis
-  currentRange.getClosedIntervalIndices(
+  currentRange.getClosestInnerIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
       m_kStart[0], m_kEnd[0]);
 
@@ -595,7 +595,7 @@ CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
                 overlapFraction, overlapThreshold);
 
-  currentRange.getClosedIntervalIndices(
+  currentRange.getClosestInnerIndices(
       m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
       m_kStart[0], m_kEnd[0]);
 
@@ -660,8 +660,8 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLogForSpectrum(
 
   Int32 imin;
   Int32 imax;
-  lambdaRange.getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(), imin,
-                                       imax);
+  lambdaRange.getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(), imin,
+                                     imax);
   for (Int32 j = imin; j <= imax; j++) {
     numDevs++;
     sumLogNoise += log(error[j]);

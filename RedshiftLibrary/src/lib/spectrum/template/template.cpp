@@ -102,8 +102,8 @@ CTemplate::CTemplate(const CTemplate &other, const TMaskList &mask)
                              other.m_SpectralAxis[other.m_Ism_kend]);
     bool rangeIsMasked = false;
     try {
-      otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(),
-                                          m_IsmIgm_kstart, m_Ism_kend);
+      otherRange.getClosestInnerIndices(m_SpectralAxis.GetSamplesVector(),
+                                        m_IsmIgm_kstart, m_Ism_kend);
     } catch (const AmzException &exception) {
       if (exception.getErrorCode() ==
           ErrorCode::IE_CRANGE_VECTBORDERS_OUTSIDERANGE) {
@@ -284,8 +284,8 @@ void CTemplate::InitIsmIgmConfig(Float64 redshift) {
 void CTemplate::InitIsmIgmConfig(const TFloat64Range &lbdaRange,
                                  Float64 redshift) {
   Int32 kstart, kend;
-  lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart,
-                                     kend);
+  lbdaRange.getClosestInnerIndices(m_SpectralAxis.GetSamplesVector(), kstart,
+                                   kend);
 
   InitIsmIgmConfig(kstart, kend, redshift);
 }

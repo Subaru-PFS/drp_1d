@@ -520,8 +520,8 @@ CLineModelFitting::getOutsideLinesRMS(CMask const &_mask) const {
   Float64 sum2_error = 0.0;
   Int32 nsum = 0;
   Int32 imin, imax;
-  getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
-                                            imin, imax);
+  getLambdaRange().getClosestInnerIndices(spectralAxis.GetSamplesVector(), imin,
+                                          imax);
 
   const auto &spcFluxAxisNoContinuum =
       getSpectrumModel().getSpcFluxAxisNoContinuum();
@@ -554,8 +554,8 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
     Float64 diff = 0.0;
 
     Int32 imin, imax;
-    getLambdaRange().getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    getLambdaRange().getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(),
+                                            imin, imax);
 
     for (Int32 j = imin; j <= imax; j++) {
       diff = (Yspc[j] - YCont[j]);
@@ -598,8 +598,8 @@ Int32 CLineModelFitting::computeSpcNSamples() const {
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    getLambdaRange().getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    getLambdaRange().getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(),
+                                            imin, imax);
 
     nSamples += abs(imax - imin + 1);
   }
@@ -1191,8 +1191,8 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
     const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
 
     Int32 imin, imax;
-    getLambdaRange().getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    getLambdaRange().getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(),
+                                            imin, imax);
     for (Int32 j = imin; j <= imax; j++) {
       if (spcComponent == "noContinuum")
         flux = YspcNoContinuum[j];
@@ -1225,8 +1225,8 @@ Float64 CLineModelFitting::EstimateMTransposeM()
     Float64 diff = 0.0;
 
     Int32 imin, imax;
-    getLambdaRange().getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    getLambdaRange().getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(),
+                                            imin, imax);
 
     for (Int32 j = imin; j <= imax; j++) {
       diff = spcFluxAxis[j];
@@ -1256,8 +1256,8 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
 
     Int32 imin;
     Int32 imax;
-    getLambdaRange().getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    getLambdaRange().getClosestInnerIndices(spcSpectralAxis.GetSamplesVector(),
+                                            imin, imax);
     Int32 numDevs = std::abs(imax - imin + 1);
     for (Int32 j = imin; j <= imax; j++)
       sumLogNoise += log(ErrorNoContinuum[j]);

@@ -72,7 +72,7 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
-    m_lambdaRanges[spectrumIdx]->getClosedIntervalIndices(
+    m_lambdaRanges[spectrumIdx]->getClosestInnerIndices(
         spectrumLambda.GetSamplesVector(), m_kStart[spectrumIdx],
         m_kEnd[spectrumIdx]);
     m_nPixels[spectrumIdx] = m_kEnd[spectrumIdx] - m_kStart[spectrumIdx] + 1;

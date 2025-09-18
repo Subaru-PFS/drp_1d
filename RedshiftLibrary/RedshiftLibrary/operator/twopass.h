@@ -196,7 +196,7 @@ TInt32Range COperatorTwoPass<T>::getzIdxRangeToCompute(Int32 candidateIdx) {
   Int32 imin = undefIdx;
   Int32 imax = undefIdx;
   TFloat64Range(extendedRedshifts)
-      .getClosedIntervalIndices(m_redshifts, imin, imax);
+      .getClosestInnerIndices(m_redshifts, imin, imax);
   return TInt32Range(imin, imax);
 }
 

@@ -354,10 +354,10 @@ public:
     i_max = it_max - ordered_values.begin();
   }
 
-  // closed refers to having i_min referring to m_Begin index or higher and
+  // Inner means i_min referring to m_Begin index or higher and
   // i_max referring to m_End index or lower
-  void getClosedIntervalIndices(const std::vector<T> &ordered_values,
-                                Int32 &i_min, Int32 &i_max) const {
+  void getClosestInnerIndices(const std::vector<T> &ordered_values,
+                              Int32 &i_min, Int32 &i_max) const {
     if (ordered_values.size() == 0) {
       THROWG(ErrorCode::IE_EMPTY_LIST,
              "Input ordered values is an empty vector.");

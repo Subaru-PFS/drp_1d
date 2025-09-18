@@ -106,8 +106,8 @@ void CInputContext::RebinInputs() {
       // Intersect with input lambdaRange and get indexes
       Int32 kstart = -1;
       Int32 kend = -1;
-      lambdaRange_ptr->getClosedIntervalIndices(spcWav.GetSamplesVector(),
-                                                kstart, kend);
+      lambdaRange_ptr->getClosestInnerIndices(spcWav.GetSamplesVector(), kstart,
+                                              kend);
       // save into the rebinnedSpectrum
       m_rebinnedFullSpectra.back()->SetSpectralAndFluxAxes(
           spcWav.extract(kstart, kend),

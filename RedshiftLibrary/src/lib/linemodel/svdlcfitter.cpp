@@ -131,8 +131,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
                 0); // number of param to be fitted=nlines+continuum
 
   Int32 imin = -1, imax = -1;
-  getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
-                                            imin, imax);
+  getLambdaRange().getClosestInnerIndices(spectralAxis.GetSamplesVector(), imin,
+                                          imax);
   ampsfitted.assign(nddl_ini, NAN);
   errorsfitted.assign(nddl_ini, NAN);
 

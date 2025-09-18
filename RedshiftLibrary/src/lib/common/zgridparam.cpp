@@ -80,7 +80,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   range_epsilon.IntersectWith(zgrid);
   Int32 imin = -1;
   Int32 imax = -1;
-  range_epsilon.getClosedIntervalIndices(zgrid, imin, imax);
+  range_epsilon.getClosestInnerIndices(zgrid, imin, imax);
 
   // deal with subgrid front or end
   // if truncated by intersection with zgrid

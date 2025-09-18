@@ -102,7 +102,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
     // Sets template indexes between which data is of interest for this given
     // spectrum / redshift
-    currentRanges[spcIndex].getClosedIntervalIndices(
+    currentRanges[spcIndex].getClosestInnerIndices(
         m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
         m_kStart[spcIndex], m_kEnd[spcIndex]);
   }
