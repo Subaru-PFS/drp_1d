@@ -273,8 +273,7 @@ void CPdfCandidatesZ::getCandidateSumTrapez(
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
-                                     kmax);
+  zrange.getClosestOuterIndices(redshifts, candidate->Redshift, kmin, kmax);
   TFloat64List ZinRange =
       TFloat64List(redshifts.begin() + kmin, redshifts.begin() + kmax + 1);
   candidate->ValSumProbaZmin = ZinRange.front();
@@ -388,8 +387,7 @@ void CPdfCandidatesZ::getCandidateGaussFit(
   Int32 kmin = -1;
   Int32 kmax = -1;
 
-  zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift, kmin,
-                                     kmax);
+  zrange.getClosestOuterIndices(redshifts, candidate->Redshift, kmin, kmax);
 
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;

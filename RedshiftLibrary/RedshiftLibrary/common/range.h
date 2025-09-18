@@ -294,11 +294,11 @@ public:
     return vect;
   }
 
-  // enclosed refers to having i_max referring to m_End or higher and i_min
+  // Outer means i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
-  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   const T &value, Int32 &i_min,
-                                   Int32 &i_max) const {
+  void getClosestOuterIndices(const std::vector<T> &ordered_values,
+                              const T &value, Int32 &i_min,
+                              Int32 &i_max) const {
     if (value < m_Begin || value > m_End) {
       THROWG(ErrorCode::IE_CRANGE_VALUE_OUTSIDERANGE,
              Formatter() << "Value " << value << " not inside ]" << m_Begin
@@ -329,8 +329,8 @@ public:
     i_max = it_max - ordered_values.begin();
   }
 
-  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   Int32 &i_min, Int32 &i_max) const {
+  void getClosestOuterIndices(const std::vector<T> &ordered_values,
+                              Int32 &i_min, Int32 &i_max) const {
 
     if (ordered_values.size() == 0) {
       THROWG(ErrorCode::IE_EMPTY_LIST,

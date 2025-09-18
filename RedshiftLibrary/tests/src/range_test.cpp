@@ -651,14 +651,14 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
 
   TFloat64Range range = TFloat64Range(6.5, 10.3);
 
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  range.getClosestOuterIndices(myVector, target, i_min, i_max);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(myVector[i_min + 1] > range.GetBegin());
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10.3);
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  range.getClosestOuterIndices(myVector, target, i_min, i_max);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10);
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  range.getClosestOuterIndices(myVector, target, i_min, i_max);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -676,45 +676,45 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   // Check errors
   range = TFloat64Range(9, 10.3);
   BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      range.getClosestOuterIndices(myVector, target, i_min, i_max),
       AmzException);
 
   range = TFloat64Range(6, 7.5);
   BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      range.getClosestOuterIndices(myVector, target, i_min, i_max),
       AmzException);
 
   range = TFloat64Range(0, 10.3);
   BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      range.getClosestOuterIndices(myVector, target, i_min, i_max),
       AmzException);
 
   range = TFloat64Range(6, 16);
   BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
+      range.getClosestOuterIndices(myVector, target, i_min, i_max),
       AmzException);
 
   // -- TEST WITHOUT TARGET --
 
   // Check errors
   range = TFloat64Range(0, 10.3);
-  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, i_min, i_max),
                     AmzException);
 
   range = TFloat64Range(6, 16);
-  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, i_min, i_max),
                     AmzException);
 
   // TEST OK
   range = TFloat64Range(6.5, 10.3);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  range.getClosestOuterIndices(myVector, i_min, i_max);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(myVector[i_min + 1] > range.GetBegin());
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10.3);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  range.getClosestOuterIndices(myVector, i_min, i_max);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6.5, 10);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  range.getClosestOuterIndices(myVector, i_min, i_max);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  range.getClosestOuterIndices(myVector, i_min, i_max);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
