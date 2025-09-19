@@ -1836,5 +1836,6 @@ void COperatorLineModel::addFitQualityToCandidate(
   candidate->ksResiduals = fitQuality.ksResiduals;
   candidate->ksStdResiduals = fitQuality.ksStdResiduals;
   candidate->ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
+  candidate->nPixels = nPixels;
   candidate->andersonResiduals = fitQuality.andersonResiduals;
 }

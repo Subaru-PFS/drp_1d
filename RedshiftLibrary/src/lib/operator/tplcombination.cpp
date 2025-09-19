@@ -360,7 +360,7 @@ void COperatorTplcombination::BasicFit(
 
   fittingResults.fitQuality = NSFitQuality::computeFitQuality(
       std::move(fluxInRange), std::move(modelInRange), std::move(errorInRange),
-      fittingResults.chiSquare, n);
+      fittingResults.chiSquare, n, n);
 }
 
 void COperatorTplcombination::RebinTemplate(

@@ -52,4 +52,5 @@ public:
   }
 
   CContinuumModelSolution fittedContinuum;
+  Int32 nPixels = undefIdx;
 };

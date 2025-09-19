@@ -258,10 +258,9 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
 
     maskInRange.push_back(CMask(std::move(mask), kStart, kEnd + 1));
   }
-
   result.fitQuality = NSFitQuality::computeFitQuality(
       spcFluxInRange, modelFluxInRange, spcFluxErrorInRange, result.chiSquare,
-      nPixels, maskInRange);
+      nPixels, nPixels, maskInRange);
 }
 
 void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {

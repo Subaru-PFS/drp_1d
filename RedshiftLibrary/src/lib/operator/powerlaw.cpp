@@ -107,9 +107,10 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return curve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
   TPowerLawResult result;
+  Int32 nPixelsUsedForFit = 0;
   if (N < m_nSamplesMinForContinuumFit) {
-    auto const N_unmasked = curve.computeUnmaskedFlux().size();
-    if (N_unmasked < 1) {
+    nPixelsUsedForFit = curve.computeUnmaskedFlux().size();
+    if (nPixelsUsedForFit < 1) {
       result.coefs = DEFAULT_COEFS_PAIR;
       return result;
     }
@@ -122,14 +123,12 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     auto curve3D = T3DCurve(std::move(curve));
     auto const chi2 = computeChi2(curve3D, coefs);
     curve = TCurve(std::move(curve3D));
-
     result.chiSquare = chi2[0][0];
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
     if (opt_dustFitting)
       result.ebmvCoef = 0.0;
-
   } else {
     T3DCurve emittedCurve = computeEmittedCurve(
         redshift, opt_extinction, opt_dustFitting, std::move(curve));
@@ -140,6 +139,17 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     // Step 4. Creates result
     result.chiSquare = chi2Result.chi2;
     result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
+
+    // Adds number of pixels ised for the continuum fit info
+    auto const igmIdx = chi2Result.igmIdx;
+    auto const ismIdx = chi2Result.ismIdx;
+    nPixelsUsedForFit = std::count_if(
+        boost::counting_iterator<Int32>(0),
+        boost::counting_iterator<Int32>(emittedCurve.size()),
+        [&emittedCurve, igmIdx, ismIdx](Int32 pixelIdx) {
+          return emittedCurve.pixelIsCoefValid(igmIdx, ismIdx, pixelIdx);
+        });
+
     if (opt_extinction)
       result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
     if (opt_dustFitting)
@@ -159,7 +169,8 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   auto flux = curve.computeUnmaskedFlux();
   auto error = curve.computeUnmaskedFluxError();
   result.fitQuality = NSFitQuality::computeFitQuality(
-      std::move(flux), std::move(modelFlux), std::move(error));
+      std::move(flux), std::move(modelFlux), std::move(error), NAN, undefIdx,
+      nPixelsUsedForFit);
   return result;
 };
 

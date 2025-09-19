@@ -151,10 +151,6 @@ private:
              Int32 resultIdx, const CPriorHelper::TPriorZEList &logpriorze,
              Float64 dtd);
 
-  void computeFitQuality(const std::shared_ptr<CTemplateFittingResult> &result,
-                         Int32 resultIdx, Int32 subResultSize,
-                         Int32 firstTplIdx, CMask const &lineMask);
-
   void EstimateXtY(const TFloat64List &X, const TFloat64List &Y,
                    TFloat64List &XtY, FFTPlans &fftPlans,
                    EPrecomputedFFT fftX = EPrecomputedFFT::none,

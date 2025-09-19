@@ -213,6 +213,9 @@ BOOST_FIXTURE_TEST_CASE(computeRaw_test, fixture_TplCombinationTestRaw) {
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 13.976419812061115,
                     1e-4);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 347);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 347);
+  BOOST_CHECK_EQUAL(res->nPixels, 347);
   ctx.reset();
 }
 
@@ -251,7 +254,9 @@ BOOST_FIXTURE_TEST_CASE(computeNoContinuum_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
-
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 347);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 347);
+  BOOST_CHECK_EQUAL(res->nPixels, 347);
   ctx.reset();
 }
 
@@ -290,6 +295,9 @@ BOOST_FIXTURE_TEST_CASE(computeContinuum_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1484176126057015, 1e-6);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 347);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 347);
+  BOOST_CHECK_EQUAL(res->nPixels, 347);
 
   ctx.reset();
 }
@@ -329,6 +337,9 @@ BOOST_FIXTURE_TEST_CASE(computeAll_test, fixture_TplCombinationTestAll) {
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 5.1545691054521061, 1e-6);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 347);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 347);
+  BOOST_CHECK_EQUAL(res->nPixels, 347);
 
   ctx.reset();
 }
