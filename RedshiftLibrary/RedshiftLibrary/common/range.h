@@ -301,9 +301,9 @@ public:
 
   // Outer means i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
-  void getClosestOuterIndices(const std::vector<T> &ordered_values,
-                              const T &value, Int32 &i_min,
-                              Int32 &i_max) const {
+  std::pair<Int32, Int32>
+  getClosestOuterIndices(const std::vector<T> &ordered_values,
+                         const T &value) const {
     if (value < m_Begin || value > m_End) {
       THROWG(ErrorCode::IE_CRANGE_VALUE_OUTSIDERANGE,
              Formatter() << "Value " << value << " not inside ]" << m_Begin
@@ -330,12 +330,13 @@ public:
     if (*it_min > m_Begin)
       it_min = it_min - 1;
 
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
+    Int32 const i_min = it_min - ordered_values.begin();
+    Int32 const i_max = it_max - ordered_values.begin();
+    return {i_min, i_max};
   }
 
-  void getClosestOuterIndices(const std::vector<T> &ordered_values,
-                              Int32 &i_min, Int32 &i_max) const {
+  std::pair<Int32, Int32>
+  getClosestOuterIndices(const std::vector<T> &ordered_values) const {
 
     if (ordered_values.size() == 0) {
       THROWG(ErrorCode::IE_EMPTY_LIST,
@@ -355,8 +356,9 @@ public:
     if (*it_min > m_Begin)
       it_min = it_min - 1;
 
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
+    Int32 const i_min = it_min - ordered_values.begin();
+    Int32 const i_max = it_max - ordered_values.begin();
+    return {i_min, i_max};
   }
 
   // Inner means i_min referring to m_Begin index or higher and
