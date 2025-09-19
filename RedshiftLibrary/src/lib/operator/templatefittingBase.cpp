@@ -72,11 +72,8 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
                 spcIndex);
 
   if ((ebmvCoef > 0.) || (meiksinIdx > -1)) {
-    Int32 kstart = undefIdx;
-    Int32 kend = undefIdx;
-    currentRange.getClosestInnerIndices(
-        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        kstart, kend);
+    auto const &[kstart, kend] = currentRange.getClosestInnerIndices(
+        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector());
     InitIsmIgmConfig(redshift, kstart, kend, spcIndex);
   }
 

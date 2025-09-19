@@ -298,9 +298,8 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
  */
 TInt32Range CSpectrumSpectralAxis::GetIndexRangeAtWaveLengthRange(
     const TFloat64Range &waveLengthRange) const {
-  Int32 min, max;
-  waveLengthRange.getClosestInnerIndices(GetSamplesVector(), min, max);
-  return TInt32Range(min, max);
+  return TInt32Range(
+      waveLengthRange.getClosestInnerIndices(GetSamplesVector()));
 }
 
 /**
@@ -403,9 +402,8 @@ TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
 
 TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(
     Int32 ssratio, TFloat64Range const &lambdarange) const {
-  Int32 imin = -1, imax = m_Samples.size();
-  lambdarange.getClosestInnerIndices(m_Samples, imin, imax);
-  return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
+  TInt32Range const irange = lambdarange.getClosestInnerIndices(m_Samples);
+  return GetSubSamplingMask(ssratio, irange);
 }
 
 /*@ssratio stands for sub-samplingRatio*/

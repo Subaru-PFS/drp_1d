@@ -434,9 +434,9 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   bool allzero = true;
   Int32 nInvalid = 0;
 
-  Int32 iMin, iMax;
-  TFloat64Range(LambdaMin, LambdaMax)
-      .getClosestInnerIndices(m_SpectralAxis.GetSamplesVector(), iMin, iMax);
+  auto const &[iMin, iMax] =
+      TFloat64Range(LambdaMin, LambdaMax)
+          .getClosestInnerIndices(m_SpectralAxis.GetSamplesVector());
   Log.LogDetail(Formatter()
                 << "CSpectrum::ValidateFlux - checking on the configured "
                    "lambdaRange = ("
@@ -646,8 +646,8 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   Int32 imin, imax;
   try {
-    clampedlambdaRange.getClosestInnerIndices(m_SpectralAxis.GetSamplesVector(),
-                                              imin, imax);
+    std::tie(imin, imax) = clampedlambdaRange.getClosestInnerIndices(
+        m_SpectralAxis.GetSamplesVector());
   } catch (const AmzException &e) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            Formatter() << "Invalid spectrum after clamping to [" << lmin << ","

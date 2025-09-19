@@ -193,11 +193,9 @@ template <class T> TZGridListParams COperatorTwoPass<T>::getSPZGridParams() {
 template <class T>
 TInt32Range COperatorTwoPass<T>::getzIdxRangeToCompute(Int32 candidateIdx) {
   auto const &extendedRedshifts = m_extendedRedshifts[candidateIdx];
-  Int32 imin = undefIdx;
-  Int32 imax = undefIdx;
-  TFloat64Range(extendedRedshifts)
-      .getClosestInnerIndices(m_redshifts, imin, imax);
-  return TInt32Range(imin, imax);
+  TInt32Range irange =
+      TFloat64Range(extendedRedshifts).getClosestInnerIndices(m_redshifts);
+  return irange;
 }
 
 } // namespace NSEpic
