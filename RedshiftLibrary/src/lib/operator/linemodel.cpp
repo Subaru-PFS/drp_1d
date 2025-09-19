@@ -1796,7 +1796,7 @@ void COperatorLineModel::addFitQualityToCandidate(
     auto const &spectrum = m_fittingManager->getSpectrum();
     auto const &lambdaRange = m_fittingManager->getLambdaRange();
     auto const &krange =
-        spectrum.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdaRange);
+        spectrum.GetSpectralAxis().GetIndexRangeAtWaveLengthRange(lambdaRange);
     kStartAll.push_back(krange.GetBegin());
     kEndAll.push_back(krange.GetEnd());
   }

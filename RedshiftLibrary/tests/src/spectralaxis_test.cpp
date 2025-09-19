@@ -359,29 +359,29 @@ BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
 
   // GetIndexesAtWaveLengthRange tests
   const TFloat64Range range1(1.9, 3.1);
-  TInt32Range irange1 = axis.GetIndexesAtWaveLengthRange(range1);
+  TInt32Range irange1 = axis.GetIndexRangeAtWaveLengthRange(range1);
   BOOST_TEST_MESSAGE("index:" << irange1.GetBegin() << "," << irange1.GetEnd());
   BOOST_CHECK(irange1.GetBegin() == 1);
   BOOST_CHECK(irange1.GetEnd() == 2);
   const TFloat64Range range2(-2.0, -1.0);
-  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range2), AmzException,
-                        check_error_OUTSIDERANGE);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexRangeAtWaveLengthRange(range2),
+                        AmzException, check_error_OUTSIDERANGE);
   const TFloat64Range range3(10.0, 20.0);
-  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range3), AmzException,
-                        check_error_OUTSIDERANGE);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexRangeAtWaveLengthRange(range3),
+                        AmzException, check_error_OUTSIDERANGE);
   const TFloat64Range range4(-1.0, 2.2);
-  TInt32Range irange4 = axis.GetIndexesAtWaveLengthRange(range4);
+  TInt32Range irange4 = axis.GetIndexRangeAtWaveLengthRange(range4);
   BOOST_TEST_MESSAGE("index:" << irange4.GetBegin() << "," << irange4.GetEnd());
   BOOST_CHECK(irange4.GetBegin() == 0);
   BOOST_CHECK(irange4.GetEnd() == 1);
   const TFloat64Range range5(2.2, 10.0);
-  TInt32Range irange5 = axis.GetIndexesAtWaveLengthRange(range5);
+  TInt32Range irange5 = axis.GetIndexRangeAtWaveLengthRange(range5);
   BOOST_TEST_MESSAGE("index:" << irange5.GetBegin() << "," << irange5.GetEnd());
   BOOST_CHECK(irange5.GetBegin() == 2);
   BOOST_CHECK(irange5.GetEnd() == 3);
   const TFloat64Range range6(2.2, 2.9);
-  BOOST_CHECK_EXCEPTION(axis.GetIndexesAtWaveLengthRange(range6), AmzException,
-                        check_error_NO_INTERSECTION);
+  BOOST_CHECK_EXCEPTION(axis.GetIndexRangeAtWaveLengthRange(range6),
+                        AmzException, check_error_NO_INTERSECTION);
 }
 
 BOOST_AUTO_TEST_CASE(LambdaRange) {

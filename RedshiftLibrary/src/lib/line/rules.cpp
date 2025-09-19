@@ -113,7 +113,7 @@ bool CRules::checkRule01(
     TFloat64Range const lambdarange(lambda - m_winsize / 2.0,
                                     lambda + m_winsize / 2.0);
     TInt32Range const range =
-        m_spc.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdarange);
+        m_spc.GetSpectralAxis().GetIndexRangeAtWaveLengthRange(lambdarange);
 
     Float64 flux = 0.0;
     Float64 noiseWeak = 0.0;
@@ -129,7 +129,7 @@ bool CRules::checkRule01(
     TFloat64Range const lambdarange(lambda - m_winsize / 2.0,
                                     lambda + m_winsize / 2.0);
     TInt32Range const range =
-        m_spc.GetSpectralAxis().GetIndexesAtWaveLengthRange(lambdarange);
+        m_spc.GetSpectralAxis().GetIndexRangeAtWaveLengthRange(lambdarange);
 
     Float64 flux = 0.0;
     Float64 noise = 0.0;

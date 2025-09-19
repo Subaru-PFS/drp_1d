@@ -296,7 +296,7 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
 /**
  *
  */
-TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange(
+TInt32Range CSpectrumSpectralAxis::GetIndexRangeAtWaveLengthRange(
     const TFloat64Range &waveLengthRange) const {
   Int32 min, max;
   waveLengthRange.getClosestInnerIndices(GetSamplesVector(), min, max);

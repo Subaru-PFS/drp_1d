@@ -271,7 +271,8 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop(
   auto const &lambda_range =
       TFloat64Range(spectralAxis[center] - m_maxsize / 2.0,
                     spectralAxis[center] + m_maxsize / 2.0);
-  auto const &irange = spectralAxis.GetIndexesAtWaveLengthRange(lambda_range);
+  auto const &irange =
+      spectralAxis.GetIndexRangeAtWaveLengthRange(lambda_range);
 
   Int32 maxwinsizeIndexes = irange.GetLength() + 1;
 
@@ -339,7 +340,8 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   // windowSampleCount/2.0) )+1; irreg. sampling
   TFloat64Range const lambda_range{specAxis[maxIndex] - winsize / 2.0,
                                    specAxis[maxIndex] + winsize / 2.0};
-  auto const &index_range = specAxis.GetIndexesAtWaveLengthRange(lambda_range);
+  auto const &index_range =
+      specAxis.GetIndexRangeAtWaveLengthRange(lambda_range);
   Int32 const left = std::max(range.GetBegin(), index_range.GetBegin());
   Int32 const right = std::min(range.GetEnd(), index_range.GetEnd());
 

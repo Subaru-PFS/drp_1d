@@ -387,7 +387,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
   const CSpectrumNoiseAxis &error = GetErrorAxis();
   const CSpectrumFluxAxis &flux = GetFluxAxis();
 
-  TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(wlRange);
   Int32 n = iRange.GetLength() + 1;
 
   TFloat64List x(n);
@@ -485,7 +485,7 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
     THROWG(ErrorCode::INVALID_NOISE, "Invalid spectrum: empty noise.");
 
   const TFloat64List &error = GetFluxAxis().GetError().GetSamplesVector();
-  TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(
       TFloat64Range(LambdaMin, LambdaMax));
   Log.LogDetail(Formatter()
                 << "CSpectrum::ValidateNoise - checking on the configured "
@@ -523,7 +523,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                                 Float64 coeffCorr) {
   ASSERT_CSpectrum_IS_VALID(*this);
 
-  TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(
       TFloat64Range(LambdaMin, LambdaMax));
 
   bool corrected = GetFluxAxis_().correctFluxAndNoiseAxis(

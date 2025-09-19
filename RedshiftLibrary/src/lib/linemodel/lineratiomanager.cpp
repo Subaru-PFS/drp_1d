@@ -222,7 +222,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
     Float64 diff = 0.0;
 
     auto const &irange =
-        spcSpectralAxis.GetIndexesAtWaveLengthRange(getLambdaRange());
+        spcSpectralAxis.GetIndexRangeAtWaveLengthRange(getLambdaRange());
     for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
       diff = (Yspc[j] - Ymodel[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);

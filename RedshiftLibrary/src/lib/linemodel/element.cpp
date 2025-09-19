@@ -238,7 +238,8 @@ TInt32Range CLineModelElement::EstimateIndexRange(
   }
 
   try {
-    supportRange = spectralAxis.GetIndexesAtWaveLengthRange(elementLambdaRange);
+    supportRange =
+        spectralAxis.GetIndexRangeAtWaveLengthRange(elementLambdaRange);
   } catch (const AmzException &exception) {
     if (exception.getErrorCode() == ErrorCode::IE_CRANGE_NO_INTERSECTION) {
       Int32 imin =

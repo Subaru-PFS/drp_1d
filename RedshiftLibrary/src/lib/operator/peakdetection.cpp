@@ -202,7 +202,8 @@ void CPeakDetection::FindPossiblePeaks(
     // halfWindowSampleCount ); irregular sampling compatible
     TFloat64Range lambda_range{spectralAxis[i] - m_winsize / 2.0,
                                spectralAxis[i] + m_winsize / 2.0};
-    auto const &irange = spectralAxis.GetIndexesAtWaveLengthRange(lambda_range);
+    auto const &irange =
+        spectralAxis.GetIndexRangeAtWaveLengthRange(lambda_range);
 
     med[i] = medianFilter.Find(fluxVector.begin() + irange.GetBegin(),
                                fluxVector.begin() + irange.GetEnd() + 1);
