@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
@@ -306,18 +307,7 @@ TInt32Range CSpectrumSpectralAxis::GetIndexRangeAtWaveLengthRange(
  *
  */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength(Float64 waveLength) const {
-  Int32 lo = 0;
-  Int32 hi = GetSamplesCount() - 1;
-
-  if (waveLength <= m_Samples[lo])
-    return lo;
-
-  if (waveLength >= m_Samples[hi])
-    return hi;
-
-  auto it = std::lower_bound(m_Samples.begin(), m_Samples.end(), waveLength);
-
-  return (it - m_Samples.begin());
+  return NSIndexing::getClosestIndex(m_Samples, waveLength);
 }
 
 /**

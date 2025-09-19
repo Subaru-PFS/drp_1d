@@ -279,11 +279,11 @@ BOOST_AUTO_TEST_CASE(Resolution) {
   BOOST_CHECK_CLOSE(axis.GetResolution(1.1), 2.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(2.0), 2.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(3.0), 2.0, 1.e-12);
-  BOOST_CHECK_CLOSE(axis.GetResolution(3.3), 1.0, 1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetResolution(3.3), 2.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(4.0), 1.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(7.7), 6.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(10.0), 6.0, 1.e-12);
-  BOOST_CHECK_CLOSE(axis.GetResolution(11.5), 5.0, 1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetResolution(11.5), 6.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(15.0), 5.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(15.6), 1.0, 1.e-12);
   BOOST_CHECK_CLOSE(axis.GetResolution(17.2), 1.0, 1.e-12);
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange) {
   BOOST_CHECK(axis.GetIndexAtWaveLength(1.0) == 1);
   BOOST_CHECK(axis.GetIndexAtWaveLength(1.9) == 1);
   BOOST_CHECK(axis.GetIndexAtWaveLength(2.0) == 1);
-  BOOST_CHECK(axis.GetIndexAtWaveLength(2.1) == 2);
+  BOOST_CHECK(axis.GetIndexAtWaveLength(2.1) == 1);
   BOOST_CHECK(axis.GetIndexAtWaveLength(3.0) == 2);
   BOOST_CHECK(axis.GetIndexAtWaveLength(5.3) == 3);
   BOOST_CHECK(axis.GetIndexAtWaveLength(6.0) == 3);
