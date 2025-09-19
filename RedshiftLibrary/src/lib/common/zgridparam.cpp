@@ -94,7 +94,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   for (Int32 dup = 0; dup < ndup; ++dup) {
     Float64 const value_overwritten = zgrid[imin + dup];
     overwrittenSourceIndices[dup] =
-        CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
+        NSIndexing::getClosestIndex(subgrid, value_overwritten);
   }
 
   NSVectorOp::insertWithDuplicates(zgrid, imin, subgrid, ndup);

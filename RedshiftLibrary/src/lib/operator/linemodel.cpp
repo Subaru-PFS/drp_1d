@@ -658,8 +658,8 @@ void COperatorLineModel::SetFirstPassCandidates(
   // now preparing the candidates extrema results
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     // find the index in the zaxis results
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts,
-                                             zCandidates[i].second->Redshift);
+    Int32 idx = NSIndexing::getIndex(m_result->Redshifts,
+                                     zCandidates[i].second->Redshift);
 
     // save basic fitting info from first pass
     m_firstpass_extremaResult->m_savedModelFittingResults[i] =
@@ -821,7 +821,7 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     std::string parentId = zCandidates[i].second->ParentId; // retrieve parentID
     Float64 z = zCandidates[i].second->Redshift;
     //  find the index in the zaxis results
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
+    Int32 idx = NSIndexing::getIndex(m_result->Redshifts, z);
     Float64 m = m_result->ChiSquare[idx];
 
     Int32 i_1pass = undefIdx;
@@ -1079,7 +1079,7 @@ void COperatorLineModel::EstimateSecondPassParameters() {
       }
     }
     // find the index in the zaxis results
-    Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
+    Int32 idx = NSIndexing::getIndex(m_result->Redshifts, z);
 
     // reestimate the model (eventually with continuum reestimation) on
     // the extrema selected
@@ -1136,10 +1136,8 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
   const Int32 half_nb_zsteps = 6;
   const Float64 z_front = m_extendedRedshifts[candidateIdx].front();
   const Float64 z_back = m_extendedRedshifts[candidateIdx].back();
-  const Int32 idx_begin =
-      CIndexing<Float64>::getIndex(m_result->Redshifts, z_front);
-  const Int32 idx_end =
-      CIndexing<Float64>::getIndex(m_result->Redshifts, z_back);
+  const Int32 idx_begin = NSIndexing::getIndex(m_result->Redshifts, z_front);
+  const Int32 idx_end = NSIndexing::getIndex(m_result->Redshifts, z_back);
   const Int32 lowerzIdx = std::max(idx_begin, Zidx - half_nb_zsteps);
   const Int32 higherzIdx = std::min(idx_end, Zidx + half_nb_zsteps);
 
@@ -1410,7 +1408,7 @@ void COperatorLineModel::RecomputeAroundCandidates(
                 << "; " << m_extendedRedshifts[i].back() << "]");
     m_fittingManager->logParameters();
     for (const Float64 z : m_extendedRedshifts[i]) {
-      const Int32 iz = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
+      const Int32 iz = NSIndexing::getIndex(m_result->Redshifts, z);
       Log.LogDetail(Formatter()
                     << "Fit for Extended redshift " << iz << ", z = " << z);
 

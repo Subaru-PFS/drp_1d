@@ -513,7 +513,7 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     Float64 z = candidate->Redshift;
 
     // find the corresponding Z
-    auto const zIndex = CIndexing<Float64>::getIndex(redshifts, z);
+    auto const zIndex = NSIndexing::getIndex(redshifts, z);
 
     std::string bestName;
     std::shared_ptr<const CTemplateFittingResult> bestResult;
