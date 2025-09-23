@@ -162,7 +162,8 @@ private:
                   Int32 FitMeiksinIdx);
   void addTooFewSamplesWarning(Int32 N, Int32 igmIdx, Int32 ismIdx,
                                const char *funcName) const;
-  TPowerLawCoefsPair computeConstantLawCoefs(TCurve const &emittedCurve) const;
+  TPowerLawCoefsPair computeConstantLawCoefs(TFloat64List const &flux,
+                                             TFloat64List const &error) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
                                               TCurve const &lnCurve) const;
   TAxisSampleList lnLambda(TAxisSampleList const &lambda) const;
@@ -205,6 +206,7 @@ private:
                                 const Float64 redshift, const Int32 meiksinIdx,
                                 const Float64 ebmvCoef,
                                 const TPowerLawCoefsPair &coefs) const;
+  Float64 computeDtD(TFloat64List const &d) const;
 };
 
 inline Float64 COperatorPowerLaw::computePowerLaw(TPowerLawCoefs const &coefs,

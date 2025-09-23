@@ -48,7 +48,7 @@ ResidualsKs	model_parameters	False	candidate	ksResiduals	extrema_results	f8
 ResidualsKsStd	model_parameters	False	candidate	ksStdResiduals	extrema_results	f8
 ResidualsKsStdMean	model_parameters	False	candidate	ksStdMeanResiduals	extrema_results	f8
 ResidualsAnderson	model_parameters	False	candidate	andersonResiduals	extrema_results	f8
-NPixels	model_parameters	False	candidate	nPixelsUsedForFit	extrema_results	i
+NPixels	model_parameters	False	candidate	nPixels	extrema_results	i
 VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
 VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
 EmissionLinesSNR	model_parameters	False	candidate	ELSNR	extrema_results	f8

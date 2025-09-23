@@ -687,6 +687,65 @@ void COperatorTemplateFittingLog::applyPrior(
   }
 }
 
+void COperatorTemplateFittingLog::computeFitQuality(
+    const std::shared_ptr<CTemplateFittingResult> &result, Int32 resultIdx,
+    Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
+
+  const auto &spectrumRebinedFluxRaw =
+      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
+  auto const &mask = m_spectraFull[0]->getMask();
+  const auto &error =
+      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+
+  for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
+       ++isubz, ++fullResultIdx, ++firstTplIdx) {
+    if (fullResultIdx >= ssize(result->ChiSquare))
+      THROWG(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+
+    if (m_enableIGM && result->FitMeiksinIdx[fullResultIdx] != -1)
+      ApplyMeiksinCoeff(result->FitMeiksinIdx[fullResultIdx]);
+    if (m_enableISM && result->FitEbmvCoeff[fullResultIdx] != -1)
+      ApplyDustCoeff(
+          m_templateRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(
+              result->FitEbmvCoeff[fullResultIdx]));
+
+    // Compute model flux
+    const auto &tplRebinedFluxRaw{
+        m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector()};
+
+    TAxisSampleList modelFlux{tplRebinedFluxRaw.begin() + firstTplIdx,
+                              tplRebinedFluxRaw.begin() + firstTplIdx +
+                                  nSpcPixels};
+    for (auto lambdaIdx = 0; lambdaIdx < ssize(modelFlux); ++lambdaIdx) {
+      modelFlux[lambdaIdx] =
+          modelFlux[lambdaIdx] * result->FitAmplitude[fullResultIdx];
+    }
+
+    CMask combinedMask;
+    if (lineMask.GetMasksCount()) {
+      CMask combinedMask(lineMask, isubz, isubz + nSpcPixels);
+      combinedMask.IntersectWith(mask);
+    } else {
+      combinedMask = mask;
+    }
+    const Int32 nSpcUnmaskedPixels = combinedMask.GetUnMaskedSampleCount();
+
+    TList<TFloat64List> spcFluxVect;
+    TList<TFloat64List> modelFluxVect;
+    TList<TFloat64List> spcFluxErrorVect;
+    TList<CMask> maskVect;
+    spcFluxVect.push_back(spectrumRebinedFluxRaw);
+    modelFluxVect.push_back((std::move(modelFlux)));
+    spcFluxErrorVect.push_back(error);
+    maskVect.push_back(std::move(combinedMask));
+    result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
+        spcFluxVect, modelFluxVect, spcFluxErrorVect,
+        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels,
+        nSpcUnmaskedPixels, maskVect);
+  }
+}
+
 /**
   // TODO : many vectors allocated in this function. Check if the allocation
  time is significant, and eventually use preallocated member buffers...

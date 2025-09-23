@@ -377,6 +377,8 @@ public:
                 const TFloat64Range &lamdbdaRange, const Float64 &redshift,
                 Int32 spc_index = 0) override {
     CMask mask(spectralAxis.GetSamplesCount(), 0);
+    mask[0] = 1;
+    mask[1] = 1;
     return mask;
   };
   bool isDefaultMask() const override { return false; };
@@ -389,7 +391,6 @@ BOOST_AUTO_TEST_CASE(basicfit_double_default) {
   nMinSamples = 10;
   CSpectrumSpectralAxis spectralAxis = createSpectralAxis(4100, 4500, 1);
   CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, 1, 0, 0, xc);
-  ;
   addNoiseAxis(fluxAxis);
 
   // Initialize power law operator
@@ -413,7 +414,7 @@ BOOST_AUTO_TEST_CASE(basicfit_double_default) {
   BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
-  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
+  BOOST_CHECK_CLOSE(result.chiSquare, 1.9996971229437142, 1e-4);
   BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, INFINITY);
   BOOST_CHECK_EQUAL(result.fitQuality.pValue, 0);
   Context.reset();

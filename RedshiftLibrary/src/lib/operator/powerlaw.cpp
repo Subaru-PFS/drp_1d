@@ -107,16 +107,19 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return curve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
   TPowerLawResult result;
-  Int32 nPixelsUsedForFit = 0;
+  Int32 nUnmasked = 0;
   if (N < m_nSamplesMinForContinuumFit) {
-    nPixelsUsedForFit = curve.computeUnmaskedFlux().size();
-    if (nPixelsUsedForFit < 1) {
+    auto const flux = curve.computeUnmaskedFlux();
+    nUnmasked = flux.size();
+    if (nUnmasked < m_nSamplesMinForContinuumFit) {
       result.coefs = DEFAULT_COEFS_PAIR;
+      result.chiSquare = computeDtD(flux);
       return result;
     }
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
-    auto const constantLawsCoef = computeConstantLawCoefs(curve);
+    auto const error = curve.computeUnmaskedFluxError();
+    auto const constantLawsCoef = computeConstantLawCoefs(flux, error);
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // Create a temporary 3D curve to compute chi2
@@ -143,7 +146,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     // Adds number of pixels ised for the continuum fit info
     auto const igmIdx = chi2Result.igmIdx;
     auto const ismIdx = chi2Result.ismIdx;
-    nPixelsUsedForFit = std::count_if(
+    nUnmasked = std::count_if(
         boost::counting_iterator<Int32>(0),
         boost::counting_iterator<Int32>(emittedCurve.size()),
         [&emittedCurve, igmIdx, ismIdx](Int32 pixelIdx) {
@@ -170,7 +173,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   auto error = curve.computeUnmaskedFluxError();
   result.fitQuality = NSFitQuality::computeFitQuality(
       std::move(flux), std::move(modelFlux), std::move(error), NAN, undefIdx,
-      nPixelsUsedForFit);
+      nUnmasked);
   return result;
 };
 
@@ -336,11 +339,10 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 }
 
 TPowerLawCoefsPair
-COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
+COperatorPowerLaw::computeConstantLawCoefs(TFloat64List const &flux,
+                                           TFloat64List const &error) const {
   // Computes a constant law. Use all unmasked pixels to compute the mean flux
   // (including the ones with low SNR)
-  auto const flux = emittedCurve.computeUnmaskedFlux();
-  auto const error = emittedCurve.computeUnmaskedFluxError();
   TFloat64List inverse_var(error.size());
   std::transform(error.cbegin(), error.cend(), inverse_var.begin(),
                  [](Float64 v) { return 1.0 / (v * v); });
@@ -792,4 +794,12 @@ CModelSpectrumResult COperatorPowerLaw::ComputeSpectrumModel(
 
   return CModelSpectrumResult(lambdaObs, std::move(fluxObs),
                               m_spectra[spcIndex]->getObsID());
+}
+
+Float64 COperatorPowerLaw::computeDtD(TFloat64List const &d) const {
+  Float64 dtd = 0;
+  for (auto v : d) {
+    dtd += v * v;
+  }
+  return dtd;
 }
