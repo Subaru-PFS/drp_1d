@@ -266,9 +266,11 @@ void CLineModelElement::computeOutsideLambdaRange() {
  *the m_FittedAmplitudes to -1. Sets the global outside lambda range. Inits the
  *fitted amplitude values.
  **/
-void CLineModelElement::prepareSupport(
-    const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
-    const TFloat64Range &lambdaRange, Float64 max_offset) {
+
+void CLineModelElement::initSupport(const CSpectrumSpectralAxis &spectralAxis,
+                                    Float64 redshift,
+                                    const TFloat64Range &lambdaRange,
+                                    Float64 max_offset) {
 
   Int32 nLines = GetSize();
   m_OutsideLambdaRange = true;
@@ -286,111 +288,118 @@ void CLineModelElement::prepareSupport(
     m_LineIsActiveOnSupport[index][index] = true;
   }
   computeOutsideLambdaRange();
+}
 
-  bool supportNoOverlap_has_duplicates = true;
-  Int32 x1 = 0;
-  Int32 y1 = 0;
-  Int32 x2 = 0;
-  Int32 y2 = 0;
-  Int32 icmpt = 0;
-  Int32 ncmpt = 20;
-  while (supportNoOverlap_has_duplicates && icmpt < ncmpt) {
-    icmpt++;
-    for (Int32 i = 0; i != nLines; ++i) {
-      if (m_OutsideLambdaRangeList[i])
+bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
+  Int32 x1 = m_StartNoOverlap[i];
+  Int32 x2 = m_EndNoOverlap[i];
+  Int32 y1 = m_StartNoOverlap[j];
+  Int32 y2 = m_EndNoOverlap[j];
+
+  Int32 max = std::max(x1, y1);
+  Int32 min = std::min(x2, y2);
+
+  if (max - min >= 0)
+    return false;
+
+  m_StartNoOverlap[i] = std::min(x1, y1);
+  m_EndNoOverlap[i] = std::max(x2, y2);
+
+  // deactivate j
+  m_StartNoOverlap[j] = m_EndNoOverlap[i];
+  m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1;
+  return true;
+}
+
+void CLineModelElement::resolveOverlaps() {
+  Int32 nLines = GetSize();
+
+  auto shouldContinue = [this](Int32 index) {
+    return m_OutsideLambdaRangeList[index] ||
+           m_StartNoOverlap[index] > m_EndNoOverlap[index];
+  };
+
+  for (Int32 i = 0; i != nLines; ++i) {
+    if (shouldContinue(i))
+      continue;
+
+    for (Int32 j = 0; j != nLines; ++j) {
+      if (shouldContinue(j) || i == j)
         continue;
 
-      if (m_StartNoOverlap[i] > m_EndNoOverlap[i])
-        continue;
-
-      for (Int32 j = 0; j != nLines; ++j) {
-        if (m_OutsideLambdaRangeList[j])
-          continue;
-
-        if (m_StartNoOverlap[j] > m_EndNoOverlap[j])
-          continue;
-
-        if (i == j)
-          continue;
-
-        bool lineActiveSupportToBeCorrected = false;
-        //
-        x1 = m_StartNoOverlap[i];
-        x2 = m_EndNoOverlap[i];
-        y1 = m_StartNoOverlap[j];
-        y2 = m_EndNoOverlap[j];
-        // compute overlapping region
-        Int32 max = std::max(x1, y1);
-        Int32 min = std::min(x2, y2);
-        if (max - min < 0) { // case of overlapping
-          m_StartNoOverlap[i] = std::min(x1, y1);
-          m_EndNoOverlap[i] = std::max(x2, y2);
-          m_StartNoOverlap[j] =
-              m_EndNoOverlap[i]; // deactivate j when end is start -1
-          m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1; // deactivate j
-
-          lineActiveSupportToBeCorrected = true;
-        }
-
-        if (lineActiveSupportToBeCorrected) {
-          // set the lines active on the overlapping support
-          m_LineIsActiveOnSupport[i][j] = true;
-          m_LineIsActiveOnSupport[j][i] = true;
-          // append all the previously overlapping lines as active on the
-          // support
-          for (Int32 i2 = 0; i2 != nLines; ++i2) {
-            if (m_OutsideLambdaRangeList[i2])
-              continue;
-
-            if (m_LineIsActiveOnSupport[i][i2]) {
-              m_LineIsActiveOnSupport[i2][j] = true;
-              m_LineIsActiveOnSupport[j][i2] = true;
-            }
-          }
-          // append all the previously overlapping lines as active on the
-          // support
-          for (Int32 j2 = 0; j2 != nLines; ++j2) {
-            if (m_OutsideLambdaRangeList[j2])
-              continue;
-
-            if (m_LineIsActiveOnSupport[j][j2]) {
-              m_LineIsActiveOnSupport[j2][i] = true;
-              m_LineIsActiveOnSupport[i][j2] = true;
-            }
-          }
-        }
+      if (mergeIfOverlapping(i, j)) {
+        propagateOverlap(i, j);
       }
     }
+  }
+}
 
-    supportNoOverlap_has_duplicates = false;
+void CLineModelElement::prepareSupport(
+    const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
+    const TFloat64Range &lambdaRange, Float64 max_offset) {
 
-    // check that there are no overlapping sub-supports in the list
-    for (Int32 i = 0; i != nLines; ++i) {
-      if (supportNoOverlap_has_duplicates) {
-        break;
-      }
-      if (m_OutsideLambdaRangeList[i]) {
+  initSupport(spectralAxis, redshift, lambdaRange, max_offset);
+  bool hasDuplicates = true;
+  Int32 icmpt = 0;
+  const Int32 ncmpt = 20;
+
+  while (hasDuplicates && icmpt < ncmpt) {
+    icmpt++;
+    resolveOverlaps();
+    hasDuplicates = detectDuplicateOverlaps();
+  }
+}
+
+bool CLineModelElement::detectDuplicateOverlaps() {
+  Int32 nLines = GetSize();
+
+  for (Int32 i = 0; i != nLines; ++i) {
+    if (m_OutsideLambdaRangeList[i])
+      continue;
+
+    for (Int32 j = 0; j != nLines; ++j) {
+      if (m_OutsideLambdaRangeList[j] || i == j)
         continue;
-      }
-      for (Int32 j = 0; j != nLines; ++j) {
-        if (m_OutsideLambdaRangeList[j]) {
-          continue;
-        }
-        if (i == j) {
-          continue;
-        }
 
-        x1 = m_StartNoOverlap[i];
-        x2 = m_EndNoOverlap[i];
-        y1 = m_StartNoOverlap[j];
-        y2 = m_EndNoOverlap[j];
-        Int32 max = std::max(x1, y1);
-        Int32 min = std::min(x2, y2);
-        if (max - min < 0) {
-          supportNoOverlap_has_duplicates = true;
-          break;
-        }
+      Int32 x1 = m_StartNoOverlap[i];
+      Int32 x2 = m_EndNoOverlap[i];
+      Int32 y1 = m_StartNoOverlap[j];
+      Int32 y2 = m_EndNoOverlap[j];
+
+      Int32 max = std::max(x1, y1);
+      Int32 min = std::min(x2, y2);
+
+      if (max - min < 0) {
+        return true;
       }
+    }
+  }
+  return false;
+}
+
+void CLineModelElement::propagateOverlap(Int32 i, Int32 j) {
+  m_LineIsActiveOnSupport[i][j] = true;
+  m_LineIsActiveOnSupport[j][i] = true;
+
+  Int32 nLines = GetSize();
+
+  // Propagate through i
+  for (Int32 i2 = 0; i2 != nLines; ++i2) {
+    if (m_OutsideLambdaRangeList[i2])
+      continue;
+    if (m_LineIsActiveOnSupport[i][i2]) {
+      m_LineIsActiveOnSupport[i2][j] = true;
+      m_LineIsActiveOnSupport[j][i2] = true;
+    }
+  }
+
+  // Propagate through j
+  for (Int32 j2 = 0; j2 != nLines; ++j2) {
+    if (m_OutsideLambdaRangeList[j2])
+      continue;
+    if (m_LineIsActiveOnSupport[j][j2]) {
+      m_LineIsActiveOnSupport[j2][i] = true;
+      m_LineIsActiveOnSupport[i][j2] = true;
     }
   }
 }

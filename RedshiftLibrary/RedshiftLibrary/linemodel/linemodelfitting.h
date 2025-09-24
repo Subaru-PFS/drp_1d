@@ -209,19 +209,15 @@ public:
   Int32 getTplratio_count() const;
   TFloat64List getTplratio_priors() const;
 
-  CLineRatioManager::EType const getLineRatioStrictType() const {
+  CLineRatioManager::EType getLineRatioStrictType() const {
     return m_lineRatioManager->getStrictType();
   }
 
-  bool const isLineRatioRules() const { return m_lineRatioManager->isRules(); }
+  bool isLineRatioRules() const { return m_lineRatioManager->isRules(); }
 
-  bool const isLineRatioTplRatio() const {
-    return m_lineRatioManager->isTplRatio();
-  }
+  bool isLineRatioTplRatio() const { return m_lineRatioManager->isTplRatio(); }
 
-  bool const isLineRatioTplCorr() const {
-    return m_lineRatioManager->isTplCorr();
-  }
+  bool isLineRatioTplCorr() const { return m_lineRatioManager->isTplCorr(); }
 
   CSpectraGlobalIndex &getSpectraIndex() const { return m_spectraIndex; }
   void refreshAllModels();
@@ -270,6 +266,26 @@ private:
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
+  void processSingleLine(Int32 iRestLine, CLineModelSolution &modelSolution,
+                         TInt32List &eIdx_oii, TInt32List &subeIdx_oii,
+                         Float64 &flux_oii, Float64 &fluxVar_oii,
+                         TInt32List &eIdx_ha, TInt32List &subeIdx_ha,
+                         Float64 &flux_ha, Float64 &fluxVar_ha);
+
+  void updateResidualsAndContinuum(Int32 iRestLine,
+                                   CLineModelSolution &modelSolution,
+                                   Int32 eIdx, Int32 line_index);
+  std::tuple<Float64, Float64, bool>
+  computeLineFlux(Int32 iRestLine, CLineModelSolution &modelSolution,
+                  Int32 eIdx, Int32 line_index);
+  void accumulateLineFluxes(Float64 flux, Float64 fluxError, Int32 eIdx,
+                            Int32 line_index, Int32 line_id,
+                            CLineModelSolution &modelSolution,
+                            TInt32List &eIdx_ha, TInt32List &subeIdx_ha,
+                            Float64 &flux_ha, Float64 &fluxVar_ha,
+                            TInt32List &eIdx_oii, TInt32List &subeIdx_oii,
+                            Float64 &flux_oii, Float64 &fluxVar_oii);
+  void addLyaParams(CLineModelSolution &modelSolution);
 
   const CLineMap m_RestLineList;
 

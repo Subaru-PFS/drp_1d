@@ -65,6 +65,46 @@ protected:
   virtual bool isIndividualFitEnabled() const {
     return !m_enableAmplitudeOffsets;
   };
+  // Initialization of tags
+  TStringList initEmissionBalmerTags();
+  TStringList initAbsorptionBalmerTags();
+  std::vector<TStringList> initAdditionalTags();
+
+  // Validation
+  bool validateTagSizes(const TStringList &E, const TStringList &A,
+                        const std::vector<TStringList> &More);
+
+  // Main per-pair processing
+  void processBalmerPair(Int32 itag, Float64 redshift,
+                         const TStringList &linetagsE,
+                         const TStringList &linetagsA,
+                         const std::vector<TStringList> &linetagsMore);
+
+  // Validity checks
+  bool isValidBalmerPair(Int32 iEltE, Int32 iEltA, Int32 lineE_id,
+                         Int32 lineA_id);
+
+  // Collect additional lines
+  std::pair<TInt32List, TInt32List>
+  collectAdditionalLines(Int32 itag,
+                         const std::vector<TStringList> &linetagsMore);
+
+  // Width condition
+  bool widthConditionSatisfied(Int32 iEltE, Int32 lineE_id, Int32 iEltA,
+                               Int32 lineA_id, Float64 redshift);
+
+  // Refit logic
+  void attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
+                          Int32 lineE_id, const TInt32List &ilinesMore,
+                          const TInt32List &idsMore, Float64 redshift);
+  std::pair<Float64, Float64> getAmplitudeAndError(Int32 iElt, Int32 lineId);
+  std::pair<TFloat64List, TFloat64List>
+  collectAmplitudes(const TInt32List &ilines);
+  void
+  restoreAmplitudes(Int32 iEltA, Int32 lineA_id, Float64 ampA, Float64 errA,
+                    Int32 iEltE, Int32 lineE_id, Float64 ampE, Float64 errE,
+                    const TInt32List &ilinesMore, const TInt32List &idsMore,
+                    const TFloat64List &ampsMore, const TFloat64List &errsMore);
 };
 } // namespace NSEpic
 #endif

@@ -565,7 +565,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   }
 
   // estimate CstLog for PDF estimation
-  result->CstLog = EstimateLikelihoodCstLog(spectrum, clampedlambdaRange);
+  result->CstLog =
+      EstimateLikelihoodCstLogForSpectrum(spectrum, clampedlambdaRange);
 
   // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();
@@ -647,7 +648,7 @@ CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
  * \brief this function estimates the likelihood_cstLog term withing the
  *wavelength range
  **/
-Float64 COperatorTplcombination::EstimateLikelihoodCstLog(
+Float64 COperatorTplcombination::EstimateLikelihoodCstLogForSpectrum(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange) {
   const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
   const TFloat64List &error =

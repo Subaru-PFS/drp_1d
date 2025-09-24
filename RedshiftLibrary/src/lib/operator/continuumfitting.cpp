@@ -81,7 +81,7 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-const void COperatorContinuumFitting::checkTemplateOverlap(
+void COperatorContinuumFitting::checkTemplateOverlap(
     const Float64 overlapFraction, const Float64 overlapThreshold) {
   if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
     THROWG(ErrorCode::TEMPLATE_OVERLAP_TOO_SMALL,

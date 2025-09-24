@@ -98,8 +98,8 @@ protected:
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
   TInt32List m_kStart, m_kEnd;
 
-  const void checkTemplateOverlap(const Float64 overlapFraction,
-                                  const Float64 overlapThreshold);
+  void checkTemplateOverlap(const Float64 overlapFraction,
+                            const Float64 overlapThreshold);
   virtual Float64 EstimateLikelihoodCstLog() const;
 };
 } // namespace NSEpic
