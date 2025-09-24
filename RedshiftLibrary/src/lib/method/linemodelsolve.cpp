@@ -131,13 +131,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute() {
         BuildChisquareArray(lmresult, m_linemodel.getSPZGridParams(),
                             m_linemodel.getFirstPassCandidatesZByRank());
 
-  /*
-  zpriorResult->Redshifts.size());
-
-  resultStore->StoreScopedGlobalResult( "priorpdf", zpriorResult); //TODO review
-  name if uncommented
-  */
-
   /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------
    */
   Int32 maxPeakPerWindow = 1;
@@ -426,10 +419,6 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   chisquarearray.modelpriors.reserve(newsize);
 
   // divide model prior by the number of continuum templates
-  // TODO: need to add/handle tpl continuum priors
-  // (note: in the case of ATEZ, which is exclusive of zpriors and
-  // Tplratios, priors are included already in the chisquares of both
-  // tplcontinuum chi2 and tplratio chi2)
   Int32 n = result->ChiSquareTplContinuum.size();
   std::transform(chisquarearray.modelpriors.begin(),
                  chisquarearray.modelpriors.end(),
@@ -570,8 +559,6 @@ void CLineModelSolve::Solve() {
     //**************************************************
     ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
-    // TODO deal with the case lmresult->Redshifts=1
-    //   Int32 extremacount = 5;
     COperatorPdfz pdfz(m_opt_pdfcombination,
                        2 * m_opt_secondpass_halfwindowsize, // peak separation
                        m_opt_candidatesLogprobaCutThreshold, m_opt_maxCandidate,

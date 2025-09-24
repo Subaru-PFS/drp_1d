@@ -113,10 +113,6 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
  * \brief Returns a sorted, de-duplicated list of indices of lines whose support
  *overlap ind's support and are not listed in the argument excludedInd.
  **/
-// TODO move this to LMElementListVector ( #8798 )
-// la difficulté viendra avec des LSF différentes, qui donc engendre un overlap
-// différent: il faudra prendre l'overlap le plus important, ie si ça overlap
-// dans un spectre alors ça overlap globalement (il faut faire un fit joint)
 TInt32List CLineModelElementList::getOverlappingElements(
     Int32 ind, const TInt32Set &excludedInd, Float64 redshift,
     Float64 overlapThres) const {

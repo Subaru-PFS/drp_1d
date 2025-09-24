@@ -385,7 +385,6 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const {
   return m_regularLogSamplingStep;
 }
 
-// still TODO: check end-to-end redshift coverage
 TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
   return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount() - 1));
 }
@@ -501,7 +500,7 @@ void CSpectrumSpectralAxis::resetAxisProperties() {
   m_isSorted = indeterminate;
   m_isLogSampled = indeterminate;
 }
-// TODO add tests
+
 CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {
   return ShiftByWaveLength(1 + z, nShiftBackward);
 };

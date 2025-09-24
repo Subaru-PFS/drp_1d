@@ -158,7 +158,6 @@ bool CTplCombinationSolve::Solve(
     const std::vector<CMask> &maskList, EType spctype,
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting) {
   std::string resultName = "tplcombination";
-  // TODO modify as in templatefittingsolve when stabilized
   Int32 _ntype = 0;
   CSpectrum::EType _spctype = CSpectrum::EType::raw;
   CSpectrum::EType _spctypetab[3] = {CSpectrum::EType::raw,

@@ -98,7 +98,6 @@ void CSpectrumModel::initModelWithContinuum() {
 /**
  * \brief Init the argument elements from the spectrum model with continuum.
  **/
-// TODO [opt] feasible without instantiating a CSpectrumFluxAxis and move it
 void CSpectrumModel::reinitModelUnderElements(const TInt32List &filterEltsIdx,
                                               Int32 lineIdx) {
   CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
@@ -383,8 +382,6 @@ CSpectrumModel::getContinuumSquaredResidualInRange(
 Float64 CSpectrumModel::getMaxContinuumUnderElement(Int32 eIdx) const {
   const auto &continuumFluxAxis = m_ContinuumFluxAxis;
 
-  // TODO add ampoffset polynomial ?
-
   TInt32List xInds = m_Elements.getSupportIndexes({eIdx});
   if (xInds.empty())
     return -INFINITY;
@@ -655,7 +652,6 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
   return str_above_cut;
 }
 
-// TODO should be renamed
 CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
                                            CLine::EType lineTypeFilter) const {
 

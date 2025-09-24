@@ -98,7 +98,7 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "model: Unable to use tplratio line priors "
              "with nElts>1 for now");
-    // NB: this could be done if the EL element idx in searched (see later
+    // NB this could be done if the EL element idx in searched (see later
     // in the itratio loop, UV Abs lines would be not affected by priors
     // then)
 
@@ -582,7 +582,7 @@ void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                         bool enableSetVelocity) {
   SetNominalAmplitudes(itplratio);
 
-  /* TODO reactivate this if once called with enableSetVelocity=true . ->
+  /* Reactivate this if once called with enableSetVelocity=true . ->
   velocities must be imported from linemodelfitting if (enableSetVelocity) {
     // Set the velocities from templates: todo auto switch when velfit is ON
     m_CatalogTplRatio.GetCatalogVelocities(itplratio, m_velocityEmission,

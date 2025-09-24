@@ -272,7 +272,7 @@ Float64 TLineModelElementParam::GetLineProfileDerivVel(
     const CLineProfile &profile, Float64 x, Float64 x0, Float64 sigma,
     bool isEmission) const {
   const Float64 c = SPEED_OF_LIGHT_IN_VACCUM;
-  const Float64 pfsSimuCompensationFactor = 1.0; // TODO should be removed !!!
+  const Float64 pfsSimuCompensationFactor = 1.0;
   Float64 v = getVelocity(), v_to_sigma = pfsSimuCompensationFactor / c * x0;
 
   Float64 profile_derivSigma = profile.GetLineProfileDerivSigma(x, x0, sigma);

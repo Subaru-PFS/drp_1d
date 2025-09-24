@@ -74,9 +74,6 @@ public:
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
 
-  // only used for template orthogonalization,
-  // TODO use only one of the future subclasses ?
-  //      at least inherit from clinemodelfitting
   CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
                     const TLambdaRange &lambdaRange,
                     const std::shared_ptr<COperatorContinuumFitting>
@@ -122,8 +119,8 @@ public:
   }
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
-    // TODO temp basic impl
-    m_spectraIndex.setAtBegining();
+    // NB dummy multiobs implementation (functional for one obs only)
+    m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 

@@ -68,14 +68,14 @@ CSvdlcFitter::CSvdlcFitter(
 // with linear solver: gsl_multifit_wlinear
 
 void CSvdlcFitter::doFit(Float64 redshift) {
-
-  // 1. fit only the current continuum
-  // prepare continuum on the observed grid
+  // NB dummy multiobs implementation (functional for one obs only)
+  //  1. fit only the current continuum
+  //  prepare continuum on the observed grid
 
   // re-interpolate the continuum on the grid
   m_continuumManager->reinterpolateContinuumResetAmp();
 
-  m_spectraIndex.setAtBegining(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
 
@@ -90,7 +90,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx, m_spectralAxis,
                                          ampsfitted, errorsfitted, chi2_cl,
                                          redshift);
-  // TODO multiobs loop here
+  // multiobs: add a loop here
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex)
     getModel().initModelWithContinuum();
@@ -116,7 +116,8 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  m_spectraIndex.setAtBegining(); // TODO dummy impl
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();
@@ -290,8 +291,6 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
                  Formatter() << "SVD reduced to continuum only since all lines "
                                 "profiles are null");
   }
-
-  // TODO handle the null continuum case
 
   for (Int32 icol = EltsIdx.size(); icol < nline; ++icol)
     valid_col_indices.push_back(icol);

@@ -73,7 +73,8 @@ CSvdFitter::CSvdFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
 
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
-  m_spectraIndex.setAtBegining(); // dummy implementation
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   if (validEltsIdx.empty())
     return;
@@ -324,7 +325,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 // positive ones
 void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                                Float64 redshift) {
-
+  // NB dummy multiobs implementation (functional for one obs only)
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
 
@@ -350,13 +351,13 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   // refit the positive elements together
   if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
     fitAmplitude(ValidEltsIdx[idx_positive.front()], redshift, undefIdx);
-    m_spectraIndex.setAtBegining(); // dummy implementation
+    m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     return;
   }
   bool const allPositive2 = fitAmplitudesLinSolve(
       ValidEltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
   if (allPositive2) {
-    m_spectraIndex.setAtBegining(); // dummy implementation
+    m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     return;
   }
   for (Int32 irefit = 0; irefit < ssize(idx_positive); ++irefit) {
@@ -366,7 +367,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                             0.0, errorsfitted[irefit]);
     }
   }
-  m_spectraIndex.setAtBegining(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 }
 
 void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,

@@ -49,6 +49,8 @@ from pylibamazed.Paths import results_specifications_filename
 from pylibamazed.redshift import CLog, ErrorCode
 from pylibamazed.DocDecorator import doc_method
 
+# NB: there are 2 types of stages here, the stages defined in parameters and the root stages
+
 root_stages = ["init", "classification", "load_result_store"]
 
 # for each stage key, value is the list of stages which depend upon it
@@ -61,11 +63,6 @@ spectrum_model_stages = {
 }
 
 zlog = CLog.GetInstance()
-
-
-# TODO bien voir ici qu'il y a deux types de stages :
-# celles définies dans le parameters et Object/Root stages.
-# À ne pas confondre, voir comment on pourrait les fusionner
 
 
 @exception_class_decorator(logging=True)
@@ -383,7 +380,6 @@ class AbstractOutput(metaclass=ABCMeta):
         else:
             return self.root_results[dataset]
 
-    # TODO more robust version, should iterate over candidate datasets and check existence
     @doc_method
     def get_nb_candidates(self, object_type):
         available_datasets = self._get_available_datasets("candidate", object_type)

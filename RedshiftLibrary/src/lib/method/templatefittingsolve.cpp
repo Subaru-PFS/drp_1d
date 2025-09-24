@@ -613,7 +613,7 @@ void CTemplateFittingSolve::initSkipSecondPass() {
 };
 
 void CTemplateFittingSolve::initTwoPassZStepFactor() {
-  // NB: To be used only if second pass is enabled
+  // NB To be used only if second pass is enabled
   m_twoPassZStepFactor =
       Context.GetInputContext()->GetParameterStore()->GetScoped<Int32>(
           "firstPass.largeGridStepRatio");

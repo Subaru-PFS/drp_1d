@@ -653,7 +653,6 @@ public:
     lineRatioCatalog->addVelocity("abs_vel", 640.0);
     lineRatioCatalog->setAsymProfileAndParams("ASYMFIXED",
                                               TAsymParams(3.0, 1.5, 1.0));
-    // TODO mettre condition enableIGM
     lineRatioCatalog->convertLineProfiles2SYMIGM(
         fixture_MeiskinCorrection().igmCorrectionMeiksin);
 

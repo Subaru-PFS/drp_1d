@@ -368,6 +368,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolveAndLambdaOffset(
 // overriding the SVD linear fitting, but here it is not linear inversion
 void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                                   Float64 redshift) {
+  // NB dummy multiobs implementation (functional for one obs only)
 
   if (EltsIdx.size() < 1)
     THROWG(ErrorCode::INTERNAL_ERROR, "empty Line element list to fit");
@@ -485,7 +486,6 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
 
-  // TODO adapt bounds to lambdaRange (if line goes out of border #8669)
   if (m_enableLambdaOffsetsFit) {
     // offset bounds
     lb[lbdaOffset_param_idx] = m_LambdaOffsetMin / normLbdaOffset;
@@ -530,8 +530,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   auto const ValidEltsIdx = m_ElementsVector->getValidElementIndices(EltsIdx);
   if (ValidEltsIdx.empty())
     return;
-  m_spectraIndex
-      .setAtBegining(); // dummy reset, TO BE CORRECTED for full multiobs
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   CSvdFitter::fitAmplitudesLinSolvePositive(EltsIdx, redshift);
   Float64 max_snr = -INFINITY;
   for (size_t i = 0; i != EltsIdx.size(); ++i) {

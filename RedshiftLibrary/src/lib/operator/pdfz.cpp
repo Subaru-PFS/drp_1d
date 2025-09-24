@@ -524,10 +524,6 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
 // This mathematically does not correspond to any valid method for combining
 // PDFs.
-// TODO: problem while estimating best proba. is it best proba for each z ? In
-// that case: what about sum_z P = 1 ?
-// TODO: this method should be replaced/modified to correspond to the MaxPDF
-// technique.
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
   validateChisquareArray(chisquarearray);

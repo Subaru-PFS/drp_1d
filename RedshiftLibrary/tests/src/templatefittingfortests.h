@@ -184,7 +184,6 @@ public:
     size_t pos = json2Pass.find(target);
     json2Pass.replace(pos, target.length(), "\"singlePass\" : false,");
 
-    // TODO do with photometry in a second time
     target = "\"enablePhotometry\" : true,";
     pos = json2Pass.find(target);
     json2Pass.replace(pos, target.length(), "\"enablePhotometry\" : false,");
