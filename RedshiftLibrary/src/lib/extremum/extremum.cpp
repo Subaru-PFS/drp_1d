@@ -95,7 +95,7 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 
   // Find index in xAxis that correspond to the boundary specified by m_XRange
   if (!m_XRange.GetIsEmpty())
-    m_XRange.getClosedIntervalIndices(xAxis, BeginIndex, EndIndex);
+    std::tie(BeginIndex, EndIndex) = m_XRange.getClosestInnerIndices(xAxis);
 
   auto [maxX, maxY] = FindAllPeaks(xAxis, yAxis, BeginIndex, EndIndex);
 
@@ -234,7 +234,7 @@ TPointList CExtremum::FilterOutNeighboringPeaksAndTruncate(
     TFloat64Range window(wind_low, wind_high);
     Int32 i_min = i, i_max = i;
     try {
-      window.getClosedIntervalIndices(maxX, i_min, i_max);
+      std::tie(i_min, i_max) = window.getClosestInnerIndices(maxX);
     } catch (const AmzException &exception) {
     }
     for (Int32 j = i_min; j <= i_max; j++) {

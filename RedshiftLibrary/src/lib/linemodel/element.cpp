@@ -224,29 +224,31 @@ void CLineModelElement::EstimateTheoreticalSupport(
 TInt32Range CLineModelElement::EstimateIndexRange(
     const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
     const TFloat64Range &lambdaRange, Float64 winsizeAngstrom) {
+
+  Float64 const winsize = winsizeAngstrom;
+  Float64 const lambda_start = mu - winsize / 2.0;
+  Float64 const lambda_end = mu + winsize / 2.0;
+
+  TFloat64Range elementLambdaRange{lambda_start, lambda_end};
+  auto has_intersection = elementLambdaRange.IntersectWith(lambdaRange);
   TInt32Range supportRange;
-  Float64 winsize = winsizeAngstrom;
-
-  Float64 lambda_start = mu - winsize / 2.0;
-  if (lambda_start < lambdaRange.GetBegin()) {
-    lambda_start = lambdaRange.GetBegin();
+  if (!has_intersection || elementLambdaRange.GetIsEmpty()) {
+    supportRange = {0, -1};
+    return supportRange;
   }
-  supportRange.SetBegin(spectralAxis.GetIndexAtWaveLength(lambda_start));
 
-  Float64 lambda_end = mu + winsize / 2.0;
-  if (lambda_end > lambdaRange.GetEnd()) {
-    lambda_end = lambdaRange.GetEnd();
-  }
-  supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
-
-  // correct the end value if higher than lambdaRange end
-  // spectralAxis[supportRange.GetEnd()]);
-  if (spectralAxis[supportRange.GetEnd()] > lambdaRange.GetEnd()) {
-    supportRange.SetEnd(supportRange.GetEnd() - 1);
-  }
-  // correct the end value if not higher or equal to the begin value
-  if (supportRange.GetEnd() < supportRange.GetBegin()) {
-    supportRange.SetEnd(supportRange.GetBegin() - 1);
+  try {
+    supportRange =
+        spectralAxis.GetIndexRangeAtWaveLengthRange(elementLambdaRange);
+  } catch (const AmzException &exception) {
+    if (exception.getErrorCode() == ErrorCode::IE_CRANGE_NO_INTERSECTION) {
+      Int32 imin =
+          spectralAxis.GetIndexAtWaveLength(elementLambdaRange.GetBegin());
+      TInt32Range supportRange{imin, imin - 1};
+      return supportRange;
+    } else {
+      throw exception;
+    }
   }
 
   return supportRange;

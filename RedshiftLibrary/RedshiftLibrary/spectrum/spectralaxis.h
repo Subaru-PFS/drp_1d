@@ -98,7 +98,7 @@ public:
 
   Int32 GetIndexAtWaveLength(Float64 waveLength) const;
   TInt32Range
-  GetIndexesAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
+  GetIndexRangeAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
   TLambdaRange GetLambdaRange() const;
   void ClampLambdaRange(const TFloat64Range &range,

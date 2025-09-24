@@ -407,7 +407,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
         GetIGMStartingRedshiftValue(m_spectraFull[0]->GetSpectralAxis()[0]);
     if (zmin_igm > redshifts.front() && zmin_igm < redshifts.back()) {
       Int32 i_zmin_igm = -1;
-      TFloat64Index::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
+      NSIndexing::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
       zsplit.push_back(i_zmin_igm);
     }
     if (zmin_igm < redshifts.back()) {
@@ -420,7 +420,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
         if (z >= redshifts.back())
           break;
         Int32 iz = -1;
-        TFloat64Index::getClosestLowerIndex(redshifts, z, iz);
+        NSIndexing::getClosestLowerIndex(redshifts, z, iz);
         zsplit.push_back(iz);
       }
     }
@@ -1292,10 +1292,8 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector());
     for (Int32 j = imin; j <= imax; j++) {
       if (mask[j]) {
         numDevs++;

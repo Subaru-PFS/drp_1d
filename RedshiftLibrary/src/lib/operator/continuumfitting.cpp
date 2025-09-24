@@ -68,10 +68,9 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector());
+
     for (Int32 j = imin; j <= imax; j++) {
       numDevs++;
       sumLogNoise += log(error[j]);

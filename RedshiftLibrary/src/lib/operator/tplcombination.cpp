@@ -117,9 +117,8 @@ void COperatorTplcombination::BasicFit(
                 fittingResults.overlapFraction.front(), overlapThreshold);
 
   // I consider here that all templates share the same spectralAxis
-  currentRange.getClosedIntervalIndices(
-      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
-      m_kStart[0], m_kEnd[0]);
+  std::tie(m_kStart[0], m_kEnd[0]) = currentRange.getClosestInnerIndices(
+      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector());
 
   if (opt_extinction || opt_dustFitting)
     for (auto &tpl : m_templatesRebined_bf)
@@ -595,9 +594,8 @@ CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
   RebinTemplate(spectrum, tplList, redshift, lambdaRange, currentRange,
                 overlapFraction, overlapThreshold);
 
-  currentRange.getClosedIntervalIndices(
-      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector(),
-      m_kStart[0], m_kEnd[0]);
+  std::tie(m_kStart[0], m_kEnd[0]) = currentRange.getClosestInnerIndices(
+      m_templatesRebined_bf.front().GetSpectralAxis().GetSamplesVector());
 
   // create identityTemplate on which we apply meiksin and ism, once for all
   // tpllist
@@ -658,10 +656,9 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLogForSpectrum(
   Float64 cstLog = 0.0;
   Float64 sumLogNoise = 0.0;
 
-  Int32 imin;
-  Int32 imax;
-  lambdaRange.getClosedIntervalIndices(spcSpectralAxis.GetSamplesVector(), imin,
-                                       imax);
+  auto const &[imin, imax] =
+      lambdaRange.getClosestInnerIndices(spcSpectralAxis.GetSamplesVector());
+
   for (Int32 j = imin; j <= imax; j++) {
     numDevs++;
     sumLogNoise += log(error[j]);

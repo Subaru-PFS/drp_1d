@@ -387,7 +387,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
   const CSpectrumNoiseAxis &error = GetErrorAxis();
   const CSpectrumFluxAxis &flux = GetFluxAxis();
 
-  TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(wlRange);
   Int32 n = iRange.GetLength() + 1;
 
   TFloat64List x(n);
@@ -434,8 +434,9 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
   bool allzero = true;
   Int32 nInvalid = 0;
 
-  Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-  Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+  auto const &[iMin, iMax] =
+      TFloat64Range(LambdaMin, LambdaMax)
+          .getClosestInnerIndices(m_SpectralAxis.GetSamplesVector());
   Log.LogDetail(Formatter()
                 << "CSpectrum::ValidateFlux - checking on the configured "
                    "lambdaRange = ("
@@ -450,7 +451,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 
   // check flux
   TBoolList validSamples = flux.checkFlux();
-  for (Int32 i = iMin; i < iMax; i++) {
+  for (Int32 i = iMin; i <= iMax; i++) {
     // collect invalid values
     if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
@@ -484,8 +485,8 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
     THROWG(ErrorCode::INVALID_NOISE, "Invalid spectrum: empty noise.");
 
   const TFloat64List &error = GetFluxAxis().GetError().GetSamplesVector();
-  Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-  Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(
+      TFloat64Range(LambdaMin, LambdaMax));
   Log.LogDetail(Formatter()
                 << "CSpectrum::ValidateNoise - checking on the configured "
                    "lambdaRange = ("
@@ -493,13 +494,14 @@ void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   Log.LogDetail(Formatter()
                 << "CSpectrum::ValidateNoise - checking on the true observed "
                    "spectral axis lambdarange = ("
-                << m_SpectralAxis[iMin] << ", " << m_SpectralAxis[iMax] << ")");
+                << m_SpectralAxis[iRange.GetBegin()] << ", "
+                << m_SpectralAxis[iRange.GetEnd()] << ")");
 
   std::map<string, int> invalidElements = {};
 
   // check noise
   TBoolList validSamples = GetFluxAxis().GetError().checkNoise();
-  for (Int32 i = iMin; i < iMax; i++) {
+  for (Int32 i = iRange.GetBegin(); i <= iRange.GetEnd(); i++) {
     if (!checkCorrectness(validSamples[i], i)) {
       ++nInvalid;
       invalidElements[to_string(error[i])]++;
@@ -521,11 +523,11 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                                 Float64 coeffCorr) {
   ASSERT_CSpectrum_IS_VALID(*this);
 
-  Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-  Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+  TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(
+      TFloat64Range(LambdaMin, LambdaMax));
 
-  bool corrected =
-      GetFluxAxis_().correctFluxAndNoiseAxis(iMin, iMax, coeffCorr);
+  bool corrected = GetFluxAxis_().correctFluxAndNoiseAxis(
+      iRange.GetBegin(), iRange.GetEnd(), coeffCorr);
 
   if (corrected)
     ResetContinuum();
@@ -644,8 +646,8 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   Int32 imin, imax;
   try {
-    clampedlambdaRange.getClosedIntervalIndices(
-        m_SpectralAxis.GetSamplesVector(), imin, imax);
+    std::tie(imin, imax) = clampedlambdaRange.getClosestInnerIndices(
+        m_SpectralAxis.GetSamplesVector());
   } catch (const AmzException &e) {
     THROWG(ErrorCode::INVALID_SPECTRUM,
            Formatter() << "Invalid spectrum after clamping to [" << lmin << ","

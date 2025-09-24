@@ -72,9 +72,9 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     const CSpectrumSpectralAxis &spectrumLambda =
         Context.getSpectra()[spectrumIdx]->GetSpectralAxis();
-    m_lambdaRanges[spectrumIdx]->getClosedIntervalIndices(
-        spectrumLambda.GetSamplesVector(), m_kStart[spectrumIdx],
-        m_kEnd[spectrumIdx]);
+    std::tie(m_kStart[spectrumIdx], m_kEnd[spectrumIdx]) =
+        m_lambdaRanges[spectrumIdx]->getClosestInnerIndices(
+            spectrumLambda.GetSamplesVector());
     m_nPixels[spectrumIdx] = m_kEnd[spectrumIdx] - m_kStart[spectrumIdx] + 1;
   }
   m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();

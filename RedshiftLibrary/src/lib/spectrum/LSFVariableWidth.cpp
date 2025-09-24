@@ -70,8 +70,7 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda,
                        << m_spcAxis[m_width.size() - 1] << "]");
 
   Int32 idx = undefIdx;
-  TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,
-                                      idx);
+  NSIndexing::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda, idx);
 
   if (m_spcAxis[idx] == lambda)
     return m_width[idx];

@@ -36,52 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
-#include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/log/log.h"
+
+#ifndef CHECK_EXCEPTIONS_FOR_TESTS
+#define CHECK_EXCEPTIONS_FOR_TESTS
+
+#include "RedshiftLibrary/common/exception.h"
 
 using namespace NSEpic;
-using namespace std;
 
-void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                      const TFloat64Range &range,
-                      const CSpectrumSpectralAxis &targetSpectralAxis,
-                      CMask &rebinedMask, const std::string opt_error_interp,
-                      const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
-                      Int32 &cursor) {
+bool check_error_code(AmzException const &e, ErrorCode const &code);
 
-  const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
-  const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
-
-  // nearest sample, lookup
-  Int32 k = 0;
-  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
-  while (cursor < targetSpectralAxis.GetSamplesCount() &&
-         Xtgt[cursor] <= range.GetEnd()) {
-    // k = gsl_interp_bsearch
-    // (Xsrc.data(), Xtgt[j], kprev,
-    // n);
-    k = NSIndexing::getClosestIndex(Xsrc, Xtgt[cursor]);
-    Float64 xSrcStep = NAN;
-    if (k == ssize(Xsrc) - 1)
-      xSrcStep = Xsrc[k] - Xsrc[k - 1];
-    else
-      xSrcStep = Xsrc[k + 1] - Xsrc[k];
-
-    // closest value
-    rebinedFluxAxis[cursor] = Ysrc[k];
-
-    if (opt_error_interp != "no") {
-
-      error_tmp[cursor] = Error[k];
-      if (opt_error_interp == "rebinVariance") {
-        Float64 xStepCompensation = computeXStepCompensation(
-            targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
-      }
-    }
-    rebinedMask[cursor] = 1;
-    cursor++;
-  }
+inline bool check_error_code(AmzException const &e, ErrorCode const &code) {
+  return e.getErrorCode() == code;
 }
+
+#endif

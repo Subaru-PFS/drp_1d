@@ -300,7 +300,7 @@ bool CSpectrumLogRebinning::checkTemplateAlignment(
     const TFloat64Range &lambdaRange_tpl) const {
   const TAxisSampleList &w = tpl->GetSpectralAxis().GetSamplesVector();
   const Float64 &lstart = lambdaRange_tpl.GetBegin();
-  Int32 idx = CIndexing<Float64>::getCloserIndex(w, lstart);
+  Int32 idx = NSIndexing::getClosestIndex(w, lstart);
   return (lstart - w[idx]) / w[idx] <= 2E-7;
 }
 

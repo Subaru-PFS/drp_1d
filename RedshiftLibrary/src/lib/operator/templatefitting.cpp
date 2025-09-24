@@ -102,9 +102,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
     // Sets template indexes between which data is of interest for this given
     // spectrum / redshift
-    currentRanges[spcIndex].getClosedIntervalIndices(
-        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        m_kStart[spcIndex], m_kEnd[spcIndex]);
+    std::tie(m_kStart[spcIndex], m_kEnd[spcIndex]) =
+        currentRanges[spcIndex].getClosestInnerIndices(
+            m_templateRebined_bf[spcIndex]
+                .GetSpectralAxis()
+                .GetSamplesVector());
   }
 
   // get masks & determine number of samples actually used
