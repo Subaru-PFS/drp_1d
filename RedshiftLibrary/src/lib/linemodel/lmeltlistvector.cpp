@@ -133,9 +133,16 @@ void CLMEltListVector::AddElementParam(CLineVector lines) {
 }
 
 void CLMEltListVector::fillElements() {
+  Float64 minDistanceToLine =
+      Context.GetParameterStore()->GetScoped<Float64>("minDistanceToLine");
+  Int32 minSamplesNumberForLineFit =
+      Context.GetParameterStore()->GetScoped<Int32>("nbSamplesMinForLineFit");
+
   for (auto &ep : m_ElementsParams)
-    getElementList().push_back(std::make_shared<CLineModelElement>(ep));
+    getElementList().push_back(std::make_shared<CLineModelElement>(
+        ep, minDistanceToLine, minSamplesNumberForLineFit));
 }
+
 /**
  * \brief For each line in each group of the argument, finds the associated
  *line in the catalog and saves this information to getElementList(). Converts

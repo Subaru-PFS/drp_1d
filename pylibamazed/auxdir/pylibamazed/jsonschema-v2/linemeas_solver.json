@@ -34,6 +34,8 @@
             "lya",
             "lineCatalog",
             "nSigmaSupport",
+            "minDistanceToLine",
+            "nbSamplesMinForLineFit",
             "lineWidthType",
             "fittingMethod",
             "velocityFit",
@@ -101,6 +103,16 @@
               "type": "number",
               "title": "Support size",
               "description": "Full (not half) size of each line support in sigma of the gaussian profile."
+            },
+            "minDistanceToLine": {
+              "type": "number",
+              "title": "minimal required distance from samples to line center",
+              "description": "A line can be fitted if at least one sample is closer to the center, expressed in the Gaussian width: sigma.\nFor instance, with a value of 1.0 a line is excluded from the model if there are no samples in the range [-1, +1] sigma."
+            },
+            "nbSamplesMinForLineFit": {
+              "type": "integer",
+              "title": "minimum number of samples required inside the line support",
+              "description": "A line can be fitted if there are at least this number of samples inside the support range defined by nSigmaSupport."
             },
             "lineWidthType": {
               "type": "string",

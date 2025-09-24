@@ -78,6 +78,8 @@ std::string jsonLMS =
     "\"lineModel\" : {"
     "\"continuumComponent\" : \"tplFit\","
     "\"useLogLambdaSampling\": false,"
+    "\"minDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\","
     "\"lya\": {"
     "\"profile\": \"asym\","
     "\"asymProfile\": {"

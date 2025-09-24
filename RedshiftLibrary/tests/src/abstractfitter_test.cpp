@@ -67,10 +67,6 @@ struct AbstractFitterFixture {
   std::unique_ptr<CSpectraGlobalIndex> spcIndex =
       std::make_unique<CSpectraGlobalIndex>(nb_spectra);
   CLineMap restLineList = CLineMap();
-
-  std::shared_ptr<CLMEltListVector> elementsVector =
-      std::make_shared<CLMEltListVector>(
-          *spcIndex, restLineList, ElementComposition::EmissionAbsorption);
   CCSpectrumVectorPtr inputSpcs;
   CSpcModelVectorPtr spectrumModels;
 
@@ -81,6 +77,9 @@ struct AbstractFitterFixture {
     const std::string jsonString = createInputJson(method, igmFit);
     Context.LoadParameterStore(jsonString);
     CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
+    std::shared_ptr<CLMEltListVector> elementsVector =
+        std::make_shared<CLMEltListVector>(
+            *spcIndex, restLineList, ElementComposition::EmissionAbsorption);
     CTestFitter testFitter(elementsVector, inputSpcs, lambdaRanges,
                            spectrumModels, restLineList, *spcIndex);
     return testFitter;
@@ -92,6 +91,8 @@ struct AbstractFitterFixture {
 
     std::string jsonString = {
         "{\"l1\" : {\"l2\": {\"someMethod\": {\"lineModel\": {"
+        "\"minDistanceToLine\" : \"1\","
+        "\"nbSamplesMinForLineFit\": \"2\","
         "\"lya\": {"
         "\"profile\": \"someProfile\","
         "\"asymProfile\": {"
