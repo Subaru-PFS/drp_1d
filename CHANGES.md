@@ -6,6 +6,7 @@
 ### Deprecated
 ### Removed
 ### Fixed
+* [ 9015] : Fixed determination of indices inside a wavelength interval, for instance inside the support of lines.
 * [10075] : Fixed computation of power law reduced chi2
 
 ## 1.14.0 (2025-08-26)
