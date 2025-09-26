@@ -56,7 +56,6 @@ namespace NSEpic {
 
 class CTemplate;
 class CClassificationResult;
-class CReliabilityResult;
 class CLogZPdfResult;
 class TLineModelResult;
 class TTplCombinationResult;
@@ -129,11 +128,6 @@ public:
   GetClassificationResult(const std::string &spectrumModel,
                           const std::string &stage, const std::string &method,
                           const std::string &name) const;
-
-  std::shared_ptr<const CReliabilityResult>
-  GetReliabilityResult(const std::string &spectrumModel,
-                       const std::string &stage, const std::string &method,
-                       const std::string &name) const;
 
   std::shared_ptr<const CLogZPdfResult>
   GetLogZPdfResult(const std::string &spectrumModel, const std::string &stage,
