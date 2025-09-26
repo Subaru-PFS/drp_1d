@@ -207,7 +207,7 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
   BOOST_CHECK_CLOSE(chi2r, 6.148, 1e-2);
   Float64 pValue = res->fittedContinuum.pValue;
   BOOST_CHECK_CLOSE(pValue, 4.97e-42, 1e-1);
-  BOOST_CHECK_EQUAL(res->nPixels, 63);
+  BOOST_CHECK_EQUAL(res->nPixels, 54);
   /*
     BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, -0.43943998160372039,
                       1e-4);

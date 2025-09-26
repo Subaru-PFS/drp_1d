@@ -112,8 +112,8 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     auto const flux = curve.computeUnmaskedFlux();
     nUnmasked = flux.size();
     if (nUnmasked < m_nSamplesMinForContinuumFit) {
-      result.coefs = DEFAULT_COEFS_PAIR;
-      result.chiSquare = computeDtD(flux);
+      result.coefs = NULL_COEFS_PAIR;
+      result.chiSquare = INFINITY;
       return result;
     }
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
@@ -353,7 +353,7 @@ COperatorPowerLaw::computeConstantLawCoefs(TFloat64List const &flux,
   mean_amplitude /= sum_inv_var;
   Float64 mean_amplitude_std = 1.0 / sqrt(sum_inv_var);
   TPowerLawCoefs coefs{mean_amplitude, 0.0, mean_amplitude_std, INFINITY};
-  checkCoefsOrDefault(coefs);
+  checkCoefsOrNull(coefs);
   return TPowerLawCoefsPair{coefs, coefs};
 }
 
@@ -387,30 +387,30 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
   }
 
-  checkCoefsOrDefault(powerLawsCoefs);
+  checkCoefsOrNull(powerLawsCoefs);
   return powerLawsCoefs;
 };
 
 TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
     TCurve const &lnCurves) const {
   TPowerLawCoefs coefs = computeSimplePowerLawCoefs(lnCurves);
-  bool validCoefs = checkCoefsOrDefault(coefs);
+  bool validCoefs = checkCoefsOrNull(coefs);
   if (validCoefs)
     coefs = computeSimplePowerLawCoefs(lnCurves, coefs);
   return coefs;
 }
 
-bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefs &coefs) const {
+bool COperatorPowerLaw::checkCoefsOrNull(TPowerLawCoefs &coefs) const {
   if (coefs.a < DBL_MIN) {
-    coefs = DEFAULT_COEFS;
+    coefs = NULL_COEFS;
     return false;
   }
   return true;
 }
 
-bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const {
+bool COperatorPowerLaw::checkCoefsOrNull(TPowerLawCoefsPair &coefs) const {
   if (coefs.first.a < DBL_MIN || coefs.second.a < DBL_MIN) {
-    coefs = DEFAULT_COEFS_PAIR;
+    coefs = NULL_COEFS_PAIR;
     return false;
   }
   return true;
@@ -458,7 +458,7 @@ TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
   // Make a first calculation of power law coefficients without taking into
   // account the noise
   TPowerLawCoefsPair coefs = computeDoublePowerLawCoefs(lnCurves);
-  bool validCoefs = checkCoefsOrDefault(coefs);
+  bool validCoefs = checkCoefsOrNull(coefs);
   if (validCoefs)
     coefs = computeDoublePowerLawCoefs(lnCurves, coefs);
   return coefs;
@@ -794,12 +794,4 @@ CModelSpectrumResult COperatorPowerLaw::ComputeSpectrumModel(
 
   return CModelSpectrumResult(lambdaObs, std::move(fluxObs),
                               m_spectra[spcIndex]->getObsID());
-}
-
-Float64 COperatorPowerLaw::computeDtD(TFloat64List const &d) const {
-  Float64 dtd = 0;
-  for (auto v : d) {
-    dtd += v * v;
-  }
-  return dtd;
 }

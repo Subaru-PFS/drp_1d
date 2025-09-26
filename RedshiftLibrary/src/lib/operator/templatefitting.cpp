@@ -112,9 +112,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   // get masks & determine number of samples actually used
   auto &&[mask_list, n_samples] = getMaskListAndNSamples(redshift);
 
-  if (n_samples == 0) {
-    result.ampl = 0.0;
-    result.ampl_sigma = 0.0;
+  if (n_samples < m_nSamplesMinForContinuumFit) {
+    result.ampl = 0;
+    result.ampl_sigma = -INFINITY;
+    result.ampl_err = INFINITY;
+    result.chiSquare = INFINITY;
     return result;
   }
 

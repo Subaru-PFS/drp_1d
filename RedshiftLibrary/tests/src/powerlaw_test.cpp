@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(basicfit_double_default) {
   BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
-  BOOST_CHECK_CLOSE(result.chiSquare, 1.9996971229437142, 1e-4);
+  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
   BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, INFINITY);
   BOOST_CHECK_EQUAL(result.fitQuality.pValue, 0);
   Context.reset();
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   Float64 b1 = 0.0;
   Float64 b2 = 0.0;
 
-  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 50);
+  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 10);
   CSpectrumSpectralAxis spectralAxisRest1 =
       createSpectralAxisRest(spectralAxis1, z);
   CSpectrumFluxAxis fluxAxis1 =
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
       z, opt_extinction, opt_dustFitting, nullThreshold, "full");
 
   BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
 

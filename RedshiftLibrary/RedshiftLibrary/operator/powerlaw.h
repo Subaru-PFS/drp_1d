@@ -115,10 +115,12 @@ public:
   CModelSpectrumResult
   ComputeSpectrumModel(const CContinuumModelSolution &continuum,
                        Int32 spcIndex);
-  bool checkCoefsOrDefault(TPowerLawCoefs &coefs) const;
-  bool checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const;
-  TPowerLawCoefs DEFAULT_COEFS = {0, 0, INFINITY, INFINITY};
+  bool checkCoefsOrNull(TPowerLawCoefs &coefs) const;
+  bool checkCoefsOrNull(TPowerLawCoefsPair &coefs) const;
+  TPowerLawCoefs DEFAULT_COEFS = {NAN, NAN, INFINITY, INFINITY};
   TPowerLawCoefsPair DEFAULT_COEFS_PAIR = {DEFAULT_COEFS, DEFAULT_COEFS};
+  TPowerLawCoefs NULL_COEFS = {0, 0, INFINITY, INFINITY};
+  TPowerLawCoefsPair NULL_COEFS_PAIR = {NULL_COEFS, NULL_COEFS};
 
 protected:
   friend ::PowerLaw_fixture;
@@ -206,7 +208,6 @@ private:
                                 const Float64 redshift, const Int32 meiksinIdx,
                                 const Float64 ebmvCoef,
                                 const TPowerLawCoefsPair &coefs) const;
-  Float64 computeDtD(TFloat64List const &d) const;
 };
 
 inline Float64 COperatorPowerLaw::computePowerLaw(TPowerLawCoefs const &coefs,
