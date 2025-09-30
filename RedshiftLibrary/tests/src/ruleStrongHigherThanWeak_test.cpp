@@ -98,7 +98,7 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
   CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
   std::string const jsonString = {
       "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
-      "\"minDistanceToLine\" : \"1\","
+      "\"maxDistanceToLine\" : \"1\","
       "\"nbSamplesMinForLineFit\": \"2\","
       "\"velocityEmission\": 100,"
       "\"lineWidthType\": \"instrumentDriven\""

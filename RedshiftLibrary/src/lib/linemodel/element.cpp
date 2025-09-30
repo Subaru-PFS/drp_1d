@@ -53,10 +53,10 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    const TLineModelElementParam_ptr elementParam, Float64 minDistanceToLine,
+    const TLineModelElementParam_ptr elementParam, Float64 maxDistanceToLine,
     Int32 minSamplesNumberForLineFit)
     : m_ElementParam(std::move(elementParam)),
-      m_minDistanceToLine(minDistanceToLine),
+      m_maxDistanceToLine(maxDistanceToLine),
       m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
       m_OutsideLambdaRange(true), m_size(m_ElementParam->size()){};
 
@@ -219,7 +219,7 @@ void CLineModelElement::EstimateLineVisbility(
   auto const &min_distance =
       *std::min_element(distance.begin(), distance.end());
 
-  if (min_distance > (m_minDistanceToLine * sigma + max_offset) ||
+  if (min_distance > (m_maxDistanceToLine * sigma + max_offset) ||
       (nsupport < m_minSamplesNumberForLineFit)) {
     m_OutsideLambdaRangeList[line_index] = true;
   } else {

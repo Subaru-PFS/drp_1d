@@ -91,7 +91,7 @@ struct AbstractFitterFixture {
 
     std::string jsonString = {
         "{\"l1\" : {\"l2\": {\"someMethod\": {\"lineModel\": {"
-        "\"minDistanceToLine\" : \"1\","
+        "\"maxDistanceToLine\" : \"1\","
         "\"nbSamplesMinForLineFit\": \"2\","
         "\"lya\": {"
         "\"profile\": \"someProfile\","

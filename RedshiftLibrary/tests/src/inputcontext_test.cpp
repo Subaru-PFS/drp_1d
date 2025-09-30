@@ -138,7 +138,7 @@ const std::string jsonStringOrtho =
     "\"lineRatioType\": \"tplRatio\","
     "\"lineTypeFilter\" : \"no\","
     "\"lineForceFilter\" : \"no\","
-    "\"minDistanceToLine\" : \"1\","
+    "\"maxDistanceToLine\" : \"1\","
     "\"nbSamplesMinForLineFit\": \"2\"}}}}}";
 
 class fixture_inputcontextTest {

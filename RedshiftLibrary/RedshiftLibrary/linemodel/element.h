@@ -72,7 +72,7 @@ class CLineModelElement {
 
 public:
   CLineModelElement(const TLineModelElementParam_ptr elementParam,
-                    Float64 minDistanceToLine = 1.0,
+                    Float64 maxDistanceToLine = 1.0,
                     Int32 minSamplesNumberForLineFit = -1);
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
@@ -192,7 +192,7 @@ protected:
 
   const TLineModelElementParam_ptr m_ElementParam;
 
-  Float64 m_minDistanceToLine;
+  Float64 m_maxDistanceToLine;
   Int32 m_minSamplesNumberForLineFit;
 
   bool m_OutsideLambdaRange;

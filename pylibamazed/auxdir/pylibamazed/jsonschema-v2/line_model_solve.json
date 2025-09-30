@@ -28,7 +28,7 @@
         "nOfZPriorStrength",
         "pdfCombination",
         "nSigmaSupport",
-        "minDistanceToLine",
+        "maxDistanceToLine",
         "nbSamplesMinForLineFit",
         "hAlphaPrior",
         "enablePhotometry",
@@ -101,11 +101,13 @@
         },
         "velocityEmission": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity",
           "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
         "velocityAbsorption": {
           "type": "number",
+          "minimum": 0,
           "title": "Absorption lines velocity",
           "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
@@ -116,31 +118,37 @@
         },
         "emVelocityFitMin": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity min",
           "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. Must be > 0 if lineWidthType=velocityDriven"
         },
         "emVelocityFitMax": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity max",
           "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines"
         },
         "emVelocityFitStep": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Emission lines velocity step",
           "description": "Tabulation of velocity for line width fitting in km s-1: step for emission lines"
         },
         "absVelocityFitMin": {
           "type": "number",
+          "minimum": 0,
           "title": "Aborption lines velocity min",
           "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines"
         },
         "absVelocityFitMax": {
           "type": "number",
+          "minimum": 0,
           "title": "Aborption lines velocity max",
           "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines"
         },
         "absVelocityFitStep": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Aborption lines velocity step",
           "description": "Tabulation of velocity for line width fitting in km s-1: step for absorption lines"
         },
@@ -162,6 +170,7 @@
         },
         "extremaCount": {
           "type": "integer",
+          "minimum": 1,
           "title": "Extrema count",
           "description": "Number of candidates to retain"
         },
@@ -276,16 +285,19 @@
         },
         "nSigmaSupport": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Support size",
           "description": "Full (not half) size of each line support in sigma of the gaussian profile "
         },
-        "minDistanceToLine": {
+        "maxDistanceToLine": {
           "type": "number",
-          "title": "minimal required distance from samples to line center",
+          "minimum": 0,
+          "title": "maximal distance of closest sample to line center",
           "description": "A line can be fitted if at least one sample is closer to the center, expressed in the Gaussian width: sigma.\nFor instance, with a value of 1.0 a line is excluded from the model if there are no samples in the range [-1, +1] sigma."
         },
         "nbSamplesMinForLineFit": {
           "type": "integer",
+          "minimum": 0,
           "title": "minimum number of samples required inside the line support",
           "description": "A line can be fitted if there are at least this number of samples inside the support range defined by nSigmaSupport."
         },
