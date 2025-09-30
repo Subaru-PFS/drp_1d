@@ -2,12 +2,14 @@
 
 ## 1.15
 ### Added
+* [10031] : Define a minimal number of valid samples to compute a continuum & add number of pixels effectively used for fits in output
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
-* [ 9015] : Fixed determination of indices inside a wavelength interval, for instance inside the support of lines.
+* [9015] : Fixed determination of indices inside a wavelength interval, for instance inside the support of lines.
 * [10075] : Fixed computation of power law reduced chi2
+* [9997] : Fix Internal Error empty leastsquare sum : handle cases where no samples is left outside mask to fit continuum in templatefitting
 
 ## 1.14.0 (2025-08-26)
 ### Added
