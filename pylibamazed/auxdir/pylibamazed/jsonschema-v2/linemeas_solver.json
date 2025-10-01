@@ -185,6 +185,18 @@
               "title": "Wether to fit wavelength offset",
               "description": "Wether to include wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
             },
+            "lbdaOffsetMax": {
+              "type": "number",
+              "minimum": 0,
+              "title": "Maxiumun authorized wavelength offset in each direction",
+              "description": "Size in km/s of the wavelength range of the effective line center arround the position given by the redshift. Relevant only when lbdaOffsetFit is set to true"
+            },
+            "lbdaOffsetStep": {
+              "type": "number",
+              "minimum": 0,
+              "title": "Wavelength offset steps in km/s",
+              "description": "Steps of the wavelength offset fitting loop. Relevant only when lbdaOffsetFit is set to true and fittingMethod=svd or hybrid (not used for fittingMethod=lbfgsb)"
+            },
             "ampOffsetFit": {
               "type": "boolean",
               "title": "Wether to fit amplitude offset",

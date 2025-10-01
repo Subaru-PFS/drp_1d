@@ -49,6 +49,28 @@
 using namespace NSEpic;
 using namespace std;
 
+CSvdFitter::CSvdFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
+                       const CCSpectrumVectorPtr &inputSpcs,
+                       const CTLambdaRangePtrVector &lambdaRanges,
+                       const CSpcModelVectorPtr &spectrumModels,
+                       const CLineMap &restLineList,
+                       const CSpectraGlobalIndex &spcIndex,
+                       bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit)
+    : CAbstractFitter(elementsVector, inputSpcs, lambdaRanges, spectrumModels,
+                      restLineList, spcIndex, enableAmplitudeOffsets,
+                      enableLambdaOffsetsFit) {
+  if (HasLambdaOffsetFitting() && m_enableLambdaOffsetsFit) {
+    std::shared_ptr<const CParameterStore> const &ps =
+        Context.GetParameterStore();
+    m_LambdaOffsetMax = ps->GetScoped<Float64>("lbdaOffsetMax");
+    m_LambdaOffsetMin = -m_LambdaOffsetMax;
+    auto const &opt_fitting_method =
+        ps->GetScoped<std::string>("fittingMethod");
+    if (opt_fitting_method == "svd" || opt_fitting_method == "hybrid")
+      m_LambdaOffsetStep = ps->GetScoped<Float64>("lbdaOffsetStep");
+  }
+};
+
 // set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
   m_spectraIndex.setAtBegining(); // dummy implementation
@@ -352,7 +374,7 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                       Float64 redshift) {
 
   bool atLeastOneOffsetToFit =
-      HasLambdaOffsetFitting(EltsIdx, enableOffsetFitting);
+      HasLineElementToOffset(EltsIdx, enableOffsetFitting);
   Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
 
   Float64 bestMerit = DBL_MAX;

@@ -319,7 +319,7 @@ void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
   return;
 }
 
-bool CAbstractFitter::HasLambdaOffsetFitting(TInt32List EltsIdx,
+bool CAbstractFitter::HasLineElementToOffset(TInt32List EltsIdx,
                                              bool enableOffsetFitting) const {
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
@@ -360,7 +360,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
                                                   bool enableOffsetFitting) {
 
   bool atLeastOneOffsetToFit =
-      HasLambdaOffsetFitting({eltIndex}, enableOffsetFitting);
+      HasLineElementToOffset({eltIndex}, enableOffsetFitting);
   Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
 
   if (!atLeastOneOffsetToFit) {
