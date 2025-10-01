@@ -653,7 +653,6 @@ void COperatorTemplateFittingLog::applyPrior(
         // check negative amplitude
         ampl_sigma = ampl / ampl_err;
         applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
-
         result->FitAmplitude[fullResultIdx] = ampl;
         result->FitAmplitudeError[fullResultIdx] = ampl_err;
         result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
@@ -741,7 +740,8 @@ void COperatorTemplateFittingLog::computeFitQuality(
     maskVect.push_back(std::move(combinedMask));
     result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
         spcFluxVect, modelFluxVect, spcFluxErrorVect,
-        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels, maskVect);
+        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels,
+        nSpcUnmaskedPixels, maskVect);
   }
 }
 
@@ -976,11 +976,13 @@ void COperatorTemplateFittingLog::FitRangez(
       TFloat64List amp_sigma(nshifts);
       TFloat64List amp_err(nshifts, DBL_MAX);
       for (Int32 k = 0; k < nshifts; k++) {
-        if (mtm_vec[k] == 0.0) {
-          amp[k] = 0.0;
-          amp_err[k] = 0.0;
-          amp_sigma[k] = 0.0;
-          chi2[k] = dtd; // keep at maximum
+        if (nValidSamples_vec[k] < m_nSamplesMinForContinuumFit) {
+          amp[k] = 0;
+          amp_err[k] = INFINITY;
+          amp_sigma[k] = -INFINITY;
+          chi2[k] = INFINITY;
+        } else if (mtm_vec[k] == 0.0) {
+          THROWG(ErrorCode::INTERNAL_ERROR, "mtm_vec[k] == 0");
         } else {
           amp[k] = dtm_vec[k] / mtm_vec[k];
           amp_err[k] = sqrt(1. / mtm_vec[k]);
@@ -1013,6 +1015,7 @@ void COperatorTemplateFittingLog::FitRangez(
           bestFitDtm[k] = dtm_vec[k];
           bestFitMtm[k] = mtm_vec[k];
           bestFitSNR[k] = -1.;
+          bestFitQuality[k].nPixelsUsedForFit = nValidSamples_vec[k];
           if (bestFitMtm[k] > 0) {
             bestFitSNR[k] = bestFitDtm[k] / std::sqrt(bestFitMtm[k]);
           }

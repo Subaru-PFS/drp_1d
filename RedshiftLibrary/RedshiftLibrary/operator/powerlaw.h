@@ -60,6 +60,7 @@ class basicfit_simple_without_extinction;
 class basicfit_simple_var;
 class basicfit_simple_weighted_without_extinction;
 class basicfit_double_without_extinction;
+class basicfit_double_default;
 class basicfit_double_with_var;
 class basicfit_simple_with_extinction;
 class basicfit_multiobs;
@@ -114,10 +115,12 @@ public:
   CModelSpectrumResult
   ComputeSpectrumModel(const CContinuumModelSolution &continuum,
                        Int32 spcIndex);
-  bool checkCoefsOrDefault(TPowerLawCoefs &coefs) const;
-  bool checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const;
-  TPowerLawCoefs DEFAULT_COEFS = {0, 0, INFINITY, INFINITY};
+  bool checkCoefsOrNull(TPowerLawCoefs &coefs) const;
+  bool checkCoefsOrNull(TPowerLawCoefsPair &coefs) const;
+  TPowerLawCoefs DEFAULT_COEFS = {NAN, NAN, INFINITY, INFINITY};
   TPowerLawCoefsPair DEFAULT_COEFS_PAIR = {DEFAULT_COEFS, DEFAULT_COEFS};
+  TPowerLawCoefs NULL_COEFS = {0, 0, INFINITY, INFINITY};
+  TPowerLawCoefsPair NULL_COEFS_PAIR = {NULL_COEFS, NULL_COEFS};
 
 protected:
   friend ::PowerLaw_fixture;
@@ -129,6 +132,7 @@ protected:
   friend powerLawOperator_test::basicfit_simple_var;
   friend powerLawOperator_test::basicfit_simple_weighted_without_extinction;
   friend powerLawOperator_test::basicfit_double_without_extinction;
+  friend powerLawOperator_test::basicfit_double_default;
   friend powerLawOperator_test::basicfit_double_with_var;
   friend powerLawOperator_test::basicfit_simple_with_extinction;
   friend powerLawOperator_test::basicfit_multiobs;
@@ -155,13 +159,13 @@ private:
   Float64 m_lambdaCut;
   Int32 m_nSpectra;
   std::vector<CSpectrumSpectralAxis> m_spcSpectralAxis_restframe;
-  Int32 m_nLogSamplesMin = POWER_LAW_N_SAMPLES_MIN_FOR_CONTINUUM_FIT;
 
   void initIgmIsm(bool opt_extinction, bool opt_dustFitting, Int32 FitEbmvIdx,
                   Int32 FitMeiksinIdx);
   void addTooFewSamplesWarning(Int32 N, Int32 igmIdx, Int32 ismIdx,
                                const char *funcName) const;
-  TPowerLawCoefsPair computeConstantLawCoefs(TCurve const &emittedCurve) const;
+  TPowerLawCoefsPair computeConstantLawCoefs(TFloat64List const &flux,
+                                             TFloat64List const &error) const;
   TPowerLawCoefsPair computeFullPowerLawCoefs(Int32 N1, Int32 N2,
                                               TCurve const &lnCurve) const;
   TAxisSampleList lnLambda(TAxisSampleList const &lambda) const;

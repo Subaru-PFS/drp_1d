@@ -57,6 +57,7 @@ const std::string jsonStringMO =
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","

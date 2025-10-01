@@ -107,24 +107,31 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                            return curve.pixelIsChi2AndSNRValid(pixelIdx);
                          });
   TPowerLawResult result;
-  if (N < m_nLogSamplesMin) {
+  Int32 nUnmasked = 0;
+  if (N < m_nSamplesMinForContinuumFit) {
+    auto const flux = curve.computeUnmaskedFlux();
+    nUnmasked = flux.size();
+    if (nUnmasked < m_nSamplesMinForContinuumFit) {
+      result.coefs = NULL_COEFS_PAIR;
+      result.chiSquare = INFINITY;
+      return result;
+    }
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
-    auto const constantLawsCoef = computeConstantLawCoefs(curve);
+    auto const error = curve.computeUnmaskedFluxError();
+    auto const constantLawsCoef = computeConstantLawCoefs(flux, error);
     T2DPowerLawCoefsPair coefs(1,
                                TList<TPowerLawCoefsPair>(1, constantLawsCoef));
     // Create a temporary 3D curve to compute chi2
     auto curve3D = T3DCurve(std::move(curve));
     auto const chi2 = computeChi2(curve3D, coefs);
     curve = TCurve(std::move(curve3D));
-
     result.chiSquare = chi2[0][0];
     result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
     if (opt_dustFitting)
       result.ebmvCoef = 0.0;
-
   } else {
     T3DCurve emittedCurve = computeEmittedCurve(
         redshift, opt_extinction, opt_dustFitting, std::move(curve));
@@ -135,6 +142,17 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     // Step 4. Creates result
     result.chiSquare = chi2Result.chi2;
     result.coefs = coefs[chi2Result.igmIdx][chi2Result.ismIdx];
+
+    // Adds number of pixels ised for the continuum fit info
+    auto const igmIdx = chi2Result.igmIdx;
+    auto const ismIdx = chi2Result.ismIdx;
+    nUnmasked = std::count_if(
+        boost::counting_iterator<Int32>(0),
+        boost::counting_iterator<Int32>(emittedCurve.size()),
+        [&emittedCurve, igmIdx, ismIdx](Int32 pixelIdx) {
+          return emittedCurve.pixelIsCoefValid(igmIdx, ismIdx, pixelIdx);
+        });
+
     if (opt_extinction)
       result.meiksinIdx = m_igmIdxList[chi2Result.igmIdx];
     if (opt_dustFitting)
@@ -154,7 +172,8 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
   auto flux = curve.computeUnmaskedFlux();
   auto error = curve.computeUnmaskedFluxError();
   result.fitQuality = NSFitQuality::computeFitQuality(
-      std::move(flux), std::move(modelFlux), std::move(error));
+      std::move(flux), std::move(modelFlux), std::move(error), NAN, undefIdx,
+      nUnmasked);
   return result;
 };
 
@@ -258,7 +277,7 @@ void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int32 igmIdx,
                                                 const char *funcName) const {
   Flag.warning(WarningCode::FORCED_POWERLAW_TO_ZERO,
                Formatter() << "COperatorPowerLaw::" << funcName << ": only "
-                           << N << " < " << m_nLogSamplesMin
+                           << N << " < " << m_nSamplesMinForContinuumFit
                            << " samples with significant flux values. Power "
                               "law coefs are forced to zero. igmIdx = "
                            << igmIdx << ", "
@@ -295,7 +314,7 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
           });
       auto const N2 = N - N1;
 
-      if (N < m_nLogSamplesMin) {
+      if (N < m_nSamplesMinForContinuumFit) {
         addTooFewSamplesWarning(N, igmIdx, ismIdx, __func__);
         powerLawsCoefs[igmIdx][ismIdx] = DEFAULT_COEFS_PAIR;
       } else {
@@ -320,9 +339,10 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
 }
 
 TPowerLawCoefsPair
-COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
-  auto const flux = emittedCurve.computeUnmaskedFlux();
-  auto const error = emittedCurve.computeUnmaskedFluxError();
+COperatorPowerLaw::computeConstantLawCoefs(TFloat64List const &flux,
+                                           TFloat64List const &error) const {
+  // Computes a constant law. Use all unmasked pixels to compute the mean flux
+  // (including the ones with low SNR)
   TFloat64List inverse_var(error.size());
   std::transform(error.cbegin(), error.cend(), inverse_var.begin(),
                  [](Float64 v) { return 1.0 / (v * v); });
@@ -333,7 +353,7 @@ COperatorPowerLaw::computeConstantLawCoefs(TCurve const &emittedCurve) const {
   mean_amplitude /= sum_inv_var;
   Float64 mean_amplitude_std = 1.0 / sqrt(sum_inv_var);
   TPowerLawCoefs coefs{mean_amplitude, 0.0, mean_amplitude_std, INFINITY};
-  checkCoefsOrDefault(coefs);
+  checkCoefsOrNull(coefs);
   return TPowerLawCoefsPair{coefs, coefs};
 }
 
@@ -347,7 +367,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
   TPowerLawCoefsPair powerLawsCoefs;
   TCurve lnPartCurve;
   lnPartCurve.reserve(N1 + N2);
-  if (N1 < m_nLogSamplesMin) {
+  if (N1 < m_nSamplesMinForContinuumFit) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) > lnxc) {
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));
@@ -355,7 +375,7 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
     powerLawsCoefs = {coefs, coefs};
-  } else if (N2 < m_nLogSamplesMin) {
+  } else if (N2 < m_nSamplesMinForContinuumFit) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
       if (lnCurve.getLambdaAt(pixelIdx) < lnxc) {
         lnPartCurve.push_back(lnCurve.get_at_index(pixelIdx));
@@ -367,30 +387,30 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
   }
 
-  checkCoefsOrDefault(powerLawsCoefs);
+  checkCoefsOrNull(powerLawsCoefs);
   return powerLawsCoefs;
 };
 
 TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
     TCurve const &lnCurves) const {
   TPowerLawCoefs coefs = computeSimplePowerLawCoefs(lnCurves);
-  bool validCoefs = checkCoefsOrDefault(coefs);
+  bool validCoefs = checkCoefsOrNull(coefs);
   if (validCoefs)
     coefs = computeSimplePowerLawCoefs(lnCurves, coefs);
   return coefs;
 }
 
-bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefs &coefs) const {
+bool COperatorPowerLaw::checkCoefsOrNull(TPowerLawCoefs &coefs) const {
   if (coefs.a < DBL_MIN) {
-    coefs = DEFAULT_COEFS;
+    coefs = NULL_COEFS;
     return false;
   }
   return true;
 }
 
-bool COperatorPowerLaw::checkCoefsOrDefault(TPowerLawCoefsPair &coefs) const {
+bool COperatorPowerLaw::checkCoefsOrNull(TPowerLawCoefsPair &coefs) const {
   if (coefs.first.a < DBL_MIN || coefs.second.a < DBL_MIN) {
-    coefs = DEFAULT_COEFS_PAIR;
+    coefs = NULL_COEFS_PAIR;
     return false;
   }
   return true;
@@ -438,7 +458,7 @@ TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
   // Make a first calculation of power law coefficients without taking into
   // account the noise
   TPowerLawCoefsPair coefs = computeDoublePowerLawCoefs(lnCurves);
-  bool validCoefs = checkCoefsOrDefault(coefs);
+  bool validCoefs = checkCoefsOrNull(coefs);
   if (validCoefs)
     coefs = computeDoublePowerLawCoefs(lnCurves, coefs);
   return coefs;

@@ -1826,7 +1826,7 @@ void COperatorLineModel::addFitQualityToCandidate(
   }
 
   TFitQuality fitQuality = NSFitQuality::computeFitQuality(
-      spcFlux, modelFlux, spcFluxError, candidate->Merit, nPixels);
+      spcFlux, modelFlux, spcFluxError, candidate->Merit, nPixels, nPixels);
   candidate->pValue = fitQuality.pValue;
   candidate->reducedChi2 = fitQuality.reducedChiSquare;
   candidate->meanResiduals = fitQuality.meanResiduals;
@@ -1836,5 +1836,6 @@ void COperatorLineModel::addFitQualityToCandidate(
   candidate->ksResiduals = fitQuality.ksResiduals;
   candidate->ksStdResiduals = fitQuality.ksStdResiduals;
   candidate->ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
+  candidate->nPixels = nPixels;
   candidate->andersonResiduals = fitQuality.andersonResiduals;
 }

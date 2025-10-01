@@ -64,7 +64,8 @@ struct TFitQuality {
   Float64 ksStdResiduals = INFINITY;
   Float64 ksStdMeanResiduals = INFINITY;
   Float64 andersonResiduals = INFINITY;
-  Int32 nPixels = 0;
+  Int32 nPixelsUsedForFit = 0;
+  Int32 nPixelsOfResiduals = 0;
 };
 
 struct TContinuumResult {
@@ -101,6 +102,7 @@ protected:
   void checkTemplateOverlap(const Float64 overlapFraction,
                             const Float64 overlapThreshold);
   virtual Float64 EstimateLikelihoodCstLog() const;
+  Int32 m_nSamplesMinForContinuumFit;
 };
 } // namespace NSEpic
 

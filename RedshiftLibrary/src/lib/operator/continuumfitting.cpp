@@ -49,7 +49,9 @@ COperatorContinuumFitting::COperatorContinuumFitting()
       m_spectra(Context.getSpectra()),
       m_lambdaRanges(Context.getClampedLambdaRanges()),
       m_kStart(Context.getSpectra().size()),
-      m_kEnd(Context.getSpectra().size()){};
+      m_kEnd(Context.getSpectra().size()),
+      m_nSamplesMinForContinuumFit(Context.GetParameterStore()->Get<Int32>(
+          "nbSamplesMinForContinuumFit")){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

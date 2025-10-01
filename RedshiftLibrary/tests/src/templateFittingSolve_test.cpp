@@ -104,6 +104,9 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                     0.30692167604051857, 1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2096655554220144,
                     1e-4);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 55);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 55);
+  BOOST_CHECK_EQUAL(res->nPixels, 55);
   Context.reset();
 }
 
@@ -156,6 +159,10 @@ BOOST_FIXTURE_TEST_CASE(compute2Pass_test,
   BOOST_CHECK_CLOSE(chi2r, 6.2827277306632574, 1e-4);
   Float64 pValue = res->fittedContinuum.pValue;
   BOOST_CHECK_CLOSE(pValue, 1.2813114284900139e-42, 1e-4);
+
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 53);
+  BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 53);
+  BOOST_CHECK_EQUAL(res->nPixels, 53);
 }
 
 BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
@@ -200,6 +207,7 @@ BOOST_FIXTURE_TEST_CASE(computeFFT_test, fixture_TemplateFittingSolveTestFFT) {
   BOOST_CHECK_CLOSE(chi2r, 6.148, 1e-2);
   Float64 pValue = res->fittedContinuum.pValue;
   BOOST_CHECK_CLOSE(pValue, 4.97e-42, 1e-1);
+  BOOST_CHECK_EQUAL(res->nPixels, 54);
   /*
     BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, -0.43943998160372039,
                       1e-4);

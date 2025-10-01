@@ -180,6 +180,7 @@ BOOST_FIXTURE_TEST_SUITE(powerLawOperator_test, PowerLaw_fixture)
 const std::string jsonStringEnd =
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"spectrumModels\" : [\"galaxy\"],"
     "\"autoCorrectInput\" : false,"
     "\"continuumRemoval\": {"
@@ -226,7 +227,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
 
   bool opt_extinction = false;
   bool opt_dustFitting = false;
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_without_extinction) {
 
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw2;
-  operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                                undefIdx);
 
@@ -286,7 +287,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
 
   bool opt_extinction = false;
   bool opt_dustFitting = false;
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_var) {
 
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw2;
-  operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                                undefIdx);
   TPowerLawResult result2 = operatorPowerLaw2.BasicFit(
@@ -349,7 +350,7 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                               undefIdx);
 
@@ -365,6 +366,57 @@ BOOST_AUTO_TEST_CASE(basicfit_double_without_extinction) {
   BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 1.0364024976819273,
                     1e-4);
   BOOST_CHECK_CLOSE(result.fitQuality.pValue, 0.31712094704529448, 1e-4);
+  Context.reset();
+}
+
+class CTestMaskBuilder : public CMaskBuilder {
+public:
+  using CMaskBuilder::CMaskBuilder;
+
+  CMask getMask(const CSpectrumSpectralAxis &spectralAxis,
+                const TFloat64Range &lamdbdaRange, const Float64 &redshift,
+                Int32 spc_index = 0) override {
+    CMask mask(spectralAxis.GetSamplesCount(), 0);
+    mask[0] = 1;
+    mask[1] = 1;
+    return mask;
+  };
+  bool isDefaultMask() const override { return false; };
+}; // namespace NSEpic
+
+BOOST_AUTO_TEST_CASE(basicfit_double_default) {
+  bool opt_extinction = false;
+  bool opt_dustFitting = false;
+
+  nMinSamples = 10;
+  CSpectrumSpectralAxis spectralAxis = createSpectralAxis(4100, 4500, 1);
+  CSpectrumFluxAxis fluxAxis = createFluxAxis(spectralAxis, 1, 0, 0, xc);
+  addNoiseAxis(fluxAxis);
+
+  // Initialize power law operator
+  std::shared_ptr<CSpectrum> spc =
+      std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
+  Init(jsonString1, {spc});
+  COperatorPowerLaw operatorPowerLaw;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
+  operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
+                              undefIdx);
+  operatorPowerLaw.m_maskBuilder = std::make_shared<CTestMaskBuilder>();
+  TPowerLawResult result = operatorPowerLaw.BasicFit(
+      0, opt_extinction, opt_dustFitting, nullThreshold, "full");
+
+  // Accepts a 1% error for calculated coefs
+  BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.first.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stda, INFINITY);
+  BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
+  BOOST_CHECK_EQUAL(result.coefs.second.stdb, INFINITY);
+  BOOST_CHECK_EQUAL(result.chiSquare, INFINITY);
+  BOOST_CHECK_EQUAL(result.fitQuality.reducedChiSquare, INFINITY);
+  BOOST_CHECK_EQUAL(result.fitQuality.pValue, 0);
   Context.reset();
 }
 
@@ -388,7 +440,7 @@ BOOST_AUTO_TEST_CASE(basicfit_double_with_var) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                               undefIdx);
 
@@ -436,7 +488,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString2, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
 
   // Without extinction, with redshift
   bool opt_extinction = false;
@@ -461,7 +513,7 @@ BOOST_AUTO_TEST_CASE(basicfit_simple_with_extinction) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString2, {spc2});
   COperatorPowerLaw operatorPowerLaw2;
-  operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.m_nSamplesMinForContinuumFit = nMinSamples;
 
   // Creates a template to be able to apply ism / igm
   CTemplate spectrumTemplate("", "", spectralAxisRest, fluxAxis);
@@ -532,7 +584,7 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   Init(jsonString2, {spc, spc2});
   COperatorPowerLaw operatorPowerLaw({}, xc2);
 
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
   bool opt_extinction = true;
   bool opt_dustFitting = true;
   operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
@@ -574,7 +626,7 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   applyIsmIgmOnSpectrum(spectralAxisRest2, fluxAxis2, z, spc2);
 
   COperatorPowerLaw operatorPowerLaw2{{}, xc2};
-  operatorPowerLaw2.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw2.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw2.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                                undefIdx);
   operatorPowerLaw2.m_ismIdxList = TList<Int32>{0, 1};
@@ -611,7 +663,7 @@ BOOST_AUTO_TEST_CASE(basicfit_multiobs) {
   applyIsmIgmOnSpectrum(spectralAxisRest2, fluxAxis2, z, spc2);
 
   COperatorPowerLaw operatorPowerLaw3{{}, xc2};
-  operatorPowerLaw3.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw3.m_nSamplesMinForContinuumFit = nMinSamples;
 
   operatorPowerLaw3.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                                undefIdx);
@@ -637,7 +689,7 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   Float64 b1 = 0.0;
   Float64 b2 = 0.0;
 
-  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 50);
+  CSpectrumSpectralAxis spectralAxis1 = createSpectralAxis(2700, 3100, 10);
   CSpectrumSpectralAxis spectralAxisRest1 =
       createSpectralAxisRest(spectralAxis1, z);
   CSpectrumFluxAxis fluxAxis1 =
@@ -652,7 +704,7 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
   COperatorPowerLaw operatorPowerLaw{{}, xc2};
   bool opt_extinction = true;
   bool opt_dustFitting = true;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
   operatorPowerLaw.initIgmIsm(opt_extinction, opt_dustFitting, undefIdx,
                               undefIdx);
   operatorPowerLaw.m_ismIdxList = TList<Int32>{0, 1};
@@ -664,7 +716,7 @@ BOOST_AUTO_TEST_CASE(basicfit_negative) {
       z, opt_extinction, opt_dustFitting, nullThreshold, "full");
 
   BOOST_CHECK_EQUAL(result.coefs.first.a, 0);
-  BOOST_CHECK_EQUAL(result.coefs.second.a, result.coefs.first.a);
+  BOOST_CHECK_EQUAL(result.coefs.second.a, 0);
   BOOST_CHECK_EQUAL(result.coefs.first.b, 0);
   BOOST_CHECK_EQUAL(result.coefs.second.b, 0);
 
@@ -688,7 +740,7 @@ BOOST_AUTO_TEST_CASE(basicfit_default) {
       std::make_shared<CSpectrum>(spectralAxis, fluxAxis);
   Init(jsonString1, {spc});
   COperatorPowerLaw operatorPowerLaw;
-  operatorPowerLaw.m_nLogSamplesMin = nMinSamples;
+  operatorPowerLaw.m_nSamplesMinForContinuumFit = nMinSamples;
 
   bool opt_extinction = false;
   bool opt_dustFitting = false;

@@ -351,7 +351,7 @@ ChisquareArray CLineModelSolve::BuildContinuumChisquareArray(
     chisquarearray.chisquares[templateIdx].resize(nRedshifts);
     chisquarearray.zpriors.push_back(zPrior);
     for (Int32 zIdx = 0; zIdx < nRedshifts; ++zIdx) {
-      CContinuumModelSolution modelSolution =
+      const CContinuumModelSolution &modelSolution =
           fitStore->GetFitValues(zIdx, templateIdx);
       chisquarearray.chisquares[templateIdx][zIdx] = modelSolution.merit;
     }

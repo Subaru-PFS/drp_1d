@@ -90,9 +90,6 @@ public:
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx);
-
-  Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
-                     const TInt32Range &range); // could be also made static
   CModelSpectrumResult ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
