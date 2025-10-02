@@ -687,3 +687,7 @@ class ParametersAccessor:
 
     def second_pass_after_classification(self):
         return self.parameters["secondPassAfterClassification"]
+
+    def get_power_law_section(self, spectum_model: str):
+        section = self.get_linemodel_section(spectum_model, ESolveMethod.LINE_MODEL)
+        return self._get_on_None(section, "powerLaw")

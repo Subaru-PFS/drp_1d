@@ -49,7 +49,6 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/fitquality.h"
 
-#include <Eigen/Dense>
 #include <algorithm>
 #include <boost/iterator/counting_iterator.hpp>
 #include <cmath>
@@ -79,6 +78,18 @@ COperatorPowerLaw::COperatorPowerLaw(const TFloat64List &redshifts,
   }
   m_igmCorrectionMeiksin = Context.getFluxCorrectionMeiksin();
   m_ismCorrectionCalzetti = Context.getFluxCorrectionCalzetti();
+  m_powerCoefsLimits.first.min =
+      Context.GetParameterStore()->GetScoped<Float64>(
+          "powerLaw.firstPowerCoefMin");
+  m_powerCoefsLimits.first.max =
+      Context.GetParameterStore()->GetScoped<Float64>(
+          "powerLaw.firstPowerCoefMax");
+  m_powerCoefsLimits.second.min =
+      Context.GetParameterStore()->GetScoped<Float64>(
+          "powerLaw.secondPowerCoefMin");
+  m_powerCoefsLimits.second.max =
+      Context.GetParameterStore()->GetScoped<Float64>(
+          "powerLaw.secondPowerCoefMax");
 }
 
 void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting,
@@ -95,8 +106,7 @@ void COperatorPowerLaw::initIgmIsm(bool opt_extinction, bool opt_dustFitting,
 TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
                                             bool opt_extinction,
                                             bool opt_dustFitting,
-                                            Float64 nullFluxThreshold,
-                                            std::string method) {
+                                            Float64 nullFluxThreshold) {
 
   TCurve curve = initializeFluxCurve(redshift, nullFluxThreshold);
 
@@ -119,15 +129,13 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
     // If the number of valid pixels is too low, set igm / ism indexes to 0 and
     // constant power law
     auto const error = curve.computeUnmaskedFluxError();
-    auto const constantLawsCoef = computeConstantLawCoefs(flux, error);
-    T2DPowerLawCoefsPair coefs(1,
-                               TList<TPowerLawCoefsPair>(1, constantLawsCoef));
+    result.coefs = computeConstantLawCoefs(flux, error);
+    T2DPowerLawCoefsPair coefs(1, TList<TPowerLawCoefsPair>(1, result.coefs));
     // Create a temporary 3D curve to compute chi2
     auto curve3D = T3DCurve(std::move(curve));
     auto const chi2 = computeChi2(curve3D, coefs);
     curve = TCurve(std::move(curve3D));
     result.chiSquare = chi2[0][0];
-    result.coefs = constantLawsCoef;
     if (opt_extinction)
       result.meiksinIdx = undefIdx;
     if (opt_dustFitting)
@@ -137,7 +145,7 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
         redshift, opt_extinction, opt_dustFitting, std::move(curve));
 
     // Step 3. Compute power law coefs and chi2
-    T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve, method);
+    T2DPowerLawCoefsPair coefs = powerLawCoefs3D(emittedCurve);
     TChi2Result chi2Result = findMinChi2OnIgmIsm(emittedCurve, coefs);
     // Step 4. Creates result
     result.chiSquare = chi2Result.chi2;
@@ -176,6 +184,26 @@ TPowerLawResult COperatorPowerLaw::BasicFit(Float64 redshift,
       nUnmasked);
   return result;
 };
+void COperatorPowerLaw::limitCoefs(TPowerLawCoefsPair &coefs) {
+  const auto newb1 = limitCoef(coefs.first.b, m_powerCoefsLimits.first);
+  const auto newb2 = limitCoef(coefs.second.b, m_powerCoefsLimits.second);
+  auto b1_limited = newb1 != coefs.first.b;
+  auto b2_limited = newb2 != coefs.second.b;
+
+  if (b1_limited && b2_limited) {
+    coefs = computeDoublePowerLawCoefs_b1_b2_fixed(newb1, newb2);
+  } else if (b1_limited) {
+    coefs = computeDoublePowerLawCoefs_b1_fixed(newb1);
+  } else if (b2_limited) {
+    coefs = computeDoublePowerLawCoefs_b2_fixed(newb2);
+  }
+}
+
+Float64 COperatorPowerLaw::limitCoef(Float64 coef,
+                                     TPowerCoefLimits limits) const {
+  const auto newvalue = std::max(limits.min, std::min(limits.max, coef));
+  return newvalue;
+}
 
 T3DCurve COperatorPowerLaw::computeLnCurve(T3DCurve const &emittedCurve) const {
   T3DCurve lnCurve = emittedCurve;
@@ -250,8 +278,8 @@ COperatorPowerLaw::lnLambda(TAxisSampleList const &lambda) const {
 
 std::shared_ptr<const COperatorResult>
 COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
-                           Float64 nullFluxThreshold, std::string method,
-                           Int32 FitEbmvIdx, Int32 FitMeiksinIdx) {
+                           Float64 nullFluxThreshold, Int32 FitEbmvIdx,
+                           Int32 FitMeiksinIdx) {
   initIgmIsm(opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
 
   // Creates power law result
@@ -261,8 +289,8 @@ COperatorPowerLaw::Compute(bool opt_extinction, bool opt_dustFitting,
   result->Redshifts = m_redshifts;
   for (Int32 zIdx = 0; zIdx < ssize(m_redshifts); zIdx++) {
     Float64 redshift = result->Redshifts[zIdx];
-    TPowerLawResult result_z = BasicFit(
-        redshift, opt_extinction, opt_dustFitting, nullFluxThreshold, method);
+    TPowerLawResult result_z =
+        BasicFit(redshift, opt_extinction, opt_dustFitting, nullFluxThreshold);
 
     result->set_at_redshift(zIdx, std::move(result_z));
   }
@@ -285,8 +313,7 @@ void COperatorPowerLaw::addTooFewSamplesWarning(Int32 N, Int32 igmIdx,
 }
 
 T2DPowerLawCoefsPair
-COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
-                                   std::string method) const {
+COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve) {
 
   T2DPowerLawCoefsPair powerLawsCoefs(
       emittedCurve.getNIgm(),
@@ -319,19 +346,8 @@ COperatorPowerLaw::powerLawCoefs3D(T3DCurve const &emittedCurve,
         powerLawsCoefs[igmIdx][ismIdx] = DEFAULT_COEFS_PAIR;
       } else {
         TCurve curve = lnCurve.toCoefCurve(igmIdx, ismIdx);
-        if (method == "full") {
-          powerLawsCoefs[igmIdx][ismIdx] =
-              computeFullPowerLawCoefs(N1, N2, curve);
-        } else if (method == "simple") {
-          TPowerLawCoefs coefs = computeSimplePowerLawCoefs(curve);
-          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
-        } else if (method == "simpleWeighted") {
-          TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(curve);
-          powerLawsCoefs[igmIdx][ismIdx] = {coefs, coefs};
-        } else {
-          THROWG(ErrorCode::INTERNAL_ERROR,
-                 Formatter() << "Unexpected method " << method);
-        }
+        powerLawsCoefs[igmIdx][ismIdx] =
+            computeFullPowerLawCoefs(N1, N2, curve);
       }
     }
   }
@@ -359,7 +375,7 @@ COperatorPowerLaw::computeConstantLawCoefs(TFloat64List const &flux,
 
 TPowerLawCoefsPair
 COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
-                                            TCurve const &lnCurve) const {
+                                            TCurve const &lnCurve) {
   // If one part of the curve has too little samples, calculate the coefs
   // with the other part, and set the same coefs on the small part
   Float64 lnxc = std::log(m_lambdaCut);
@@ -374,6 +390,10 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
       }
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
+    const auto newb = limitCoef(coefs.b, m_powerCoefsLimits.second);
+    if (newb != coefs.b) {
+      coefs = computeSimplePowerLawCoefs_b_fixed(newb);
+    }
     powerLawsCoefs = {coefs, coefs};
   } else if (N2 < m_nSamplesMinForContinuumFit) {
     for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
@@ -382,17 +402,23 @@ COperatorPowerLaw::computeFullPowerLawCoefs(Int32 N1, Int32 N2,
       }
     }
     TPowerLawCoefs coefs = compute2PassSimplePowerLawCoefs(lnPartCurve);
+    const auto newb = limitCoef(coefs.b, m_powerCoefsLimits.first);
+    if (newb != coefs.b) {
+      coefs = computeSimplePowerLawCoefs_b_fixed(newb);
+    }
     powerLawsCoefs = {coefs, coefs};
   } else {
     powerLawsCoefs = compute2PassDoublePowerLawCoefs(lnCurve);
+    limitCoefs(powerLawsCoefs);
   }
 
   checkCoefsOrNull(powerLawsCoefs);
   return powerLawsCoefs;
 };
 
-TPowerLawCoefs COperatorPowerLaw::compute2PassSimplePowerLawCoefs(
-    TCurve const &lnCurves) const {
+TPowerLawCoefs
+COperatorPowerLaw::compute2PassSimplePowerLawCoefs(TCurve const &lnCurves) {
+
   TPowerLawCoefs coefs = computeSimplePowerLawCoefs(lnCurves);
   bool validCoefs = checkCoefsOrNull(coefs);
   if (validCoefs)
@@ -416,45 +442,70 @@ bool COperatorPowerLaw::checkCoefsOrNull(TPowerLawCoefsPair &coefs) const {
   return true;
 }
 
-TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
+void COperatorPowerLaw::updatePowerLawCalcStorageForSimple(
     TCurve const &lnCurve,
-    std::optional<TPowerLawCoefs> const &coefsFirstEstim) const {
+    std::optional<TPowerLawCoefs> const &coefsFirstEstim) {
+  m_powerLawCalcStorage.xc = std::log(m_lambdaCut);
 
-  Float64 SX = 0;
-  Float64 SY = 0;
-  Float64 SXY = 0;
-  Float64 SX2 = 0;
-  Float64 n = 0;
-
+  m_powerLawCalcStorage.n1 = 0;
+  m_powerLawCalcStorage.sx1 = 0;
+  m_powerLawCalcStorage.sxx1 = 0;
+  m_powerLawCalcStorage.sy1 = 0;
+  m_powerLawCalcStorage.sxy1 = 0;
+  m_powerLawCalcStorage.N1 = 0;
   for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
     Float64 w = 1;
     if (coefsFirstEstim.has_value()) {
       Float64 estimatedFlux = computePowerLaw(
           coefsFirstEstim.value(), std::exp(lnCurve.getLambdaAt(pixelIdx)));
-      w = lnCurve.getFluxErrorAt(pixelIdx) / estimatedFlux;
+      w = estimatedFlux / lnCurve.getFluxErrorAt(pixelIdx);
     }
-    Float64 X = lnCurve.getLambdaAt(pixelIdx) / w;
-    Float64 Y = lnCurve.getFluxAt(pixelIdx) / w;
-    SX += X / w;
-    SY += Y / w;
-    SXY += X * Y;
-    SX2 += X * X;
-    n += 1 / (w * w);
+    Float64 X = lnCurve.getLambdaAt(pixelIdx);
+    Float64 Y = lnCurve.getFluxAt(pixelIdx);
+    Float64 w2 = w * w;
+    m_powerLawCalcStorage.sx1 += X * w2;
+    m_powerLawCalcStorage.sy1 += Y * w2;
+    m_powerLawCalcStorage.sxy1 += X * Y * w2;
+    m_powerLawCalcStorage.sxx1 += X * X * w2;
+    m_powerLawCalcStorage.n1 += w2;
   }
+}
 
-  Float64 denomInv = 1 / (n * SX2 - SX * SX);
-  Float64 b = (n * SXY - SX * SY) * denomInv;
-  Float64 a = std::exp((SY - b * SX) / n);
+TPowerLawCoefs COperatorPowerLaw::computeSimplePowerLawCoefs(
+    TCurve const &lnCurve,
+    std::optional<TPowerLawCoefs> const &coefsFirstEstim) {
 
-  Float64 sigmalna = sqrt(SX2 * denomInv);
+  updatePowerLawCalcStorageForSimple(lnCurve, coefsFirstEstim);
+
+  Float64 denomInv =
+      1 / (m_powerLawCalcStorage.n1 * m_powerLawCalcStorage.sxx1 -
+           m_powerLawCalcStorage.sx1 * m_powerLawCalcStorage.sx1);
+  Float64 b = (m_powerLawCalcStorage.n1 * m_powerLawCalcStorage.sxy1 -
+               m_powerLawCalcStorage.sx1 * m_powerLawCalcStorage.sy1) *
+              denomInv;
+  Float64 a =
+      std::exp((m_powerLawCalcStorage.sy1 - b * m_powerLawCalcStorage.sx1) /
+               m_powerLawCalcStorage.n1);
+
+  Float64 sigmalna = sqrt(m_powerLawCalcStorage.sxx1 * denomInv);
   Float64 stda = a * sigmalna;
-  Float64 stdb = sqrt(n * denomInv);
+  Float64 stdb = sqrt(m_powerLawCalcStorage.n1 * denomInv);
 
   return {a, b, stda, stdb};
 }
 
-TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
-    TCurve const &lnCurves) const {
+TPowerLawCoefs
+COperatorPowerLaw::computeSimplePowerLawCoefs_b_fixed(Float64 b) const {
+
+  Float64 a =
+      std::exp(1 / m_powerLawCalcStorage.n1 *
+               (m_powerLawCalcStorage.sy1 - b * m_powerLawCalcStorage.sx1));
+
+  return {a, b, a * std::sqrt(1 / m_powerLawCalcStorage.n1), 0};
+}
+
+TPowerLawCoefsPair
+COperatorPowerLaw::compute2PassDoublePowerLawCoefs(TCurve const &lnCurves) {
   // Make a first calculation of power law coefficients without taking into
   // account the noise
   TPowerLawCoefsPair coefs = computeDoublePowerLawCoefs(lnCurves);
@@ -464,37 +515,25 @@ TPowerLawCoefsPair COperatorPowerLaw::compute2PassDoublePowerLawCoefs(
   return coefs;
 }
 
-TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
+void COperatorPowerLaw::updatePowerLawCalcStorage(
     TCurve const &lnCurve,
-    std::optional<TPowerLawCoefsPair> const &coefsFirstEstim) const {
-  // NB : coefsFirstEstim are used to calculate the weights. If absent
-  // calculations are made without taking error into account
+    std::optional<TPowerLawCoefsPair> const &coefsFirstEstim) {
+  m_powerLawCalcStorage.xc = std::log(m_lambdaCut);
 
-  Float64 xc = std::log(m_lambdaCut);
+  m_powerLawCalcStorage.n1 = 0;
+  m_powerLawCalcStorage.sx1 = 0;
+  m_powerLawCalcStorage.sxx1 = 0;
+  m_powerLawCalcStorage.sy1 = 0;
+  m_powerLawCalcStorage.sxy1 = 0;
+  m_powerLawCalcStorage.N1 = 0;
 
-  // 1 <-> power law first part / 2 <-> second part
-
-  // n pixels
-  Int32 N1 = 0;
-  Int32 N2 = 0;
-  // sum pixels weights
-  Float64 n1 = 0;
-  Float64 n2 = 0;
-  // sum ln xi * wi
-  Float64 sx1 = 0;
-  Float64 sx2 = 0;
-  // sum (ln xi)^2 * wi
-  Float64 sxx1 = 0;
-  Float64 sxx2 = 0;
-  // sum ln yi * wi
-  Float64 sy1 = 0;
-  Float64 sy2 = 0;
-  // sum ln xi * ln yi * wi
-  Float64 sxy1 = 0;
-  Float64 sxy2 = 0;
-
-  // sum wi*(lnxc - lnxi)**2 (on second part only)
-  Float64 sx2mc2 = 0;
+  m_powerLawCalcStorage.n2 = 0;
+  m_powerLawCalcStorage.sx2 = 0;
+  m_powerLawCalcStorage.sxx2 = 0;
+  m_powerLawCalcStorage.sy2 = 0;
+  m_powerLawCalcStorage.sxy2 = 0;
+  m_powerLawCalcStorage.sx2mc2 = 0;
+  m_powerLawCalcStorage.N2 = 0;
 
   // Loop over all pixels to make necessary pre-calculations
   for (Int32 pixelIdx = 0; pixelIdx < lnCurve.size(); pixelIdx++) {
@@ -502,7 +541,7 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
     Float64 yi = lnCurve.getFluxAt(pixelIdx);
     Float64 wi = 1;
 
-    if (xi < xc) {
+    if (xi < m_powerLawCalcStorage.xc) {
       if (coefsFirstEstim.has_value()) {
         Float64 estimatedFlux =
             computePowerLaw(coefsFirstEstim.value().first, std::exp(xi));
@@ -510,12 +549,12 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
              (lnCurve.getFluxErrorAt(pixelIdx) *
               lnCurve.getFluxErrorAt(pixelIdx));
       }
-      n1 += wi;
-      sx1 += xi * wi;
-      sxx1 += xi * xi * wi;
-      sy1 += yi * wi;
-      sxy1 += xi * yi * wi;
-      N1 += 1;
+      m_powerLawCalcStorage.n1 += wi;
+      m_powerLawCalcStorage.sx1 += xi * wi;
+      m_powerLawCalcStorage.sxx1 += xi * xi * wi;
+      m_powerLawCalcStorage.sy1 += yi * wi;
+      m_powerLawCalcStorage.sxy1 += xi * yi * wi;
+      m_powerLawCalcStorage.N1 += 1;
     } else {
       if (coefsFirstEstim.has_value()) {
         Float64 estimatedFlux =
@@ -524,67 +563,185 @@ TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
              (lnCurve.getFluxErrorAt(pixelIdx) *
               lnCurve.getFluxErrorAt(pixelIdx));
       }
-      n2 += wi;
-      sx2 += xi * wi;
-      sxx2 += xi * xi * wi;
-      sy2 += yi * wi;
-      sxy2 += xi * yi * wi;
-      sx2mc2 += wi * (xc - xi) * (xc - xi);
-      N2 += 1;
+      m_powerLawCalcStorage.n2 += wi;
+      m_powerLawCalcStorage.sx2 += xi * wi;
+      m_powerLawCalcStorage.sxx2 += xi * xi * wi;
+      m_powerLawCalcStorage.sy2 += yi * wi;
+      m_powerLawCalcStorage.sxy2 += xi * yi * wi;
+      m_powerLawCalcStorage.sx2mc2 += wi * (m_powerLawCalcStorage.xc - xi) *
+                                      (m_powerLawCalcStorage.xc - xi);
+      m_powerLawCalcStorage.N2 += 1;
     }
   }
 
   // Creates the Mc^TN^-1Mc matrix
-  Float64 m11 = n1 + n2;
-  Float64 m12 = n2 * xc + sx1;
-  Float64 m13 = -n2 * xc + sx2;
-  Float64 m21 = n2 * xc + sx1;
-  Float64 m22 = n2 * xc * xc + sxx1;
-  Float64 m23 = -n2 * xc * xc + xc * sx2;
-  Float64 m31 = -n2 * xc + sx2;
-  Float64 m32 = -n2 * xc * xc + xc * sx2;
-  Float64 m33 = sx2mc2;
+  m_powerLawCalcStorage.m(0, 0) =
+      m_powerLawCalcStorage.n1 + m_powerLawCalcStorage.n2;
+  m_powerLawCalcStorage.m(0, 1) =
+      m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.sx1;
+  m_powerLawCalcStorage.m(0, 2) =
+      -m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.sx2;
+  m_powerLawCalcStorage.m(1, 0) =
+      m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.sx1;
+  m_powerLawCalcStorage.m(1, 1) = m_powerLawCalcStorage.n2 *
+                                      m_powerLawCalcStorage.xc *
+                                      m_powerLawCalcStorage.xc +
+                                  m_powerLawCalcStorage.sxx1;
+  m_powerLawCalcStorage.m(1, 2) =
+      -m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc *
+          m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.xc * m_powerLawCalcStorage.sx2;
+  m_powerLawCalcStorage.m(2, 0) =
+      -m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.sx2;
+  m_powerLawCalcStorage.m(2, 1) =
+      -m_powerLawCalcStorage.n2 * m_powerLawCalcStorage.xc *
+          m_powerLawCalcStorage.xc +
+      m_powerLawCalcStorage.xc * m_powerLawCalcStorage.sx2;
+  m_powerLawCalcStorage.m(2, 2) = m_powerLawCalcStorage.sx2mc2;
 
-  // Creates the Mc^TY vector
-  Float64 v1 = sy1 + sy2;
-  Float64 v2 = sxy1 + xc * sy2;
-  Float64 v3 = sxy2 - xc * sy2;
+  m_powerLawCalcStorage.v(0) =
+      m_powerLawCalcStorage.sy1 + m_powerLawCalcStorage.sy2;
+  m_powerLawCalcStorage.v(1) =
+      m_powerLawCalcStorage.sxy1 +
+      m_powerLawCalcStorage.xc * m_powerLawCalcStorage.sy2;
+  m_powerLawCalcStorage.v(2) =
+      m_powerLawCalcStorage.sxy2 -
+      m_powerLawCalcStorage.xc * m_powerLawCalcStorage.sy2;
+}
 
-  Eigen::Matrix3d m;
-  m(0, 0) = m11;
-  m(0, 1) = m12;
-  m(0, 2) = m13;
-  m(1, 0) = m21;
-  m(1, 1) = m22;
-  m(1, 2) = m23;
-  m(2, 0) = m31;
-  m(2, 1) = m32;
-  m(2, 2) = m33;
+TPowerLawCoefsPair COperatorPowerLaw::computeDoublePowerLawCoefs(
+    TCurve const &lnCurve,
+    std::optional<TPowerLawCoefsPair> const &coefsFirstEstim) {
+  // NB : coefsFirstEstim are used to calculate the weights. If absent
+  // calculations are made without taking error into account
 
-  if (std::abs(m.determinant()) < DBL_MIN)
+  updatePowerLawCalcStorage(lnCurve, coefsFirstEstim);
+
+  if (std::abs(m_powerLawCalcStorage.m.determinant()) < DBL_MIN)
     THROWG(ErrorCode::INTERNAL_ERROR,
            "Cannot calculate power law coefs: division by zero");
 
-  Eigen::Matrix3d mInv = m.inverse();
-  Eigen::Vector3d v(v1, v2, v3);
+  Eigen::Matrix3d mInv = m_powerLawCalcStorage.m.inverse();
 
-  Eigen::Vector3d theta = mInv * v;
+  Eigen::Vector3d theta = mInv * m_powerLawCalcStorage.v;
 
   Float64 a1 = std::exp(theta(0));
   Float64 b1 = theta(1);
   Float64 b2 = theta(2);
-  Float64 a2 = a1 * std::pow(std::exp(xc), b1 - b2);
+  auto [a2, sigmaa2] = computea2(a1, b1, b2, mInv(0, 0), mInv(1, 1), mInv(2, 2),
+                                 mInv(1, 2), mInv(0, 1), mInv(0, 2));
 
   // Calculates var / covar
-  Float64 varlna2 = mInv(0, 0) +
-                    xc * xc * (mInv(1, 1) + mInv(2, 2) - 2 * mInv(1, 2)) +
-                    2 * xc * (mInv(0, 1) - mInv(0, 2));
-  Float64 sigmaa1 = a1 * std::sqrt(mInv(0, 0));
+
+  Float64 sigmaa1 = stdExpA(a1, mInv(0, 0));
   Float64 sigmab1 = std::sqrt(mInv(1, 1));
-  Float64 sigmaa2 = a2 * std::sqrt(varlna2);
   Float64 sigmab2 = std::sqrt(mInv(2, 2));
 
   return {{a1, b1, sigmaa1, sigmab1}, {a2, b2, sigmaa2, sigmab2}};
+}
+
+TPowerLawCoefsPair
+COperatorPowerLaw::computeDoublePowerLawCoefs_b2_fixed(Float64 b2) {
+
+  Eigen::Matrix2d m;
+  m(0, 0) = m_powerLawCalcStorage.m(0, 0);
+  m(0, 1) = m_powerLawCalcStorage.m(0, 1);
+  m(1, 0) = m_powerLawCalcStorage.m(1, 0);
+  m(1, 1) = m_powerLawCalcStorage.m(1, 1);
+
+  Eigen::Vector2d v;
+  auto g = m_powerLawCalcStorage.n2 * b2 * m_powerLawCalcStorage.xc -
+           b2 * m_powerLawCalcStorage.sx2;
+  v(0) = m_powerLawCalcStorage.v(0) + g;
+  v(1) = m_powerLawCalcStorage.v(1) + m_powerLawCalcStorage.xc * g;
+
+  Eigen::Matrix2d mInv = m.inverse();
+
+  Eigen::Vector2d theta = mInv * v;
+
+  Float64 a1 = std::exp(theta(0));
+  Float64 b1 = theta(1);
+
+  const Float64 varA1 = mInv(0, 0);
+  const Float64 varb1 = mInv(1, 1);
+
+  Float64 sigmaa1 = stdExpA(a1, varA1);
+  Float64 sigmab1 = std::sqrt(varb1);
+
+  auto [a2, sigmaa2] = computea2(a1, b1, b2, varA1, varb1, 0, 0, mInv(0, 1), 0);
+
+  // If once recomputed b2 is out of bounds, we recompute a1 and a2 with both b1
+  // and b2 fixed to limits
+  const auto newb1 = limitCoef(b1, m_powerCoefsLimits.first);
+  if (newb1 != b1) {
+    return computeDoublePowerLawCoefs_b1_b2_fixed(newb1, b2);
+  }
+
+  return {{a1, b1, sigmaa1, sigmab1}, {a2, b2, sigmaa2, 0}};
+}
+
+TPowerLawCoefsPair
+COperatorPowerLaw::computeDoublePowerLawCoefs_b1_fixed(Float64 b1) {
+
+  Eigen::Matrix2d m;
+  m(0, 0) = m_powerLawCalcStorage.m(0, 0);
+  m(0, 1) = m_powerLawCalcStorage.n1 * m_powerLawCalcStorage.xc +
+            m_powerLawCalcStorage.sx2;
+  m(1, 0) = m(0, 1);
+  m(1, 1) = m_powerLawCalcStorage.n1 * m_powerLawCalcStorage.xc *
+                m_powerLawCalcStorage.xc +
+            m_powerLawCalcStorage.sxx2;
+
+  Eigen::Vector2d v;
+  auto g = m_powerLawCalcStorage.n1 * b1 * m_powerLawCalcStorage.xc -
+           b1 * m_powerLawCalcStorage.sx1;
+  v(0) = m_powerLawCalcStorage.v(0) + g;
+  v(1) = m_powerLawCalcStorage.xc * m_powerLawCalcStorage.sy1 +
+         m_powerLawCalcStorage.sxy2 + m_powerLawCalcStorage.xc * g;
+
+  Eigen::Matrix2d mInv = m.inverse();
+
+  Eigen::Vector2d theta = mInv * v;
+
+  Float64 a2 = std::exp(theta(0));
+
+  const Float64 varA2 = mInv(0, 0);
+  const Float64 varb2 = mInv(1, 1);
+  Float64 b2 = theta(1);
+  auto [a1, sigmaa1] = computea1(a2, b1, b2, varA2, 0, varb2, 0, 0, mInv(0, 1));
+
+  Float64 sigmaa2 = stdExpA(a2, varA2);
+  Float64 sigmab2 = std::sqrt(varb2);
+
+  const auto newb2 = limitCoef(b2, m_powerCoefsLimits.second);
+  // If once recomputed b2 is out of bounds, we recompute a1 and a2 with both b1
+  // and b2 fixed to limits
+  if (newb2 != b2) {
+    return computeDoublePowerLawCoefs_b1_b2_fixed(b1, newb2);
+  }
+
+  return {{a1, b1, sigmaa1, 0}, {a2, b2, sigmaa2, sigmab2}};
+}
+
+TPowerLawCoefsPair
+COperatorPowerLaw::computeDoublePowerLawCoefs_b1_b2_fixed(Float64 b1,
+                                                          Float64 b2) {
+
+  auto A1 = 1 / (m_powerLawCalcStorage.n1 + m_powerLawCalcStorage.n2) *
+            (m_powerLawCalcStorage.sy1 + m_powerLawCalcStorage.sy2 -
+             b1 * m_powerLawCalcStorage.sx1 - b2 * m_powerLawCalcStorage.sx2 +
+             m_powerLawCalcStorage.n2 * (b2 - b1) * m_powerLawCalcStorage.xc);
+  Float64 a1 = std::exp(A1);
+  const Float64 varA1 =
+      1 / (m_powerLawCalcStorage.n1 + m_powerLawCalcStorage.n2);
+  auto [a2, sigmaa2] = computea2(a1, b1, b2, varA1, 0, 0, 0, 0, 0);
+  Float64 sigmaa1 = stdExpA(a1, varA1);
+
+  return {{a1, b1, sigmaa1, 0}, {a2, b2, sigmaa2, 0}};
 }
 
 TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
@@ -794,4 +951,52 @@ CModelSpectrumResult COperatorPowerLaw::ComputeSpectrumModel(
 
   return CModelSpectrumResult(lambdaObs, std::move(fluxObs),
                               m_spectra[spcIndex]->getObsID());
+}
+
+Float64 COperatorPowerLaw::stdExpA(Float64 a, Float64 varA) const {
+  // From var(a) = var(exp(A)) ~ (exp(A))^2 * var(A) => std(a) = a *
+  // sqrt(var(A))
+  return a * std::sqrt(varA);
+}
+
+std::pair<Float64, Float64>
+COperatorPowerLaw::computea2(const Float64 a1, const Float64 b1,
+                             const Float64 b2, Float64 varA1, Float64 varb1,
+                             Float64 varb2, Float64 covb1b2, Float64 covA1b1,
+                             Float64 covA1b2) const {
+  Float64 a2 = a1 * std::pow(m_lambdaCut, b1 - b2);
+  Float64 varA2 = computeVarA2(varA1, varb1, varb2, covb1b2, covA1b1, covA1b2);
+  Float64 stdaa2 = stdExpA(a2, varA2);
+  return std::make_pair(a2, stdaa2);
+}
+
+std::pair<Float64, Float64>
+COperatorPowerLaw::computea1(const Float64 a2, const Float64 b1,
+                             const Float64 b2, Float64 varA2, Float64 varb1,
+                             Float64 varb2, Float64 covb1b2, Float64 covA2b1,
+                             Float64 covA2b2) const {
+  Float64 a1 = a2 * std::pow(m_lambdaCut, b2 - b1);
+  Float64 varA1 = computeVarA1(varA2, varb1, varb2, covb1b2, covA2b1, covA2b2);
+  Float64 stdaa1 = stdExpA(a1, varA1);
+  return std::make_pair(a1, stdaa1);
+}
+
+Float64 COperatorPowerLaw::computeVarA2(Float64 varA1, Float64 varb1,
+                                        Float64 varb2, Float64 covb1b2,
+                                        Float64 covA1b1,
+                                        Float64 covA1b2) const {
+  // Computes var(A2) from var and covar of A1, b1, b2. Can be used for var(a1)
+  // exchanging all 2 with 1
+  return varA1 +
+         m_powerLawCalcStorage.xc * m_powerLawCalcStorage.xc *
+             (varb1 + varb2 - 2 * covb1b2) +
+         2 * m_powerLawCalcStorage.xc * (covA1b1 - covA1b2);
+}
+
+Float64 COperatorPowerLaw::computeVarA1(Float64 varA2, Float64 varb1,
+                                        Float64 varb2, Float64 covb1b2,
+                                        Float64 covA2b1,
+                                        Float64 covA2b2) const {
+  // Computes var(A1) from var and covar of A2, b1, b2.
+  return computeVarA2(varA2, varb2, varb1, covb1b2, covA2b2, covA2b1);
 }

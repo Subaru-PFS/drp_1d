@@ -1,5 +1,5 @@
-Results
-=======
+Output quantities
+=================
 
 Fit quality indicators
 ----------------------
