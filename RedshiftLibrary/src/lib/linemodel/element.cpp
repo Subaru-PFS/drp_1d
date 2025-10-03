@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/processflow/context.h"
 
 using namespace std;
 using namespace NSEpic;
@@ -53,18 +53,12 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    const TLineModelElementParam_ptr elementParam)
+    const TLineModelElementParam_ptr elementParam, Float64 maxDistanceToLine,
+    Int32 minSamplesNumberForLineFit)
     : m_ElementParam(std::move(elementParam)),
-      m_OutsideLambdaRangeOverlapThreshold(
-          0.33), // 33% overlap minimum in order to keep the line
-      m_OutsideLambdaRange(
-          true) // example: 0.33 means 66% of the line is allowed to be outside
-                // the spectrum with the line still considered inside the
-                // lambda range
-
-{
-  m_size = m_ElementParam->size();
-}
+      m_maxDistanceToLine(maxDistanceToLine),
+      m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
+      m_OutsideLambdaRange(true), m_size(m_ElementParam->size()){};
 
 void TLineModelElementParam::resetFittingParams() {
   // init the fitted amplitude values and related variables
@@ -183,10 +177,12 @@ void CLineModelElement::EstimateTheoreticalSupport(
     m_OutsideLambdaRangeList[line_index] = true;
     return;
   }
-  Float64 sigma = GetLineWidth(mu);
+  Float64 const sigma = GetLineWidth(mu);
+  Float64 const max_offset_angstrom =
+      (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
   Float64 winsize =
       getElementParam()->getLineProfile(line_index)->GetNSigmaSupport() * sigma;
-  winsize += 2 * (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
+  winsize += 2 * max_offset_angstrom;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -195,24 +191,39 @@ void CLineModelElement::EstimateTheoreticalSupport(
   m_StartNoOverlap[line_index] = supportRange.GetBegin();
   m_EndNoOverlap[line_index] = supportRange.GetEnd();
 
-  if (supportRange.GetBegin() >
-      supportRange.GetEnd()) // in this case the line is completely outside the
-                             // lambdarange
-  {
+  EstimateLineVisbility(line_index, spectralAxis, supportRange, mu, sigma,
+                        max_offset_angstrom);
+}
+
+void CLineModelElement::EstimateLineVisbility(
+    Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
+    const TInt32Range &supportRange, Float64 line_lambda, Float64 sigma,
+    Float64 max_offset) {
+
+  if (supportRange.GetBegin() > supportRange.GetEnd()) {
+    // in this case the line is completely outside the
+    // lambdarange
     m_OutsideLambdaRangeList[line_index] = true;
-  } else { // in this case the line is completely inside the lambdarange or with
-           // partial overlap
+    return;
+  }
 
-    Float64 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
-    Float64 startLbda = spectralAxis[m_StartNoOverlap[line_index]];
-    Float64 endLbda = spectralAxis[m_EndNoOverlap[line_index]];
+  // in this case the line is completely inside the lambdarange or with
+  // partial overlap
+  Int32 const nsupport = supportRange.GetLength() + 1;
+  TFloat64List distance(nsupport);
+  auto const &wave_iter =
+      spectralAxis.GetSamplesVector().begin() + supportRange.GetBegin();
+  std::transform(
+      wave_iter, wave_iter + nsupport, distance.begin(),
+      [line_lambda](Float64 lambda) { return std::abs(lambda - line_lambda); });
+  auto const &min_distance =
+      *std::min_element(distance.begin(), distance.end());
 
-    if (startLbda >= (lambdaRange.GetEnd() - minLineOverlap) ||
-        endLbda <= (lambdaRange.GetBegin() + minLineOverlap)) {
-      m_OutsideLambdaRangeList[line_index] = true;
-    } else {
-      m_OutsideLambdaRangeList[line_index] = false;
-    }
+  if (min_distance > (m_maxDistanceToLine * sigma + max_offset) ||
+      (nsupport < m_minSamplesNumberForLineFit)) {
+    m_OutsideLambdaRangeList[line_index] = true;
+  } else {
+    m_OutsideLambdaRangeList[line_index] = false;
   }
 
   return;
@@ -838,8 +849,6 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   os << "m_ElementType\t"
      << CLine::ETypeString.at(getElementParam()->GetElementType()) << "\n";
 
-  os << "m_OutsideLambdaRangeOverlapThreshold\t"
-     << m_OutsideLambdaRangeOverlapThreshold << "\n";
   os << "m_sumCross\t" << m_ElementParam->m_sumCross << "\n";
   os << "m_sumGauss\t" << m_ElementParam->m_sumGauss << "\n";
   os << "m_dtmFree\t" << m_ElementParam->m_dtmFree << "\n";

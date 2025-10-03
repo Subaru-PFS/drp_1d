@@ -137,7 +137,9 @@ const std::string jsonStringOrtho =
     "\"velocityAbsorption\": 100,"
     "\"lineRatioType\": \"tplRatio\","
     "\"lineTypeFilter\" : \"no\","
-    "\"lineForceFilter\" : \"no\"}}}}}";
+    "\"lineForceFilter\" : \"no\","
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\"}}}}}";
 
 class fixture_inputcontextTest {
 public:
