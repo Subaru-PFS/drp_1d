@@ -5,6 +5,7 @@
 * [10031] : Define a minimal number of valid samples to compute a continuum & add number of pixels effectively used for fits in output
 * [9208] : In powerlaw, added min / max constraints on power coefficients
 * [10103] : Added two parameters: lbdaOffsetMax abd lbdaOffsetStep for fitting of the wavelength offset of lines.
+* [9060] : add Soft Voting for reliability deep learning solver
 ### Changed
 ### Deprecated
 ### Removed
