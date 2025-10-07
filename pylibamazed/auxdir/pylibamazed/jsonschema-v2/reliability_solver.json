@@ -30,7 +30,7 @@
         "reliabilityModel": {
           "type": "string",
           "title": "Reliability path",
-          "description": "Relative path to the neural network model"
+          "description": "Relative path to neural network models, maybe single file or directory containing many models"
         }
       }
     },
