@@ -47,7 +47,12 @@ namespace NSEpic
 
 class CSvdFitter : public CAbstractFitter {
 public:
-  using CAbstractFitter::CAbstractFitter;
+  CSvdFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
+             const CCSpectrumVectorPtr &inputSpcs,
+             const CTLambdaRangePtrVector &lambdaRanges,
+             const CSpcModelVectorPtr &spectrumModels,
+             const CLineMap &restLineList, const CSpectraGlobalIndex &spcIndex,
+             bool enableAmplitudeOffsets, bool enableLambdaOffsetsFit);
 
 protected:
   virtual void doFit(Float64 redshift) override;
@@ -62,6 +67,8 @@ protected:
                              TFloat64List &ampsfitted,
                              TFloat64List &errorsfitted, Float64 redshift,
                              const TInt32List &IdxToFit = {});
+
+  bool HasLambdaOffsetFitting() const override { return true; };
 };
 } // namespace NSEpic
 #endif

@@ -546,6 +546,15 @@ class ParametersAccessor:
     def get_linemodel_extremacount(self, spectrum_model: str):
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "extremaCount")
 
+    def get_linemodel_lbda_offset_fit(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetFit")
+
+    def get_linemodel_lbda_offset_max(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetMax")
+
+    def get_linemodel_lbda_offset_step(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetStep")
+
     def get_linemodel_velocity_fit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "velocityFit")
 
@@ -621,6 +630,15 @@ class ParametersAccessor:
 
     def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")
+
+    def get_linemeas_lbda_offset_fit(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetFit")
+
+    def get_linemeas_lbda_offset_max(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetMax")
+
+    def get_linemeas_lbda_offset_step(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetStep")
 
     def get_nsigmasupport(self, spectrum_model: str, method: ESolveMethod) -> Optional[float]:
         nsigmasupport = None

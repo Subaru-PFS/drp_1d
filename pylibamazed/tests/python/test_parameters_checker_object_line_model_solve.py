@@ -48,6 +48,30 @@ from tests.python.utils import (
 
 
 class TestLineModelSolve:
+    class TestMethod:
+        def _make_parameter_dict(self, **kwargs):
+            kwargs["linemeas_method"] = ""
+            kwargs["method"] = "lineModelSolve"
+            return make_parameter_dict_at_redshift_solver_level(**kwargs)
+
+        def test_error_if_method_is_lineModelSolve_and_section_is_absent(self):
+            param_dict = self._make_parameter_dict(**{})
+            with pytest.raises(APIException, match=r"Missing parameter lineModelSolve"):
+                check_from_parameter_dict(param_dict)
+
+        def test_OK_if_method_is_lineModelSolve_and_section_is_present(self, zflag):
+            param_dict = self._make_parameter_dict(**{"lineModelSolve": {}})
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        def test_OK_if_lineRatioType_is_rules_and_rules_section_is_present(self, zflag):
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineRatioType": "rules", "rules": {}}}
+            )
+
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
     class TestImproveBalmerFit:
         def _make_parameter_dict(self, **kwargs) -> dict:
             kwargs = {"method": "lineModelSolve", "lineModelSolve": {"lineModel": kwargs}}
@@ -433,7 +457,8 @@ class TestLineModelSolve:
             )
             with pytest.raises(
                 APIException,
-                match=r"lineModelSolve lineModel emVelocityFit min must be > 0 when lineWidthType is velocityDriven",
+                match=r"lineModelSolve lineModel emVelocityFit min must be > 0 "
+                r"when lineWidthType is velocityDriven",
             ):
                 check_from_parameter_dict(param_dict)
 
@@ -474,3 +499,193 @@ class TestLineModelSolve:
             param_dict = self._make_parameter_dict(**{"continuumComponent": "sth", "powerLaw": {}})
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_warning(WarningCode.UNUSED_PARAMETER)
+
+    class TestFittingMethod:
+        def _make_parameter_dict(self, object_level_params=None, **kwargs):
+            kwargs["linemeas_method"] = ""
+            kwargs["method"] = "lineModelSolve"
+            if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("secondPass") is not None:
+                kwargs["lineModelSolve"]["lineModel"]["skipSecondPass"] = False
+            fitting_method = kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("fittingMethod")
+            if (
+                fitting_method == "hybrid"
+                and "continuumReestimation" not in kwargs["lineModelSolve"]["lineModel"]
+            ):
+                kwargs["lineModelSolve"]["lineModel"]["continuumReestimation"] = "no"
+            param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
+            param_dict["continuumRemoval"] = {} if fitting_method == "hybrid" else None
+            return param_dict
+
+        def test_error_if_fittingmethod_is_hybrid_but_continuumreestimation_absent(self):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {"fittingMethod": "hybrid", "continuumReestimation": None}
+                    }
+                }
+            )
+
+            with pytest.raises(
+                APIException, match=r"Missing parameter object galaxy lineModelSolve continuumReestimation"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        def test_warning_if_fittingmethod_hybrid_but_continuumreestimation_present(self, zflag):
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineModel": {"fittingMethod": "sth", "continuumReestimation": "sth"}}}
+            )
+            param_dict["continuumRemoval"] = {}
+            check_from_parameter_dict(param_dict)
+            assert WarningUtils.has_any_warning()
+
+        def test_OK_if_fittingmethod_hybrid_and_mandatory_fields_present(self, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": "hybrid",
+                            "lbdaOffsetFit": False,
+                        }
+                    }
+                }
+            )
+            param_dict["continuumRemoval"] = {}
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_lbdaOffsetFit_absent(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{"lineModelSolve": {"lineModel": {"fittingMethod": fitting_method, "lbdaOffsetFit": None}}}
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_Ok_if_lbdaOffsetFit_and_mandatory_fields_present(self, fitting_method, zflag):
+            lbda_offset_step = 25 if fitting_method in ["hybrid", "svd"] else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "lbdaOffsetFit": True,
+                            "lbdaOffsetMax": 400,
+                            "lbdaOffsetStep": lbda_offset_step,
+                        }
+                    }
+                }
+            )
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_lbdaOffsetFit_and_mandatory_lbdaOffsetMax_absent(self, fitting_method, zflag):
+            lbda_offset_step = 25 if fitting_method in ["hybrid", "svd"] else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "lbdaOffsetFit": True,
+                            "lbdaOffsetStep": lbda_offset_step,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetMax"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd"])
+        def test_error_if_lbdaOffsetFit_and_mandatory_lbdaOffsetStep_absent(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "lbdaOffsetFit": True,
+                            "lbdaOffsetMax": 400,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetStep"
+            ):
+                check_from_parameter_dict(param_dict)
+
+    class TestContinuumComponent:
+        def _make_parameter_dict(self, object_level_params=None, **kwargs):
+            kwargs["linemeas_method"] = ""
+            kwargs["method"] = "lineModelSolve"
+            if kwargs.get("lineModelSolve", {}).get("lineModel", {}).get("secondPass") is not None:
+                kwargs["lineModelSolve"]["lineModel"]["skipSecondPass"] = False
+            param_dict = make_parameter_dict_at_redshift_solver_level(object_level_params, **kwargs)
+            return param_dict
+
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
+        def test_error_if_continuumcomponent_is_tplfit_but_continuumfit_is_absent(self, continuum_component):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "secondPass": {"continuumFit": ""},
+                        }
+                    }
+                }
+            )
+            param_dict["continuumRemoval"] = {}
+            with pytest.raises(
+                APIException, match=r"Missing parameter object galaxy lineModelSolve continuumFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
+        def test_error_if_continuumcomponent_is_tplfit_but_secondpass_continuumfit_is_absent(
+            self, continuum_component
+        ):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "continuumFit": {},
+                            "secondPass": {},
+                        }
+                    },
+                }
+            )
+            param_dict["continuumRemoval"] = {}
+            param_dict["galaxy"]["templateDir"] = "sth"
+
+            with pytest.raises(
+                APIException, match=r"Missing parameter object galaxy lineModelSolve secondpass continuumFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("continuum_component", ["tplFit", "tplFitAuto"])
+        def test_ok_if_continuumcomponent_is_tplfit_and_continuumfit_is_present(
+            self, zflag, continuum_component
+        ):
+            param_dict = self._make_parameter_dict(
+                {"templateDir": "sth"},
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "continuumComponent": continuum_component,
+                            "continuumFit": {},
+                            "secondPass": {"continuumFit": ""},
+                        }
+                    }
+                },
+            )
+            if continuum_component == "tplFitAuto":
+                param_dict["continuumRemoval"] = {}
+            param_dict["galaxy"]["templateDir"] = "sth"
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()

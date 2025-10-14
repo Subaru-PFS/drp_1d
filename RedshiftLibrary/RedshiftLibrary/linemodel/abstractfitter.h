@@ -113,7 +113,8 @@ protected:
 
   void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount);
 
-  bool HasLambdaOffsetFitting(TInt32List EltsIdx,
+  virtual bool HasLambdaOffsetFitting() const { return false; };
+  bool HasLineElementToOffset(TInt32List EltsIdx,
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 

@@ -262,6 +262,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemeassolve_redshiftstep(spectrum_model)
         self._check_linemeassolve_lineratiotype_rules(spectrum_model)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(spectrum_model)
+        self._check_linemeassolve_lbda_offset(spectrum_model)
         self._check_linemeassolve_velocity_fit_params(spectrum_model)
         self._check_linemeassolve_lya_fit(spectrum_model)
 
@@ -476,6 +477,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
+        self._check_linemodel_lbda_offset(spectrum_model)
         self._check_linemodelsolve_velocity_fit_params(spectrum_model)
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
@@ -648,6 +650,33 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
         )
 
+    def _check_linemodel_lbda_offset(self, spectrum_model: str):
+        self._check_linemodelsolve_lbda_offset_fit(spectrum_model)
+        self._check_linemodelsolve_lbda_offset_max_and_step(spectrum_model)
+
+    def _check_linemodelsolve_lbda_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
+        )
+
+    def _check_linemodelsolve_lbda_offset_max_and_step(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model),
+            self.accessor.get_linemodel_lbda_offset_max(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetMax",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetMax",
+        )
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model)
+            and self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid"],
+            self.accessor.get_linemodel_lbda_offset_step(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
+        )
+
     def _check_linemodelsolve_velocity_fit_params(self, spectrum_model: str):
         velocity_fit: bool = self.accessor.get_linemodel_velocity_fit(spectrum_model)
         for velocity_type in EVelocityType:
@@ -719,6 +748,33 @@ class CustomParametersChecker(ParametersChecker):
             self.accessor.get_linemeas_rules(spectrum_model) is not None,
             error_message=f"lineMeasSolve rules for object {spectrum_model}",
             warning_message=f"object {spectrum_model} LineMeasSolve rules",
+        )
+
+    def _check_linemeassolve_lbda_offset(self, spectrum_model: str):
+        self._check_linemeassolve_lbda_offset_fit(spectrum_model)
+        self._check_linemeassolve_lbda_offset_max_and_step(spectrum_model)
+
+    def _check_linemeassolve_lbda_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetFit",
+            f"{spectrum_model} lineMeaslSolve lineModel lbdaOffsetFit",
+        )
+
+    def _check_linemeassolve_lbda_offset_max_and_step(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model),
+            self.accessor.get_linemeas_lbda_offset_max(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetMax",
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetMax",
+        )
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model)
+            and self.accessor.get_linemeas_fitting_method(spectrum_model) in ["svd", "hybrid"],
+            self.accessor.get_linemeas_lbda_offset_step(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
         )
 
     def _check_linemeassolve_fittingmethod_lbfgsb_velocityfit(self, spectrum_model: str):
