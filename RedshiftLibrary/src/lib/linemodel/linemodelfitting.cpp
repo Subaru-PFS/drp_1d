@@ -272,9 +272,9 @@ Int32 CLineModelFitting::GetPassNumber() const { return m_pass; }
  **/
 void CLineModelFitting::LogCatalogInfos() {
   Log.LogDetail("\n");
-  Log.LogDetail("LineModel Infos: %d elements", getElementParam().size());
+  Log.LogDetail("LineModel Infos: %d elements", getElementsParams().size());
   int iElts = 0;
-  for (auto const &elt_param : getElementParam()) {
+  for (auto const &elt_param : getElementsParams()) {
 
     Int32 nLines = elt_param->size();
     if (nLines < 1) {
@@ -477,7 +477,7 @@ void CLineModelFitting::setLineRatioManager(
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
-  for (auto &elt_param : getElementParam()) {
+  for (auto &elt_param : getElementsParams()) {
     elt_param->SetAbsLinesLimit(limit);
   }
 }
@@ -726,7 +726,7 @@ void CLineModelFitting::LoadModelSolution(
   setRedshift(modelSolution.Redshift, false);
 
   // reset before loading
-  for (auto param_ptr : m_ElementsVector->getElementParam()) {
+  for (auto param_ptr : m_ElementsVector->getElementsParams()) {
     param_ptr->resetFittingParams();
     param_ptr->setVelocity(NAN);
   }
@@ -735,12 +735,12 @@ void CLineModelFitting::LoadModelSolution(
   // should also reset nominal amplitudes...
   // but not touched without using template-ratio
 
-  TBoolList element_done(getElementParam().size(), false);
+  TBoolList element_done(getElementsParams().size(), false);
   for (Int32 iRestLine = 0; iRestLine < ssize(m_RestLineList); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue; // TODO should throw exception here
-    auto const &elt_param = getElementParam()[eIdx];
+    auto const &elt_param = getElementsParams()[eIdx];
     if (modelSolution.NotFitted[iRestLine]) {
       // set outsidelambdrarangeList
       for ([[maybe_unused]] auto const spcIndex : m_spectraIndex) {
@@ -783,16 +783,16 @@ void CLineModelFitting::LoadModelSolution(
     std::string lyaTag = linetags::lya_em;
     auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
     if (idxLyaE != undefIdx)
-      getElementParam()[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
-                                                    modelSolution.LyaAlpha,
-                                                    modelSolution.LyaDelta});
+      getElementsParams()[idxLyaE]->SetAsymfitParams(
+          {modelSolution.LyaWidthCoeff, modelSolution.LyaAlpha,
+           modelSolution.LyaDelta});
   }
 
   if (modelSolution.LyaIgm != undefIdx) {
     auto const indices_Igm = m_ElementsVector->getIgmLinesIndices();
     if (!indices_Igm.empty())
       for (auto const &[elt_idx, _] : indices_Igm)
-        getElementParam()[elt_idx]->SetSymIgmParams(
+        getElementsParams()[elt_idx]->SetSymIgmParams(
             {modelSolution.LyaIgm, modelSolution.Redshift});
   }
 
@@ -812,7 +812,7 @@ void CLineModelFitting::LoadModelSolution(
 
 // should be called only on final candidates
 void CLineModelFitting::ComputeAndAddOptionalLineProperties(
-    CLineModelSolution &modelSolution) {
+    CLineModelSolution &modelSolution) const {
   TInt32List eIdx_oii;
   TInt32List subeIdx_oii;
   TInt32List eIdx_ha;
@@ -834,10 +834,10 @@ void CLineModelFitting::processSingleLine(
     Int32 iRestLine, CLineModelSolution &modelSolution, TInt32List &eIdx_oii,
     TInt32List &subeIdx_oii, Float64 &flux_oii, Float64 &fluxVar_oii,
     TInt32List &eIdx_ha, TInt32List &subeIdx_ha, Float64 &flux_ha,
-    Float64 &fluxVar_ha) {
+    Float64 &fluxVar_ha) const {
   Int32 line_id = modelSolution.lineId[iRestLine];
   Int32 eIdx = modelSolution.ElementId[iRestLine];
-  auto const &elt_param = getElementParam()[eIdx];
+  auto const elt_param = getElementsParams()[eIdx];
   Int32 line_index = elt_param->getLineIndex(line_id);
 
   if (eIdx == undefIdx || line_index == undefIdx ||
@@ -871,12 +871,12 @@ void CLineModelFitting::processSingleLine(
 
 void CLineModelFitting::updateResidualsAndContinuum(
     Int32 iRestLine, CLineModelSolution &modelSolution, Int32 eIdx,
-    Int32 line_index) {
+    Int32 line_index) const {
   modelSolution.ResidualRMS[iRestLine] =
       m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
 
   if (m_enableAmplitudeOffsets) {
-    const auto &polynom_coeffs = getElementParam()[eIdx]->m_ampOffsetsCoeffs;
+    const auto &polynom_coeffs = getElementsParams()[eIdx]->m_ampOffsetsCoeffs;
     modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.m_a0;
     modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.m_a1;
     modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.m_a2;
@@ -898,9 +898,9 @@ void CLineModelFitting::updateResidualsAndContinuum(
 std::tuple<Float64, Float64, bool>
 CLineModelFitting::computeLineFlux(Int32 iRestLine,
                                    CLineModelSolution &modelSolution,
-                                   Int32 eIdx, Int32 line_index) {
-  auto &line = m_RestLineList.at(modelSolution.lineId[iRestLine]);
-  bool isEmission = line.GetType() == CLine::EType::nType_Emission;
+                                   Int32 eIdx, Int32 line_index) const {
+  const auto &line = m_RestLineList.at(modelSolution.lineId[iRestLine]);
+  const bool isEmission = line.GetType() == CLine::EType::nType_Emission;
 
   Float64 amp = modelSolution.Amplitudes[iRestLine];
   Float64 ampError = modelSolution.AmplitudesUncertainties[iRestLine];
@@ -941,7 +941,7 @@ void CLineModelFitting::accumulateLineFluxes(
     Int32 line_id, CLineModelSolution &modelSolution, TInt32List &eIdx_ha,
     TInt32List &subeIdx_ha, Float64 &flux_ha, Float64 &fluxVar_ha,
     TInt32List &eIdx_oii, TInt32List &subeIdx_oii, Float64 &flux_oii,
-    Float64 &fluxVar_oii) {
+    Float64 &fluxVar_oii) const {
   auto const &line = m_RestLineList.at(line_id);
   if (line.GetName() == linetags::halpha_em ||
       line.GetName() == linetags::niia_em ||
@@ -979,17 +979,17 @@ void CLineModelFitting::accumulateLineFluxes(
   }
 }
 
-void CLineModelFitting::addLyaParams(CLineModelSolution &modelSolution) {
+void CLineModelFitting::addLyaParams(CLineModelSolution &modelSolution) const {
   std::string lyaTag = linetags::lya_em;
   auto const [idxLyaE, _] = m_ElementsVector->findElementIndex(lyaTag);
   if (idxLyaE != undefIdx) {
-    TAsymParams params =
-        m_ElementsVector->getElementParam()[idxLyaE]->GetAsymfitParams(0);
+    const auto &params =
+        m_ElementsVector->getElementsParams()[idxLyaE]->GetAsymfitParams(0);
     modelSolution.LyaWidthCoeff = params.sigma;
     modelSolution.LyaAlpha = params.alpha;
     modelSolution.LyaDelta = params.delta;
-    TSymIgmParams params_igm =
-        m_ElementsVector->getElementParam()[idxLyaE]->GetSymIgmParams(0);
+    const auto &params_igm =
+        m_ElementsVector->getElementsParams()[idxLyaE]->GetSymIgmParams(0);
     modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 }
@@ -1000,11 +1000,14 @@ void CLineModelFitting::addLyaParams(CLineModelSolution &modelSolution) {
  **/
 // this is not really a const method as spectrum model(s) have to be modified
 // (cf CSpectrumModel::getContinuumUncertainty)
-CLineModelSolution CLineModelFitting::GetModelSolution(bool fullSolution) {
+CLineModelSolution
+CLineModelFitting::GetModelSolution(bool fullSolution) const {
   Int32 s = m_RestLineList.size();
   CLineModelSolution modelSolution(m_RestLineList);
 
-  auto &elt_param_vect = m_ElementsVector->getElementParam();
+  auto const &elt_param_vect =
+      static_pointer_cast<const CLMEltListVector>(m_ElementsVector)
+          ->getElementsParams();
 
   modelSolution.EmissionVelocity = GetVelocityEmission();
   modelSolution.AbsorptionVelocity = GetVelocityAbsorption();
@@ -1081,13 +1084,13 @@ void CLineModelFitting::SetLSF(std::shared_ptr<const CLSF> const &lsf_) {
 }
 
 void CLineModelFitting::SetVelocityEmission(Float64 vel) {
-  for (auto &lmep : m_ElementsVector->getElementParam())
+  for (auto &lmep : m_ElementsVector->getElementsParams())
     if (lmep->IsEmission())
       lmep->setVelocity(vel);
 }
 
 void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
-  for (auto &lmep : m_ElementsVector->getElementParam())
+  for (auto &lmep : m_ElementsVector->getElementsParams())
     if (lmep->IsAbsorption())
       lmep->setVelocity(vel);
 }
@@ -1095,7 +1098,7 @@ void CLineModelFitting::SetVelocityAbsorption(Float64 vel) {
 void CLineModelFitting::setVelocityByGroup(Float64 vel,
                                            const TInt32List &inds) {
   for (auto idxElt : inds)
-    m_ElementsVector->getElementParam()[idxElt]->setVelocity(vel);
+    m_ElementsVector->getElementsParams()[idxElt]->setVelocity(vel);
 }
 
 Float64 CLineModelFitting::GetVelocityEmission() const {
@@ -1105,7 +1108,7 @@ Float64 CLineModelFitting::GetVelocityEmission() const {
     return NAN;
 
   // find 1st emission element
-  auto elt_param_vect = m_ElementsVector->getElementParam();
+  auto elt_param_vect = m_ElementsVector->getElementsParams();
   auto const it = std::find_if(elt_param_vect.begin(), elt_param_vect.end(),
                                [](TLineModelElementParam_ptr const &p) {
                                  return p->IsEmission() && p->isFittable();
@@ -1122,7 +1125,7 @@ Float64 CLineModelFitting::GetVelocityAbsorption() const {
     return NAN;
 
   // find 1st emission element
-  auto elt_param_vect = m_ElementsVector->getElementParam();
+  auto elt_param_vect = m_ElementsVector->getElementsParams();
   auto const it = std::find_if(elt_param_vect.begin(), elt_param_vect.end(),
                                [](TLineModelElementParam_ptr const &p) {
                                  return p->IsAbsorption() && p->isFittable();
@@ -1263,7 +1266,7 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
 // assumes model is refreshed and continuum uptodate
 std::pair<Float64, Float64>
 CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
-                                             Float64 redshift) {
+                                             Float64 redshift) const {
 
   Float64 sumContinuumAll = 0.0;
   Float64 sumWeightAll = 0.0;
@@ -1273,8 +1276,8 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   Float64 sumWeightResidualAll = 0;
   Float64 sumSquaredWeightResidualAll = 0;
   auto const &polynomCoeffs =
-      m_ElementsVector->getElementParam()[eltIdx]->m_ampOffsetsCoeffs;
-  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+      m_ElementsVector->getElementsParams()[eltIdx]->m_ampOffsetsCoeffs;
+  for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
     // TODO check this : it has been added because it caused Line position does
     // not belong to LSF range with lsf variable width
     if (m_ElementsVector->getElementList()[eltIdx]->IsOutsideLambdaRangeLine(
@@ -1313,7 +1316,7 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
 
 std::pair<Float64, Float64>
 CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
-                                               Float64 redshift) {
+                                               Float64 redshift) const {
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     // TODO check this : it has been added because it caused Line position does
     // not belong to LSF range with lsf variable width

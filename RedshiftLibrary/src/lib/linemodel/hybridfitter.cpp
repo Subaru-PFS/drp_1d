@@ -136,7 +136,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
-      m_ElementsVector->getElementParam()[overlapping_iElt]
+      m_ElementsVector->getElementsParams()[overlapping_iElt]
           ->SetFittingGroupInfo(fitGroupTag);
     }
 
@@ -238,8 +238,8 @@ bool CHybridFitter::isValidBalmerPair(Int32 iEltE, Int32 iEltA, Int32 lineE_id,
   if (getElementList()[iEltE]->GetSize() > 1 ||
       getElementList()[iEltA]->GetSize() > 1)
     return false;
-  if (getElementParam()[iEltE]->isNotFittable() ||
-      getElementParam()[iEltA]->isNotFittable())
+  if (getElementsParams()[iEltE]->isNotFittable() ||
+      getElementsParams()[iEltA]->isNotFittable())
     return false;
   return true;
 }
@@ -250,7 +250,7 @@ std::pair<TInt32List, TInt32List> CHybridFitter::collectAdditionalLines(
   for (Int32 imore = 0; imore < ssize(linetagsMore[itag]); imore++) {
     auto const &[iElt, id] = m_ElementsVector->findElementIndex(
         linetagsMore[itag][imore], CLine::EType::nType_Emission);
-    if (iElt == undefIdx || getElementParam()[iElt]->isNotFittable())
+    if (iElt == undefIdx || getElementsParams()[iElt]->isNotFittable())
       continue;
 
     ilinesMore.push_back(iElt);
@@ -305,8 +305,8 @@ void CHybridFitter::attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
 
 std::pair<Float64, Float64> CHybridFitter::getAmplitudeAndError(Int32 iElt,
                                                                 Int32 lineId) {
-  Float64 amp = getElementParam()[iElt]->GetFittedAmplitude(lineId);
-  Float64 ampErr = getElementParam()[iElt]->GetFittedAmplitudeStd(lineId);
+  Float64 amp = getElementsParams()[iElt]->GetFittedAmplitude(lineId);
+  Float64 ampErr = getElementsParams()[iElt]->GetFittedAmplitudeStd(lineId);
   return {amp, ampErr};
 }
 
@@ -317,8 +317,8 @@ CHybridFitter::collectAmplitudes(const TInt32List &ilines) {
 
   for (Int32 i = 0; i < ssize(ilines); ++i) {
     Int32 idx = ilines[i];
-    Float64 amp = getElementParam()[idx]->GetFittedAmplitude(0);
-    Float64 ampErr = getElementParam()[idx]->GetFittedAmplitudeStd(0);
+    Float64 amp = getElementsParams()[idx]->GetFittedAmplitude(0);
+    Float64 ampErr = getElementsParams()[idx]->GetFittedAmplitudeStd(0);
     amps.push_back(amp);
     ampErrors.push_back(ampErr);
   }
@@ -335,9 +335,9 @@ void CHybridFitter::restoreAmplitudes(Int32 iEltA, Int32 lineA_id, Float64 ampA,
                                       const TFloat64List &errsMore) {
   // Restore absorption and emission lines
   Float64 nominal_ampA =
-      getElementParam()[iEltA]->GetNominalAmplitude(lineA_id);
+      getElementsParams()[iEltA]->GetNominalAmplitude(lineA_id);
   Float64 nominal_ampE =
-      getElementParam()[iEltE]->GetNominalAmplitude(lineE_id);
+      getElementsParams()[iEltE]->GetNominalAmplitude(lineE_id);
 
   m_ElementsVector->SetElementAmplitude(iEltA, ampA / nominal_ampA,
                                         errA / nominal_ampA);
@@ -348,7 +348,7 @@ void CHybridFitter::restoreAmplitudes(Int32 iEltA, Int32 lineA_id, Float64 ampA,
   for (Int32 i = 0; i < ssize(ilinesMore); ++i) {
     Int32 idx = ilinesMore[i];
     Float64 nominal_amp =
-        getElementParam()[idx]->GetNominalAmplitude(idsMore[i]);
+        getElementsParams()[idx]->GetNominalAmplitude(idsMore[i]);
     m_ElementsVector->SetElementAmplitude(idx, ampsMore[i] / nominal_amp,
                                           errsMore[i] / nominal_amp);
   }

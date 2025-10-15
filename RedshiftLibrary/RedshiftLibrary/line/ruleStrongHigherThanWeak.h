@@ -73,7 +73,7 @@ private:
                                    std::string &name,
                                    CLMEltListVector &LineModelElementList);
   std::pair<Int32, Int32>
-  FindLowestStrongLineIndex(const CLMEltListVector &LineModelElementList);
+  FindLowestStrongLineIndex(const CLMEltListVector &LineModelElementList) const;
   void constructLogMsg(const std::string &nameWeak,
                        const std::string &strongName, Float64 ampB,
                        Float64 maxB);

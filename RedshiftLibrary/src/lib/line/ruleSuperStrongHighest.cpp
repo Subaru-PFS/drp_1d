@@ -82,7 +82,7 @@ void CRuleSuperStrong::Correct(CLMEltListVector &LineModelElementList) {
 
   for (auto const &[elt_ptr, elt_param_ptr] :
        boost::combine(LineModelElementList.getElementList().getElements(),
-                      LineModelElementList.getElementParam())) {
+                      LineModelElementList.getElementsParams())) {
 
     for (Int32 iLineWeak = 0; iLineWeak != elt_ptr->GetSize(); ++iLineWeak) {
       auto const &lineWeak = elt_param_ptr->GetLines()[iLineWeak];

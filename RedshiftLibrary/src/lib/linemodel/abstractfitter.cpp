@@ -207,7 +207,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
     line_idx_LyaE = line_indices_LyaE.front();
 
-    auto const &param_LyaE = m_ElementsVector->getElementParam()[elt_idx_LyaE];
+    auto const &param_LyaE =
+        m_ElementsVector->getElementsParams()[elt_idx_LyaE];
     auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
     if (profile->isAsymFit() && param_LyaE->isFittable() &&
@@ -226,7 +227,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     std::vector<std::pair<Int32, TInt32List>> line_indices_tofit;
     for (auto const &[elt_idx_igmLine, line_indices_LyaE] : indices_Igm) {
       auto const &param_EltIgm =
-          m_ElementsVector->getElementParam()[elt_idx_igmLine];
+          m_ElementsVector->getElementsParams()[elt_idx_igmLine];
 
       if (param_EltIgm->isNotFittable())
         continue;
@@ -247,7 +248,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
                           ? undefIdx
                           : fitAsymIGMCorrection(redshift, line_indices_tofit);
     for (auto const &[elt_idx, _] : line_indices_tofit) {
-      auto const &param_EltIgm = m_ElementsVector->getElementParam()[elt_idx];
+      auto const &param_EltIgm = m_ElementsVector->getElementsParams()[elt_idx];
       param_EltIgm->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
     }
   }
@@ -256,7 +257,7 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
 void CAbstractFitter::fitAmplitude(Int32 eltIndex, Float64 redshift,
                                    Int32 lineIdx) {
 
-  auto &param = getElementParam()[eltIndex];
+  auto &param = getElementsParams()[eltIndex];
   if (param->isNotFittable()) {
     param->m_sumCross = NAN;
     param->m_sumGauss = NAN;
@@ -314,7 +315,7 @@ void CAbstractFitter::setLambdaOffset(const TInt32List &EltsIdx,
 
   Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
   for (Int32 iE : EltsIdx)
-    getElementParam()[iE]->SetAllOffsetsEnabled(offset);
+    getElementsParams()[iE]->SetAllOffsetsEnabled(offset);
 
   return;
 }
@@ -324,7 +325,7 @@ bool CAbstractFitter::HasLineElementToOffset(TInt32List EltsIdx,
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
     for (Int32 iE : EltsIdx)
-      for (const auto &line : getElementParam()[iE]->GetLines())
+      for (const auto &line : getElementsParams()[iE]->GetLines())
         // check if the line is to be fitted
         if (line.IsOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
@@ -408,15 +409,15 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
   Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
   Int32 istart = 0;
-  Int32 iend = getElementParam().size();
+  Int32 iend = getElementsParams().size();
   if (eltIdx != undefIdx) {
     istart = eltIdx;
     iend = eltIdx + 1;
   }
   for (Int32 iElts = istart; iElts < iend; iElts++) {
-    Float64 dtm = getElementParam()[iElts]->getSumCross();
-    Float64 mtm = getElementParam()[iElts]->getSumGauss();
-    Float64 a = getElementParam()[iElts]->GetElementAmplitude();
+    Float64 dtm = getElementsParams()[iElts]->getSumCross();
+    Float64 mtm = getElementsParams()[iElts]->getSumGauss();
+    Float64 a = getElementsParams()[iElts]->GetElementAmplitude();
     Float64 term1 = a * a * mtm;
     Float64 term2 = -2. * a * dtm;
     fit += term1 + term2;
@@ -451,7 +452,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
 
   TInt32List filterEltsIdxLya(1, idxLyaE);
 
-  auto const &param_LyaE = m_ElementsVector->getElementParam()[idxLyaE];
+  auto const &param_LyaE = m_ElementsVector->getElementsParams()[idxLyaE];
 
   for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
     Float64 delta = deltaMin + deltaStep * iDelta;
@@ -503,13 +504,13 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
   Float64 meritMin = DBL_MAX;
   Int32 bestIgmIdx = undefIdx;
 
-  Int32 igmCount = m_ElementsVector->getElementParam()[idxLines.front().first]
+  Int32 igmCount = m_ElementsVector->getElementsParams()[idxLines.front().first]
                        ->getLineProfile(idxLines.front().second.front())
                        ->getIGMIdxCount();
   for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
     bool fitIsValid = false;
     for (auto const &[elt_idx, _] : idxLines) {
-      auto const &param_EltIgm = m_ElementsVector->getElementParam()[elt_idx];
+      auto const &param_EltIgm = m_ElementsVector->getElementsParams()[elt_idx];
       param_EltIgm->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
       fitAmplitude(elt_idx, redshift);
       fitIsValid |= param_EltIgm->GetElementAmplitude() > 0.0;

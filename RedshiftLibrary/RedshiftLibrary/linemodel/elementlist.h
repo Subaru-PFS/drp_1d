@@ -146,13 +146,11 @@ public:
     return m_ElementsVector.at(m_spectraIndex.get());
   }
 
-  // TODO Rename to getElementsParams
-  std::vector<TLineModelElementParam_ptr> &getElementParam() {
+  std::vector<TLineModelElementParam_ptr> &getElementsParams() {
     return m_ElementsParams;
   }
-
-  const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
-    return m_ElementsParams;
+  std::vector<ConstTLineModelElementParam_ptr> getElementsParams() const {
+    return {m_ElementsParams.cbegin(), m_ElementsParams.cend()};
   }
 
   void SetElementAmplitude(Int32 eltIndex, Float64 A, Float64 AStd);

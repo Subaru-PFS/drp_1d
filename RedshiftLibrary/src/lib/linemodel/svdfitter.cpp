@@ -79,7 +79,7 @@ void CSvdFitter::doFit(Float64 redshift) {
     return;
 
   std::string fitGroupTag = "svd";
-  for (auto const &param : m_ElementsVector->getElementParam())
+  for (auto const &param : m_ElementsVector->getElementsParams())
     param->SetFittingGroupInfo(fitGroupTag);
 
   fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, m_enableLambdaOffsetsFit,
@@ -136,12 +136,12 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                              << ", number of parameters to fit = " << nddl_ini);
     for (Int32 iddl = 0; iddl < ssize(EltsIdxToFit_ini); iddl++) {
       m_ElementsVector->SetElementAmplitude(EltsIdxToFit_ini[iddl], NAN, NAN);
-      m_ElementsVector->getElementParam()[EltsIdxToFit_ini[iddl]]
+      m_ElementsVector->getElementsParams()[EltsIdxToFit_ini[iddl]]
           ->m_nullLineProfiles = true;
     }
     if (useAmpOffset) {
       for (Int32 iddl = 0; iddl < ssize(EltsIdx); ++iddl)
-        m_ElementsVector->getElementParam()[EltsIdxToFit_ini[iddl]]
+        m_ElementsVector->getElementsParams()[EltsIdxToFit_ini[iddl]]
             ->SetPolynomCoeffs({NAN, NAN, NAN});
     }
     return true;
@@ -217,7 +217,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
       // set the amplitude to NAN
       Int32 const elt_idx = EltsIdxToFit_ini[iddl];
       m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
-      m_ElementsVector->getElementParam()[elt_idx]->m_nullLineProfiles = true;
+      m_ElementsVector->getElementsParams()[elt_idx]->m_nullLineProfiles = true;
       Flag.warning(WarningCode::NULL_LINES_PROFILE,
                    Formatter() << "Null lines profile"
                                << " of elt " << elt_idx);
@@ -229,7 +229,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                  Formatter() << "SVD aborted since all lines null");
     if (useAmpOffset) {
       for (Int32 elt_idx : EltsIdxToFit_ini)
-        m_ElementsVector->getElementParam()[elt_idx]->SetPolynomCoeffs(
+        m_ElementsVector->getElementsParams()[elt_idx]->SetPolynomCoeffs(
             {NAN, NAN, NAN});
     }
     gsl_matrix_free(Xini);
@@ -306,7 +306,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
         {COV(s + 2, s), COV(s + 2, s + 1), COV(s + 2, s + 2)}};
     CPolynomCoeffs polyCoeffs{x0, x1, x2, polyCoeffsCovar};
     for (Int32 iddl = 0; iddl < ssize(EltsIdx); ++iddl)
-      m_ElementsVector->getElementParam()[EltsIdx[iddl]]->SetPolynomCoeffs(
+      m_ElementsVector->getElementsParams()[EltsIdx[iddl]]->SetPolynomCoeffs(
           polyCoeffs * (1 / normFactor));
   }
 
