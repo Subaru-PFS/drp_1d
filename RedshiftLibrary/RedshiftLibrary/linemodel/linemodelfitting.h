@@ -282,6 +282,9 @@ private:
   void updateResidualsAndContinuum(Int32 iRestLine,
                                    CLineModelSolution &modelSolution,
                                    Int32 eIdx, Int32 line_index) const;
+
+  Int32 computeNSamplesUnderLine(Int32 Elt_id, Int32 line_index) const;
+
   std::tuple<Float64, Float64, bool>
   computeLineFlux(Int32 iRestLine, CLineModelSolution &modelSolution,
                   Int32 eIdx, Int32 line_index) const;

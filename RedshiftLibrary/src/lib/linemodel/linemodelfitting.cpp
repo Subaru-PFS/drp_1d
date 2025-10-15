@@ -845,6 +845,9 @@ void CLineModelFitting::processSingleLine(
       elt_param->isOutsideLambdaRangeLine(line_index))
     return;
 
+  modelSolution.NSamples[iRestLine] =
+      computeNSamplesUnderLine(eIdx, line_index);
+
   updateResidualsAndContinuum(iRestLine, modelSolution, eIdx, line_index);
 
   auto [flux, fluxError, isEmission] =
@@ -893,6 +896,18 @@ void CLineModelFitting::updateResidualsAndContinuum(
 
   modelSolution.CenterContinuumFlux[iRestLine] = cont;
   modelSolution.CenterContinuumFluxUncertainty[iRestLine] = cont_std;
+}
+
+Int32 CLineModelFitting::computeNSamplesUnderLine(Int32 eIdx,
+                                                  Int32 line_index) const {
+  Int32 NSamples = 0;
+  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+    const auto &elt = getElementList()[eIdx];
+    if (elt->IsOutsideLambdaRangeLine(line_index))
+      continue;
+    NSamples += elt->getTheoreticalSupportSubElt(line_index).GetLength() + 1;
+  }
+  return NSamples;
 }
 
 std::tuple<Float64, Float64, bool>
