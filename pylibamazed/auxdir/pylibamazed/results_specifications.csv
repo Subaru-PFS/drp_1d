@@ -189,7 +189,7 @@ zstep	pdf_params	False	object	zstep	pdf_params	f8
 zcenter	pdf_params	False	object	zcenter	pdf_params	f8
 CorrScaleMarg	model_parameters	True	candidate	CorrScaleMarg	extrema_results	f8
 NDof	model_parameters	True	candidate	NDof	extrema_results	i
-NLinesOverThreshold	model_parameters	True	candidate	NLinesOverThreshold	extrema_results	f8
+NLinesOverThreshold	model_parameters	False	candidate	NLinesOverThreshold	extrema_results	f8
 ResidualRMSOutsideLines	model_parameters	True	candidate	OutsideLinesResidualRMS	extrema_results	f8
 InputStDevRMSOutsideLines	model_parameters	True	candidate	OutsideLinesInputStDevRMS	extrema_results	f8
 BayesianInformationCriterion	model_parameters	True	candidate	bic	extrema_results	f8
