@@ -70,7 +70,7 @@ CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
   }
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
-    m_ElementsVector.push_back(CLineModelElementList());
+    m_ElementsVector.emplace_back();
     fillElements();
   }
 }
@@ -154,15 +154,19 @@ void CLMEltListVector::fillElements() {
  **/
 void CLMEltListVector::LoadCatalog() {
   auto groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
-  for (auto &[_, lines] : groupList) {
+  for (auto &&lines : groupList) {
     AddElementParam(std::move(lines));
   }
 }
 
 void CLMEltListVector::LoadCatalogOneLineByElement() {
-  for (auto const &[_, line] : m_RestLineList) {
-    AddElementParam(CLineVector{line});
-  }
+  CLineVector sortedLines;
+  sortedLines.reserve(m_RestLineList.size());
+  for (auto const &[_, line] : m_RestLineList)
+    sortedLines.push_back(line);
+  sortLinesByCenterWavelength(sortedLines);
+  for (auto &&line : std::move(sortedLines))
+    AddElementParam(CLineVector{std::move(line)});
 }
 
 void CLMEltListVector::LoadCatalogOneMultiline() {
@@ -170,7 +174,7 @@ void CLMEltListVector::LoadCatalogOneMultiline() {
   RestLineVector.reserve(m_RestLineList.size());
   for (auto const &[_, line] : m_RestLineList)
     RestLineVector.push_back(line);
-
+  sortLinesByCenterWavelength(RestLineVector);
   AddElementParam(std::move(RestLineVector));
 }
 
@@ -187,9 +191,18 @@ void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
     }
 
     if (lines.size() > 0) {
+      sortLinesByCenterWavelength(lines);
       AddElementParam(std::move(lines));
     }
   }
+}
+
+void CLMEltListVector::sortLinesByCenterWavelength(
+    CLineVector &lineVector) const {
+  std::sort(lineVector.begin(), lineVector.end(),
+            [](CLine const &l, CLine const &r) {
+              return l.GetPosition() < r.GetPosition();
+            });
 }
 
 Float64 CLMEltListVector::getScaleMargCorrection(Int32 Eltidx) const {

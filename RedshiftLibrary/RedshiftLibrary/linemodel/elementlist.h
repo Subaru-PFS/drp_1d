@@ -191,6 +191,7 @@ private:
   void LoadCatalogOneLineByElement();
   void LoadCatalogOneMultiline();
   void LoadCatalogTwoMultilinesAE();
+  void sortLinesByCenterWavelength(CLineVector &lineVector) const;
   bool computeOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index);
   bool computeOutsideLambdaRange(Int32 elt_index);
 };
