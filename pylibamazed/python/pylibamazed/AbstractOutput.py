@@ -36,7 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import numpy as np
 import pandas as pd
 from abc import ABCMeta, abstractmethod
 from typing import Optional
@@ -333,24 +332,18 @@ class AbstractOutput(metaclass=ABCMeta):
             return False
 
     @doc_method
-    def get_dataset_size(self, object_type, dataset, rank=None):
+    def get_dataset_type(self, object_type, dataset, rank=None):
         first_attr = None
         if rank is None:
             if dataset in self.object_results[object_type]:
-                if not self.object_results[object_type][dataset]:
-                    return 0
-                first_attr = next(iter(self.object_results[object_type][dataset].values()))
+                if self.object_results[object_type][dataset]:
+                    first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
                 raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Dataset " + dataset + " does not exist")
         else:
             if len(self.object_results[object_type][dataset][rank]):
                 first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
-        if first_attr is None:
-            return 0
-        if type(first_attr) is np.ndarray:
-            return len(first_attr)
-        else:
-            return 1
+        return type(first_attr)
 
     def get_available_datasets(self, level, object_type=None):
         return self._get_available_datasets(level, object_type)
