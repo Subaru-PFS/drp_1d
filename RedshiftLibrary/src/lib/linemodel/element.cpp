@@ -303,19 +303,15 @@ void CLineModelElement::initSupport(const CSpectrumSpectralAxis &spectralAxis,
 }
 
 bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
-  Int32 x1 = m_StartNoOverlap[i];
-  Int32 x2 = m_EndNoOverlap[i];
-  Int32 y1 = m_StartNoOverlap[j];
-  Int32 y2 = m_EndNoOverlap[j];
 
-  Int32 max = std::max(x1, y1);
-  Int32 min = std::min(x2, y2);
+  TInt32Range range_i(m_StartNoOverlap[i], m_EndNoOverlap[i]);
+  TInt32Range range_j(m_StartNoOverlap[j], m_EndNoOverlap[j]);
 
-  if (max - min >= 0)
+  if (!range_i.unionWith(range_j))
     return false;
 
-  m_StartNoOverlap[i] = std::min(x1, y1);
-  m_EndNoOverlap[i] = std::max(x2, y2);
+  m_StartNoOverlap[i] = range_i.GetBegin();
+  m_EndNoOverlap[i] = range_i.GetEnd();
 
   // deactivate j
   m_StartNoOverlap[j] = m_EndNoOverlap[i];
@@ -323,24 +319,43 @@ bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
   return true;
 }
 
-void CLineModelElement::resolveOverlaps() {
+TInt32List CLineModelElement::sortLinesByLeftIndex() const {
   Int32 nLines = GetSize();
+  TInt32List sortedIndices;
+  sortedIndices.reserve(nLines);
 
-  auto shouldContinue = [this](Int32 index) {
-    return m_OutsideLambdaRangeList[index] ||
-           m_StartNoOverlap[index] > m_EndNoOverlap[index];
+  // list visible lines
+  for (Int32 index = 0; index != nLines; ++index)
+    if (!m_OutsideLambdaRangeList[index])
+      sortedIndices.push_back(index);
+
+  // then sort by left most index
+  std::sort(sortedIndices.begin(), sortedIndices.end(),
+            [this](Int32 l, Int32 r) {
+              return m_StartNoOverlap[l] < m_StartNoOverlap[r];
+            });
+
+  return sortedIndices;
+}
+
+void CLineModelElement::resolveOverlaps() {
+  auto alreadyMerged = [this](Int32 index) {
+    return m_StartNoOverlap[index] > m_EndNoOverlap[index];
   };
 
-  for (Int32 i = 0; i != nLines; ++i) {
-    if (shouldContinue(i))
+  auto const &sortedLines = sortLinesByLeftIndex();
+  for (auto iter_left = sortedLines.begin(); iter_left != sortedLines.end();
+       ++iter_left) {
+    if (alreadyMerged(*iter_left))
       continue;
 
-    for (Int32 j = 0; j != nLines; ++j) {
-      if (shouldContinue(j) || i == j)
+    for (auto iter_right = iter_left + 1; iter_right != sortedLines.end();
+         ++iter_right) {
+      if (alreadyMerged(*iter_right))
         continue;
 
-      if (mergeIfOverlapping(i, j)) {
-        propagateOverlap(i, j);
+      if (mergeIfOverlapping(*iter_left, *iter_right)) {
+        propagateOverlap(*iter_left, *iter_right);
       }
     }
   }
@@ -351,39 +366,30 @@ void CLineModelElement::prepareSupport(
     const TFloat64Range &lambdaRange, Float64 max_offset) {
 
   initSupport(spectralAxis, redshift, lambdaRange, max_offset);
-  bool hasDuplicates = true;
-  Int32 icmpt = 0;
-  const Int32 ncmpt = 20;
 
-  while (hasDuplicates && icmpt < ncmpt) {
-    icmpt++;
+  if (!IsOutsideLambdaRange()) {
     resolveOverlaps();
-    hasDuplicates = detectDuplicateOverlaps();
+    if (detectRemainingOverlaps())
+      THROWG(ErrorCode::INTERNAL_ERROR, "Remaining overlaps");
   }
 }
 
-bool CLineModelElement::detectDuplicateOverlaps() {
+bool CLineModelElement::detectRemainingOverlaps() {
   Int32 nLines = GetSize();
 
   for (Int32 i = 0; i != nLines; ++i) {
     if (m_OutsideLambdaRangeList[i])
       continue;
 
-    for (Int32 j = 0; j != nLines; ++j) {
-      if (m_OutsideLambdaRangeList[j] || i == j)
+    for (Int32 j = i + 1; j != nLines; ++j) {
+      if (m_OutsideLambdaRangeList[j])
         continue;
 
-      Int32 x1 = m_StartNoOverlap[i];
-      Int32 x2 = m_EndNoOverlap[i];
-      Int32 y1 = m_StartNoOverlap[j];
-      Int32 y2 = m_EndNoOverlap[j];
+      TInt32Range range_i(m_StartNoOverlap[i], m_EndNoOverlap[i]);
+      TInt32Range range_j(m_StartNoOverlap[j], m_EndNoOverlap[j]);
 
-      Int32 max = std::max(x1, y1);
-      Int32 min = std::min(x2, y2);
-
-      if (max - min < 0) {
+      if (range_i.HasIntersectionWith(range_j))
         return true;
-      }
     }
   }
   return false;

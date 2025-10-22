@@ -212,8 +212,9 @@ protected:
   void initSupport(const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
                    const TFloat64Range &lambdaRange, Float64 max_offset = 0.0);
   bool mergeIfOverlapping(Int32 i, Int32 j);
+  TInt32List sortLinesByLeftIndex() const;
   void resolveOverlaps();
-  bool detectDuplicateOverlaps();
+  bool detectRemainingOverlaps();
   void propagateOverlap(Int32 i, Int32 j);
 };
 
