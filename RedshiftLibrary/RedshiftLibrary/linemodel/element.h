@@ -96,13 +96,12 @@ public:
                                   Float64 max_offset = 0.0);
   void EstimateLineVisbility(Int32 line_index,
                              const CSpectrumSpectralAxis &spectralAxis,
-                             const TInt32Range &supportRange,
                              Float64 line_lambda, Float64 sigma,
                              Float64 max_offset);
   void computeOutsideLambdaRange();
 
-  TInt32Range getSupportSubElt(Int32 line_index) const;
-  TInt32Range getTheoreticalSupportSubElt(Int32 line_id) const;
+  TInt32Range const &getSupportSubElt(Int32 line_index) const;
+  TInt32Range const &getTheoreticalSupportSubElt(Int32 line_index) const;
 
   static TInt32Range
   EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
@@ -156,8 +155,6 @@ public:
   void SetLineProfile(Int32 line_index, CLineProfile_ptr &&profile);
 
   bool isLineActiveOnSupport(Int32 line_indexA, Int32 line_indexB) const;
-  Int32 getStartNoOverlap(Int32 line_index) const;
-  Int32 getEndNoOverlap(Int32 line_index) const;
 
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
@@ -201,10 +198,8 @@ protected:
 
   std::vector<TBoolList> m_LineIsActiveOnSupport;
 
-  TInt32List m_StartNoOverlap;
-  TInt32List m_EndNoOverlap;
-  TInt32List m_StartTheoretical;
-  TInt32List m_EndTheoretical;
+  TInt32RangeList m_rangeNoOverlap;
+  TInt32RangeList m_rangeTheoretical;
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
@@ -235,12 +230,14 @@ inline bool CLineModelElement::isLineActiveOnSupport(Int32 lineindexA,
   return m_LineIsActiveOnSupport[lineindexA][lineindexB];
 }
 
-inline Int32 CLineModelElement::getStartNoOverlap(Int32 line_index) const {
-  return m_StartNoOverlap[line_index];
+inline TInt32Range const &
+CLineModelElement::getSupportSubElt(Int32 line_index) const {
+  return m_rangeNoOverlap[line_index];
 }
 
-inline Int32 CLineModelElement::getEndNoOverlap(Int32 line_index) const {
-  return m_EndNoOverlap[line_index];
+inline TInt32Range const &
+CLineModelElement::getTheoreticalSupportSubElt(Int32 line_index) const {
+  return m_rangeTheoretical[line_index];
 }
 
 inline void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {
