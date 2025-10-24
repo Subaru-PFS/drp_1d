@@ -15,7 +15,6 @@ variables:
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
-  DOC_VERSION: ""
   CCACHE_BASEDIR: $CI_PROJECT_DIR
   CCACHE_DIR: $CI_PROJECT_DIR/ccache
 
@@ -265,19 +264,20 @@ push-rc-38-osx:
 
 .pages-linux:
   stage: deploy
+  variables:
+    GIT_DEPTH: 0
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - pip install -r pip-doc-requirements.txt
-    - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v2 pylibamazed/doc/source/json-schema/
-    - sphinx-build -b html pylibamazed/doc/source public/$DOC_VERSION
+    - python pylibamazed/doc/source/build_doc.py public
   artifacts:
     paths:
     - public
+    exclude:
+    - "**/.doctrees"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        DOC_VERSION: $CI_DEFAULT_BRANCH
 
 # Almalinux9 stages
 .almalinux9:

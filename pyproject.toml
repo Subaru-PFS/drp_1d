@@ -22,6 +22,7 @@ dependencies = [
     "ninja>=1.11",
     "decorator>=5.1.1",
     "scikit-learn>=1.2.1",
+    "sphinx-multiversion>=0.2.4"
 ]
 authors = [
     {name = "LAM - Laboratoire d'Astrophysique de Marseille", email = "amazed-support@lam.fr"}]
