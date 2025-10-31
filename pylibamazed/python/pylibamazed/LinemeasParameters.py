@@ -85,7 +85,7 @@ class LinemeasParameters:
             redshift_solver_method,
             "model_parameters",
             "Redshift",
-            0,
+            rank=0,
         )
 
         for velocity_type in self.velocity:
@@ -131,7 +131,7 @@ class LinemeasParameters:
                 redshift_solver,
                 "model_parameters",
                 velocity_name,
-                0,
+                rank=0,
             )
         except Exception:
             raise APIException(

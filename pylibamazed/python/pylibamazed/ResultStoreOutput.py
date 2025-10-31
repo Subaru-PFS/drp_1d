@@ -76,9 +76,10 @@ class ResultStoreOutput(AbstractOutput):
     def _handle_default(self, attr, **_):
         return attr
 
-    def _get_attribute_from_result_store(
-        self, object_type, stage, method, data_spec, rank, band_name=None, obs_id=None
-    ):
+    def _get_attribute_from_result_store(self, object_type, stage, method, data_spec, **kwargs):
+        obs_id = kwargs.get("obs_id", None)
+        band_name = kwargs.get("band_name", None)
+        rank = kwargs.get("rank", None)
         operator_result = self._get_operator_result(object_type, stage, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
@@ -112,19 +113,17 @@ class ResultStoreOutput(AbstractOutput):
         handler = attr_type_mapping.get(attr_type, self._handle_default)
         return handler(attr, band_name=band_name, object_type=object_type, obs_id=obs_id)
 
-    def get_attribute_from_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute, **kwargs):
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
-        return self._get_attribute_from_result_store(
-            object_type, stage, method, attribute_info, rank=rank, band_name=band_name, obs_id=obs_id
-        )
+        return self._get_attribute_from_result_store(object_type, stage, method, attribute_info, **kwargs)
 
-    def has_attribute_in_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute, **kwargs):
+        obs_id = kwargs.get("obs_id", None)
+        band_name = kwargs.get("band_name", None)
+        rank = kwargs.get("rank", None)
+
         output = False
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
