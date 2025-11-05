@@ -192,8 +192,7 @@ void COperatorTplcombination::BasicFit(
       igmCorrectionAppliedOnce = false;
       if (currentRange.GetBegin() <= RESTLAMBDA_LYA) { // igm is in range
         for (Int32 iddl = 0; iddl < nddl; iddl++)
-          igmCorrectionAppliedOnce =
-              igmCorrectionAppliedOnce ||
+          igmCorrectionAppliedOnce |=
               m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
       }
       if (!igmCorrectionAppliedOnce) {
