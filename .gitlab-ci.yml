@@ -271,11 +271,10 @@ push-rc-38-osx:
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - pip install -r pip-doc-requirements.txt
     - python pylibamazed/doc/source/build_doc.py public
+    - find public -type d -name ".doctrees" -exec rm -rf {} +
   artifacts:
     paths:
     - public
-    exclude:
-    - "**/.doctrees"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
