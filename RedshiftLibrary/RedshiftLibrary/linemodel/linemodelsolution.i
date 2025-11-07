@@ -64,6 +64,7 @@ public:
   TFloat64List SigmasUncertainty;                // width (Gaussian sigma) uncertainty for each line
   TFloat64List EquivalentWidth; //Equivalent width
   TFloat64List EquivalentWidthUncertainty; //Equivalent width
+  TInt32List NSamples;
   
   TInt32List lineId;
 
@@ -83,8 +84,7 @@ public:
   TFloat64List VelocityUncertainty;
   TFloat64List Offset;    // line offset in km/s
   TFloat64List OffsetUncertainty;
-   TBoolList NotFitted;
-  std::vector<TInt32Range> fittingIndexRange;
+  TBoolList NotFitted;
   TStringList fittingGroupInfo;
 
   Float64 LyaWidthCoeff = NAN;

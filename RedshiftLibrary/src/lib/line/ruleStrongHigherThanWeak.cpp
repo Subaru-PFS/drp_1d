@@ -78,7 +78,7 @@ void CRuleStrongHigherThanWeak::Correct(
 
   // Access strong line infos
   auto &minElement_ptr =
-      LineModelElementList.getElementParam()[minStrongEltIndex];
+      LineModelElementList.getElementsParams()[minStrongEltIndex];
   Float64 erStrong = minElement_ptr->GetFittedAmplitudeStd(minStrongLineIndex);
   Float64 ampStrong = minElement_ptr->GetFittedAmplitude(minStrongLineIndex);
   std::string nameStrong =
@@ -89,7 +89,7 @@ void CRuleStrongHigherThanWeak::Correct(
        iElement < LineModelElementList.getElementList().size(); iElement++) {
     auto &element_ptr = LineModelElementList.getElementList()[iElement];
     const TLineModelElementParam_ptr &element_param_ptr =
-        LineModelElementList.getElementParam()[iElement];
+        LineModelElementList.getElementsParams()[iElement];
 
     // Consider only desired line types
     if (element_param_ptr->GetElementType() != m_LineType)
@@ -187,7 +187,7 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
        iedx++) {
     const auto &element_ptr = LineModelElementList.getElementList()[iedx];
     const auto &element_param_ptr =
-        LineModelElementList.getElementParam()[iedx];
+        LineModelElementList.getElementsParams()[iedx];
     for (Int32 iLineStrong = 0; iLineStrong != element_ptr->GetSize();
          ++iLineStrong) {
       auto const &lineStrong = element_param_ptr->GetLines()[iLineStrong];
@@ -212,15 +212,15 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
 }
 
 std::pair<Int32, Int32> CRuleStrongHigherThanWeak::FindLowestStrongLineIndex(
-    const CLMEltListVector &LineModelElementList) {
+    const CLMEltListVector &LineModelElementList) const {
   Float64 amplitudeMin = INFINITY;
   Int32 iElementMin = undefIdx;
   Int32 iLineMin = undefIdx;
   for (Int32 iElement = 0;
        iElement < LineModelElementList.getElementList().size(); iElement++) {
     const auto &element_ptr = LineModelElementList.getElementList()[iElement];
-    const auto &element_param_ptr =
-        LineModelElementList.getElementParam()[iElement];
+    const auto element_param_ptr =
+        LineModelElementList.getElementsParams()[iElement];
     if (element_param_ptr->GetElementType() != m_LineType)
       continue;
 

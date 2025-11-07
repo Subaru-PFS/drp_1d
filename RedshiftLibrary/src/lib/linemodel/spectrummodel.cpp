@@ -353,7 +353,7 @@ CSpectrumModel::GetContinuumWeightedSumInRange(
  */
 std::tuple<Float64, Float64, Float64>
 CSpectrumModel::getContinuumSquaredResidualInRange(
-    TInt32Range const &indexRange) {
+    TInt32Range const &indexRange) const {
 
   TAxisSampleList residualFlux(m_inputSpc->GetSampleCount());
 

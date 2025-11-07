@@ -94,7 +94,7 @@ public:
                                  CPolynomCoeffs const &polynomCoeffs) const;
 
   std::tuple<Float64, Float64, Float64>
-  getContinuumSquaredResidualInRange(TInt32Range const &indexRange);
+  getContinuumSquaredResidualInRange(TInt32Range const &indexRange) const;
 
   Float64 getMaxContinuumUnderElement(Int32 eIdx) const;
 
@@ -201,11 +201,11 @@ public:
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
                                            bool with_continuum,
-                                           bool with_weight = true) {
+                                           bool with_weight = true) const {
     Float64 fit_allObs = 0;
     Float64 sumErr_allObs = 0;
     std::size_t nb_nan = 0;
-    for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
+    for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
       auto [fit, sumErr] =
           getSpectrumModel().getModelSquaredResidualUnderElements(
               EltsIdx, with_continuum, with_weight);
