@@ -566,7 +566,8 @@ class COperatorResultStore
 										 const std::string& method,
 										 const std::string& name ,
 								     const std::string &dataset,
-										 const int& rank
+										 const int& rank,
+                     bool firstpassResults
 										 ) const;
   std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,

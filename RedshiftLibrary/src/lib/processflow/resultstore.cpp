@@ -239,14 +239,15 @@ COperatorResultStore::GetLineModelResult(
 }
 
 std::shared_ptr<const TTplCombinationResult>
-COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
-                                              const std::string &stage,
-                                              const std::string &method,
-                                              const std::string &name,
-                                              const std::string &dataset,
-                                              const int &rank) const
+COperatorResultStore::GetTplCombinationResult(
+    const std::string &spectrumModel, const std::string &stage,
+    const std::string &method, const std::string &name,
+    const std::string &dataset, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
+  if (firstpassCorrespondingResult)
+    return nullptr;
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(spectrumModel, stage, method, name)
           .lock()
