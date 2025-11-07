@@ -443,135 +443,184 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     const std::string &opt_interp, bool opt_extinction, bool opt_dustFitting,
     const CPriorHelper::TPriorZEList &logpriorze, Int32 FitEbmvIdx,
     Int32 FitMeiksinIdx) {
-  Int32 componentCount = tplList.size();
+
   Log.LogInfo(Formatter() << " starting computation with N-template = "
-                          << componentCount);
+                          << tplList.size());
 
-  for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
-    if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
-    }
-    if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
-    }
-  }
-
-  Log.LogDebug(Formatter() << " allocating memory for buffers (N = "
-                           << componentCount << ")");
+  CheckTemplateInitialization(tplList, opt_extinction, opt_dustFitting);
 
   BasicFit_preallocateBuffers(spectrum, tplList);
 
-  // sort the redshift and keep track of the indexes
-  TFloat64List sortedRedshifts;
-  TFloat64List sortedIndexes;
-  // This is a vector of {value,index} pairs
-  vector<pair<Float64, Int32>> vp;
-  vp.reserve(redshifts.size());
-  for (Int32 i = 0; i < ssize(redshifts); i++) {
-    vp.push_back(make_pair(redshifts[i], i));
-  }
-  std::sort(vp.begin(), vp.end());
-  for (Int32 i = 0; i < ssize(vp); i++) {
-    sortedRedshifts.push_back(vp[i].first);
-    sortedIndexes.push_back(vp[i].second);
-  }
+  auto [sortedRedshifts, sortedIndexes] = SortRedshifts(redshifts);
 
-  Log.LogDebug(" prepare the results");
-
-  TIgmIsmIdxs igmIsmIdxs = m_templatesRebined_bf.front().GetIsmIgmIdxList(
+  auto igmIsmIdxs = m_templatesRebined_bf.front().GetIsmIgmIdxList(
       opt_extinction, opt_dustFitting, FitEbmvIdx, FitMeiksinIdx);
-  Int32 MeiksinListSize = igmIsmIdxs.igmIdxs.size();
-  Int32 EbmvListSize = igmIsmIdxs.ismIdxs.size();
-  Log.LogDebug(Formatter() << " prepare N ism coeffs = " << EbmvListSize);
-  Log.LogDebug(Formatter() << " prepare N igm coeffs = " << MeiksinListSize);
-  std::shared_ptr<CTplCombinationResult> result =
-      make_shared<CTplCombinationResult>(sortedRedshifts.size(), EbmvListSize,
-                                         MeiksinListSize, componentCount);
-  result->Redshifts = sortedRedshifts;
 
-  // default mask
-  bool useDefaultMask =
-      additional_spcMasks.size() != sortedRedshifts.size() ? true : false;
-  CMask default_spcMask(spectrum.GetSampleCount());
-  if (useDefaultMask)
-    for (Int32 km = 0; km < default_spcMask.GetMasksCount(); km++)
-      default_spcMask[km] = 1.0;
+  auto result = PrepareResult(sortedRedshifts, igmIsmIdxs, tplList.size());
 
-  if (additional_spcMasks.size() != sortedRedshifts.size() &&
-      additional_spcMasks.size() != 0)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "masks-list and redshift size do not match: "
-                       << additional_spcMasks.size()
-                       << "!=" << sortedRedshifts.size());
+  CMask defaultMask = CreateDefaultMaskIfNeeded(spectrum, additional_spcMasks,
+                                                sortedRedshifts, sortedIndexes);
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
-  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
-    const CMask &additional_spcMask =
-        useDefaultMask ? default_spcMask
-                       : additional_spcMasks[sortedIndexes[i]];
+  ComputeBasicFits(spectrum, tplList, sortedRedshifts, sortedIndexes,
+                   clampedlambdaRange, overlapThreshold, opt_extinction,
+                   opt_dustFitting, additional_spcMasks, defaultMask,
+                   logpriorze, igmIsmIdxs, *result);
 
-    const CPriorHelper::TPriorEList &logp =
-        logpriorze.size() > 0 && logpriorze.size() == sortedRedshifts.size()
-            ? logpriorze[i]
-            : CPriorHelper::TPriorEList();
+  CheckOverlapWarnings(*result, sortedRedshifts, overlapThreshold);
 
-    Float64 redshift = result->Redshifts[i];
-
-    STplcombination_basicfitresult fittingResults(EbmvListSize, MeiksinListSize,
-                                                  componentCount);
-
-    BasicFit(spectrum, tplList, clampedlambdaRange, redshift, overlapThreshold,
-             fittingResults, -1, opt_extinction, opt_dustFitting,
-             additional_spcMask, logp, igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
-
-    result->ChiSquare[i] = fittingResults.chiSquare;
-    result->FitQuality[i] = fittingResults.fitQuality;
-    result->Overlap[i] = fittingResults.overlapFraction;
-    result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
-    result->FitAmplitudeSigma[i] = fittingResults.fittingAmplitudeSigmas;
-    result->FitAmplitudeError[i] = fittingResults.fittingAmplitudeErrors;
-    result->SNR[i] = fittingResults.SNR;
-    result->FitCOV[i] = fittingResults.COV;
-    // result->LogPrior[i]=NAN: //not yet calculated
-    result->FitEbmvCoeff[i] = fittingResults.ebmvCoef;
-    result->FitMeiksinIdx[i] = fittingResults.meiksinIdx;
-    result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
-    result->IsmEbmvIdxIntermediate[i] = fittingResults.IsmCalzettiIdxInterm;
-    result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
-  }
-
-  // overlap warning
-  Float64 overlapValidInfZ = -1;
-  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
-    if (result->Overlap[i].front() >= overlapThreshold) {
-      overlapValidInfZ = sortedRedshifts[i];
-      break;
-    }
-  }
-  Float64 overlapValidSupZ = -1;
-  for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--) {
-    if (result->Overlap[i].front() >= overlapThreshold) {
-      overlapValidSupZ = sortedRedshifts[i];
-      break;
-    }
-  }
-  if (overlapValidInfZ != sortedRedshifts[0] ||
-      overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1]) {
-    Log.LogInfo(Formatter() << " overlap warning for: minz=" << overlapValidInfZ
-                            << ", maxz=" << overlapValidSupZ);
-  }
-
-  // estimate CstLog for PDF estimation
   result->CstLog =
       EstimateLikelihoodCstLogForSpectrum(spectrum, clampedlambdaRange);
 
-  // Deallocate the rebined template and mask buffers
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
 
   return result;
+}
+
+void COperatorTplcombination::CheckTemplateInitialization(
+    const TTemplateConstRefList &tplList, bool opt_extinction,
+    bool opt_dustFitting) const {
+
+  for (const auto &tpl : tplList) {
+    if (opt_dustFitting && tpl->CalzettiInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
+    }
+    if (opt_extinction && tpl->MeiksinInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
+    }
+  }
+}
+
+std::pair<TFloat64List, TFloat64List>
+COperatorTplcombination::SortRedshifts(const TFloat64List &redshifts) const {
+  std::vector<std::pair<Float64, Int32>> vp;
+  vp.reserve(redshifts.size());
+  for (Int32 i = 0; i < ssize(redshifts); i++)
+    vp.emplace_back(redshifts[i], i);
+
+  std::sort(vp.begin(), vp.end());
+
+  TFloat64List sortedValues, sortedIndexes;
+  for (auto &[val, idx] : vp) {
+    sortedValues.push_back(val);
+    sortedIndexes.push_back(idx);
+  }
+  return {std::move(sortedValues), std::move(sortedIndexes)};
+}
+
+std::shared_ptr<CTplCombinationResult>
+COperatorTplcombination::PrepareResult(const TFloat64List &sortedRedshifts,
+                                       const TIgmIsmIdxs &igmIsmIdxs,
+                                       Int32 componentCount) const {
+  Int32 MeiksinListSize = igmIsmIdxs.igmIdxs.size();
+  Int32 EbmvListSize = igmIsmIdxs.ismIdxs.size();
+
+  Log.LogDebug(Formatter() << " prepare N ism coeffs = " << EbmvListSize);
+  Log.LogDebug(Formatter() << " prepare N igm coeffs = " << MeiksinListSize);
+
+  auto result = std::make_shared<CTplCombinationResult>(
+      sortedRedshifts.size(), EbmvListSize, MeiksinListSize, componentCount);
+  result->Redshifts = sortedRedshifts;
+  return result;
+}
+
+CMask COperatorTplcombination::CreateDefaultMaskIfNeeded(
+    const CSpectrum &spectrum, const std::vector<CMask> &additional_spcMasks,
+    const TFloat64List &sortedRedshifts,
+    const TFloat64List &sortedIndexes) const {
+
+  bool useDefaultMask = additional_spcMasks.size() != sortedRedshifts.size();
+
+  CMask defaultMask(spectrum.GetSampleCount());
+  if (useDefaultMask) {
+    for (Int32 km = 0; km < defaultMask.GetMasksCount(); km++)
+      defaultMask[km] = 1.0;
+  }
+
+  if (additional_spcMasks.size() != sortedRedshifts.size() &&
+      !additional_spcMasks.empty()) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "masks-list and redshift size do not match: "
+                       << additional_spcMasks.size()
+                       << "!=" << sortedRedshifts.size());
+  }
+
+  return defaultMask;
+}
+
+void COperatorTplcombination::ComputeBasicFits(
+    const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
+    const TFloat64List &sortedRedshifts, const TFloat64List &sortedIndexes,
+    const TFloat64Range &clampedlambdaRange, Float64 overlapThreshold,
+    bool opt_extinction, bool opt_dustFitting,
+    const std::vector<CMask> &additional_spcMasks, const CMask &defaultMask,
+    const CPriorHelper::TPriorZEList &logpriorze, const TIgmIsmIdxs &igmIsmIdxs,
+    CTplCombinationResult &result) {
+
+  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
+    const CMask &mask = (additional_spcMasks.size() == sortedRedshifts.size())
+                            ? additional_spcMasks[sortedIndexes[i]]
+                            : defaultMask;
+
+    const CPriorHelper::TPriorEList &logp =
+        (logpriorze.size() == sortedRedshifts.size() && !logpriorze.empty())
+            ? logpriorze[i]
+            : CPriorHelper::TPriorEList();
+
+    Float64 z = result.Redshifts[i];
+
+    STplcombination_basicfitresult fit(
+        igmIsmIdxs.ismIdxs.size(), igmIsmIdxs.igmIdxs.size(), tplList.size());
+
+    BasicFit(spectrum, tplList, clampedlambdaRange, z, overlapThreshold, fit,
+             -1, opt_extinction, opt_dustFitting, mask, logp,
+             igmIsmIdxs.igmIdxs, igmIsmIdxs.ismIdxs);
+
+    result.ChiSquare[i] = fit.chiSquare;
+    result.FitQuality[i] = fit.fitQuality;
+    result.Overlap[i] = fit.overlapFraction;
+    result.FitAmplitude[i] = fit.fittingAmplitudes;
+    result.FitAmplitudeSigma[i] = fit.fittingAmplitudeSigmas;
+    result.FitAmplitudeError[i] = fit.fittingAmplitudeErrors;
+    result.SNR[i] = fit.SNR;
+    result.FitCOV[i] = fit.COV;
+    result.FitEbmvCoeff[i] = fit.ebmvCoef;
+    result.FitMeiksinIdx[i] = fit.meiksinIdx;
+    result.ChiSquareIntermediate[i] = fit.ChiSquareInterm;
+    result.IsmEbmvIdxIntermediate[i] = fit.IsmCalzettiIdxInterm;
+    result.IgmMeiksinIdxIntermediate[i] = fit.IgmMeiksinIdxInterm;
+  }
+}
+
+void COperatorTplcombination::CheckOverlapWarnings(
+    const CTplCombinationResult &result, const TFloat64List &sortedRedshifts,
+    Float64 overlapThreshold) const {
+
+  Float64 overlapValidInfZ = -1;
+  Float64 overlapValidSupZ = -1;
+
+  for (Int32 i = 0; i < ssize(sortedRedshifts); i++) {
+    if (result.Overlap[i].front() >= overlapThreshold) {
+      overlapValidInfZ = sortedRedshifts[i];
+      break;
+    }
+  }
+
+  for (Int32 i = ssize(sortedRedshifts) - 1; i >= 0; i--) {
+    if (result.Overlap[i].front() >= overlapThreshold) {
+      overlapValidSupZ = sortedRedshifts[i];
+      break;
+    }
+  }
+
+  if (overlapValidInfZ != sortedRedshifts.front() ||
+      overlapValidSupZ != sortedRedshifts.back()) {
+    Log.LogInfo(Formatter() << " overlap warning for: minz=" << overlapValidInfZ
+                            << ", maxz=" << overlapValidSupZ);
+  }
 }
 
 CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
