@@ -40,6 +40,7 @@
 from pylibamazed.AbstractOutput import AbstractOutput
 from pylibamazed.Parameters import Parameters
 from pylibamazed.PdfHandler import BuilderPdfHandler
+import numpy as np
 
 
 class PdfHandlerTestUtils:
@@ -68,7 +69,10 @@ class PdfHandlerTestUtils:
     def pdf_handler():
         abstract_output = PdfHandlerTestUtils.abstract_output()
         abstract_output.object_results = {
-            "some_object_type": {"pdf_params": PdfHandlerTestUtils.pdf_params(), "pdf": {"LogZPdfNative": ""}}
+            "some_object_type": {
+                "pdf_params": PdfHandlerTestUtils.pdf_params(),
+                "pdf": {"LogZPdfNative": np.array([])},
+            }
         }
         pdf_handler = BuilderPdfHandler().add_params(abstract_output, "some_object_type", True).build()
         return pdf_handler
