@@ -601,11 +601,6 @@ class CalibrationLibrary:
                         clf_dict = load_sklearn_classifier(classifier_file, classifier)
                         self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
                         self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
-            # if self.parameters.get_lsf_type() != "fromSpectrumData":
-            #     self.load_lsf()
-
-            # if self.parameters.get_photometry_transmission_dir() is not None:
-            #     self.load_photometric_bands()
         except FileNotFoundError as e:
             raise APIException(ErrorCode.INVALID_FILEPATH, str(e)) from None
 
