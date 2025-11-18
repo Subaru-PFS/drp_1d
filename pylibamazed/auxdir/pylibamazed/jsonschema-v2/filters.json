@@ -12,6 +12,7 @@
         "type": "object",
         "title": "Filter byValue",
         "additionalProperties": false,
+        "description": "A filter by value specifies a column name available in the input spectrum, a comparison operator and a constant value to compare with.",
         "properties": {
           "type": {
             "const": "byValue"
@@ -56,7 +57,7 @@
         "type": "object",
         "title": "Morphology Filter",
         "additionalProperties": false,
-        "description": "Morphology filter is used to apply a bitwise morphology operation on the spectrum. It is useful to remove isolated pixels or to smooth the selection. For instance : \n * To remove isolated pixels, use 'opening' [1,1] \n * To enlarge mask by one sample use 'erosion' [1, 1, 1]",
+        "description": "Morphology filter is used to apply a bitwise morphology operation on the combined mask obtained by the application of all the previous filters in the list. It can be used to remove isolated pixels left after masking by the other filters or to enlarge or shrink the mask. For instance : \n * To remove isolated pixels, use 'opening' [1,1] \n * To enlarge mask by one sample use 'erosion' [1, 1, 1]",
         "properties": {
           "type": {
             "const": "morphology"
@@ -64,6 +65,7 @@
           "instruction": {
             "type": "string",
             "title": "bitwise morphology operation",
+            "description": "By convention the mask, deduced from the previous filters, flags bad samples with 1 and good samples with 0. \n * **erosion**: shrinks ranges of contigous bad pixels (a kernel [1,1,1] for removing one pixel)\n * **dilation**: enlarges ranges of contiguous bad pixels\n * **opening**:  an erosion followed by a dilation, removes small spots of bad pixels\n * **closing**: a dilation followed by an erosion, connects near ranges of bad pixels",
             "enum": [
               "opening",
               "closing",
