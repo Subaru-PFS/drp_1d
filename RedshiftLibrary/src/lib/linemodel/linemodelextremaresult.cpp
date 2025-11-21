@@ -75,12 +75,25 @@ void TLineModelResult::updateTplRatioFromModel(
                          FittedTplratioAmplitudeUncertaintyAbs;
 }
 
+void TLineModelResult::updateFromFpCandidate(
+    std::shared_ptr<const TLineModelResult> const &firstPassCandidate) {
+  FittedTplratioName = firstPassCandidate->FittedTplratioName;
+  FittedTplratioIsmCoeff = firstPassCandidate->FittedTplratioIsmCoeff;
+  FittedTplratioAmplitudeEm = firstPassCandidate->FittedTplratioAmplitudeAbs;
+  FittedTplratioAmplitudeAbs = firstPassCandidate->FittedTplratioAmplitudeAbs;
+  FittedTplratioAmplitudeUncertaintyEm =
+      firstPassCandidate->FittedTplratioAmplitudeUncertaintyEm;
+  FittedTplratioAmplitudeUncertaintyAbs =
+      firstPassCandidate->FittedTplratioAmplitudeUncertaintyAbs;
+  FittedTplratioSNREm = firstPassCandidate->FittedTplratioSNREm;
+  FittedTplratioSNRAbs = firstPassCandidate->FittedTplratioSNRAbs;
+}
+
 void TLineModelResult::updateFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel,
     const std::shared_ptr<const CLineModelResult> &lmresult,
     bool estimateLeastSquareFast, int idx) {
   Merit = lmresult->ChiSquare[idx];
-
   //  LineModelSolutions
   Elv = lmresult->LineModelSolutions[idx].EmissionVelocity;
   Alv = lmresult->LineModelSolutions[idx].AbsorptionVelocity;

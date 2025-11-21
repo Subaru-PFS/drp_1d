@@ -54,7 +54,6 @@ class SubType:
             context.GetResultStore(), self.parameters, auto_load=False, extended_results=False
         )
         ret = []
-
         for rank in range(
             context.GetResultStore().getNbRedshiftCandidates(
                 self.object_type, "redshiftSolver", "lineModelSolve"

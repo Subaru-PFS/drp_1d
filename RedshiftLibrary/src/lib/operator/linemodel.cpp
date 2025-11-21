@@ -673,7 +673,10 @@ void COperatorLineModel::SetFirstPassCandidates(
     candidate->updateFromContinuumModelSolution(
         m_result->ContinuumModelSolutions[idx]);
     candidate->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
-    //... TODO: more first pass results can be saved here if needed
+    if (m_fittingManager->isLineRatioTplRatio())
+      candidate->updateTplRatioFromModel(
+          std::dynamic_pointer_cast<CTplratioManager>(
+              m_fittingManager->m_lineRatioManager));
   }
 }
 
@@ -793,7 +796,6 @@ COperatorLineModel::ComputeSecondPass() {
 std::shared_ptr<LineModelExtremaResult>
 COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
                                         const std::string &opt_continuumreest) {
-
   CAutoScope autoscope(Context.m_ScopeStack, "lineModel");
 
   CContinuumManager::EFitType savedFitContinuumOption =
@@ -905,7 +907,6 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
     m_fittingManager->SetVelocityAbsorption(
         m_result->LineModelSolutions[idx].AbsorptionVelocity);
     //}
-
     m_result->ChiSquare[idx] = m_fittingManager->fit(
         m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
         m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
@@ -977,7 +978,6 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       ExtremaResult->m_savedModelFittingResults[i] =
           std::make_shared<CLineModelSolution>(
               m_result->LineModelSolutions[idx]);
-
       // CModelRulesResult
       if (m_fittingManager->isLineRatioRules()) {
         ExtremaResult->m_savedModelRulesResults[i] =
@@ -1021,7 +1021,14 @@ COperatorLineModel::buildExtremaResults(const TCandidateZbyRank &zCandidates,
       candidate->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
               m_fittingManager->m_lineRatioManager));
-    // save the tplcorr/tplratio results
+
+    if (m_fittingManager->isLineRatioRatioToFree() && i_1pass != undefIdx) {
+      // In ratio to free case, we retrieve initial line ratio from first pass
+      // result store
+      auto const &firstPassCandidate =
+          m_firstpass_extremaResult->getRankedCandidateCPtr(i_1pass);
+      candidate->updateFromFpCandidate(firstPassCandidate);
+    }
   }
 
   // ComputeArea2(ExtremaResult);

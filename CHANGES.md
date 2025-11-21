@@ -17,6 +17,7 @@
 * [9015] : Fix determination of samples inside a wavelength interval, better handling holes due to masks. Strong impact on lines mostly masked
 * [10075] : Fix computation of power law reduced chi2
 * [9997] : Fix Internal Error empty leastsquare sum : handle cases where no samples is left outside mask to fit continuum in template fitting
+* [10114] : Fix SubClassifSolverError caused by ratioToFree. Enhance tplRatio first pass results filling.
 
 ## 1.14.0 (2025-08-26)
 ### Added

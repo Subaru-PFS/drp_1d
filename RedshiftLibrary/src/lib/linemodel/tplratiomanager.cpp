@@ -528,7 +528,6 @@ std::pair<Float64, Float64> CTplratioManager::computeMerit(Int32 itratio) {
 }
 
 void CTplratioManager::resetToBestRatio(Float64 redshift) {
-
   // first reinit all the elements:
   setTplratioModel(m_savedIdxFitted, redshift);
 
