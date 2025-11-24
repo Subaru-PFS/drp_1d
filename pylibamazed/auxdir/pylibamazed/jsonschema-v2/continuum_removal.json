@@ -24,8 +24,8 @@
     },
     "medianEvenReflection": {
       "type": "boolean",
-      "title": "Media even reflection",
-      "description": "Only for irregularSamplingMedian method. Use even or odd reflection to extend the flux"
+      "title": "Median even reflection",
+      "description": "Only for irregularSamplingMedian method. Wether to use even or odd reflection to extend the flux before smoothing. Odd reflexion is the prefered method."
     }
   }
 }

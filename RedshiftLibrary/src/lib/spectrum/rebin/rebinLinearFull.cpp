@@ -66,6 +66,9 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
       Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
+
+      // If both samples arround subsample are valid, compute flux, otherwise,
+      // set mask & flux to 0
       if (origin.getMask()[k] && origin.getMask()[k + 1]) {
         rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
         rebinedMask[cursor] = 1;
@@ -73,6 +76,8 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
         rebinedMask[cursor] = 0;
         rebinedFluxAxis[cursor] = 0;
       }
+
+      // Same for error
       if (opt_error_interp == "rebin" && origin.getMask()[k] &&
           origin.getMask()[k + 1])
         error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;

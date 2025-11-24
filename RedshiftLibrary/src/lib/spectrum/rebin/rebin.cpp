@@ -81,6 +81,7 @@ void CRebin::compute(const TFloat64Range &range,
   rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedMask,
         opt_error_interp, Xtgt, error_tmp, cursor);
 
+  // For every sample "after" the end of targetSpectralAxis set mask to 0 etc
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
     rebinedFluxAxis[cursor] = 0.0;

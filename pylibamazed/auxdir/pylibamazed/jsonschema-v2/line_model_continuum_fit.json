@@ -40,7 +40,7 @@
     "ignoreLineSupport": {
       "type": "boolean",
       "title": "Ignore lines support",
-      "description": "\n * **yes**: mask the lines to fit the continuum \n * **no**: the lines are inverse-weighted in the fit (orthogonalization of the continuum wrt the lines such that the joint fitting of the continnum amplitude and the lines amplitude can be done separately)"
+      "description": "\n * **true**: mask the lines to fit the continuum \n * **false**: the lines are inverse-weighted in the fit (orthogonalization of the continuum wrt the lines such that the joint fitting of the continnum amplitude and the lines amplitude can be done separately)"
     },
     "negativeThreshold": {
       "type": "number",

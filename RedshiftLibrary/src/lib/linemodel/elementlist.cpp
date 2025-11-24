@@ -109,8 +109,9 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
   return groups;
 }
 
-TInt32List CLineModelElementList::getOverlappingElements(
-    TInt32List &indicesToFit, Float64 redshift, Float64 overlapThres) const {
+TInt32List
+CLineModelElementList::getOverlappingElements(TInt32List &indicesToFit,
+                                              Float64 redshift) const {
   TInt32List overlappedIndices;
   Int32 const ind = indicesToFit.front();
   const auto &refElement = *m_Elements[ind];
@@ -269,7 +270,7 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
 
   // need to avoid overlapping polynomes since the ovelapping condition is
   // computed unsing the lambda range support of the lines that intersect with a
-  // bigger fraction than OVERLAP_THRES_HYBRID_FIT. It can lead to shared pixels
+  // big fraction. It can lead to shared pixels
   // between elements considered not overlapped. In this case we should not add
   // the overlapped polynomes, but choose one of them.
   TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);

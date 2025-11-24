@@ -32,7 +32,7 @@
         "lin",
         "preComputedFineGrid"
       ],
-      "description": "Interpolation method to redshift the template. \n * **lin**: linear interpolation done at each redshift \n * **precomputefinegrid**: precompute linear interpolation on a fine grid (0.1 Angstr\u00f6m), then do nearest grid point interpolation from the fine grid at each redshift.\n \n Note: Used with fftProcessing set to false"
+      "description": "Interpolation method to redshift the template. \n * **lin**: linear interpolation done at each redshift \n * **preComputedFineGrid**: precompute linear interpolation on a fine grid (0.1 Angstr\u00f6m), then do nearest grid point interpolation from the fine grid at each redshift.\n \n Note: Used with fftProcessing set to false"
     },
     "extremaCount": {
       "type": "integer",

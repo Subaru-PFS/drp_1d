@@ -71,7 +71,6 @@ CSvdFitter::CSvdFitter(const std::shared_ptr<CLMEltListVector> &elementsVector,
   }
 };
 
-// set all the amplitudes to 1.0
 void CSvdFitter::doFit(Float64 redshift) {
   // NB dummy multiobs implementation (functional for one obs only)
   m_spectraIndex.setAtBegining(); // temporary multiobs implementation
@@ -407,8 +406,7 @@ void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
     return;
 
   // set offset value
-  if (atLeastOneOffsetToFit)
-    setLambdaOffset(EltsIdx, idxBestMerit);
+  setLambdaOffset(EltsIdx, idxBestMerit);
   // fit again for this offset
   fitAmplitudesLinSolvePositive(EltsIdx, redshift);
 }

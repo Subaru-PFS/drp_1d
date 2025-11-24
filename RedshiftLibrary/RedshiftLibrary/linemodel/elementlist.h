@@ -52,8 +52,8 @@ private:
 public:
   TInt32List GetElementsIndicesInsideLambdaRange() const;
   TInt32List getNonZeroElementIndices(CLine::EType lineTypeFilter) const;
-  TInt32List getOverlappingElements(TInt32List &indicesToFit, Float64 redshift,
-                                    Float64 overlapThres) const;
+  TInt32List getOverlappingElements(TInt32List &indicesToFit,
+                                    Float64 redshift) const;
 
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 

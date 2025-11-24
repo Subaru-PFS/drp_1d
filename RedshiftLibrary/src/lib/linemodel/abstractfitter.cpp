@@ -202,7 +202,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   if (indices_Igm.empty())
     return;
 
-  // ASym Profile
+  // Asym Profile : if lya profile parameter is set to asym, lya is set here. If
+  // set to igm, then profile->isAsymFit() is false and nothing is done here.
   {
     auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
     line_idx_LyaE = line_indices_LyaE.front();
@@ -222,16 +223,17 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     }
   }
 
-  // deal with symIgm profiles
+  // deal with symIgm profiles. If lya profile parameter is set to igm, then
+  // isSymIgmFit() is false, and lya will be included here
   {
     std::vector<std::pair<Int32, TInt32List>> line_indices_tofit;
-    for (auto const &[elt_idx_igmLine, line_indices_LyaE] : indices_Igm) {
+    for (auto const &[elt_idx_igmLine, line_indices] : indices_Igm) {
       auto const &param_EltIgm =
           m_ElementsVector->getElementsParams()[elt_idx_igmLine];
 
       if (param_EltIgm->isNotFittable())
         continue;
-      auto line_indices_filtered = line_indices_LyaE;
+      auto line_indices_filtered = line_indices; // Contains lines to fit
       auto end = std::remove_if(
           line_indices_filtered.begin(), line_indices_filtered.end(),
           [&](Int32 idx) {

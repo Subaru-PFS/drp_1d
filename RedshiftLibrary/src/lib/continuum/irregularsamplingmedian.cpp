@@ -168,7 +168,7 @@ TFloat64List CContinuumIrregularSamplingMedian::OddMirror(
 }
 
 /**
- * Extends array with its own "reflection". Version for even-sized arrays.
+ * Extends array with its own "reflection"
  */
 TFloat64List CContinuumIrregularSamplingMedian::EvenMirror(
     const TFloat64List::const_iterator &begin,
