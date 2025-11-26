@@ -95,14 +95,14 @@ class AbstractExternalStorage(metaclass=ABCMeta):
 
     @abstractmethod
     @doc_method
-    def read(self, spectrum_id, path: str = "", obs_id: str = ""):
+    def read(self, spectrum_id: str, path: str, obs_id: str = ""):
         """
         Read a spectrum file and return its data.
 
         :param spectrun_id: id of the source
-        :type spectrum_id: any
+        :type spectrum_id: str
         :param path: path or anything else neded to acquire the resource
-        :type param path: str
+        :type path: str
         :param obs_id: id of the observation, for multiple observations of the same source
         :type obs_id: str
 
