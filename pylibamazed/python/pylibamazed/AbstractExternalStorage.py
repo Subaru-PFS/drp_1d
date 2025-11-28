@@ -71,7 +71,6 @@ class AbstractExternalStorage(metaclass=ABCMeta):
         if config.reader not in READER_CLASSES:
             raise Exception(f"Reader class must be one of the following: {READER_CLASSES}")
         self.config = config
-        self._spectrum_id = None
         self.spectrum_infos = dict()
         self.global_infos = dict()
 
