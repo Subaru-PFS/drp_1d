@@ -673,7 +673,7 @@ void COperatorLineModel::SetFirstPassCandidates(
     candidate->updateFromContinuumModelSolution(
         m_result->ContinuumModelSolutions[idx]);
     candidate->updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
-    if (m_fittingManager->isLineRatioTplRatio())
+    if (m_fittingManager->isLineRatioRatioToFree())
       candidate->updateTplRatioFromModel(
           std::dynamic_pointer_cast<CTplratioManager>(
               m_fittingManager->m_lineRatioManager));
