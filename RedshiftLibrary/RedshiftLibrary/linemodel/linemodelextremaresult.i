@@ -54,6 +54,7 @@ public:
   void updateFromModel(const std::shared_ptr<const CLineModelFitting> &lmel,
                        const std::shared_ptr<const CLineModelResult> &lmresult,
                        bool estimateLeastSquareFast, int indx);
+  void updateFromFpCandidate(std::shared_ptr<const TLineModelResult> const &firstPassCandidate);
 
   Float64 MeritContinuum = NAN; // best continum  chi2
   Float64 Merit = NAN;          // fullmodel best chi2

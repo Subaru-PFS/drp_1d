@@ -94,6 +94,7 @@ public:
   virtual bool isRules() const { return false; };
   virtual bool isTplRatio() const { return false; };
   virtual bool isTplCorr() const { return false; };
+  virtual bool isRatioToFree() const { return false; };
 
   void SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   } // TODO, called in computeFirstPass in the general case but only active when

@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.15
+## 1.17
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+* [10114] : Fix SubClassifSolverError caused by ratioToFree. Enhance tplRatio first pass results filling.
+
+## 1.16.0 (2025-11-20)
 ### Added
 * [10031] : Add a minimal number of samples to fit a continuum (one new parameter `nbSamplesMinForContinuumFit`) and provide the number of pixels effectively used for fitting (two new output results `ContinuumNPixelsUsedForFit` & `ContinuumNPixelsOfResiduals`)
 * [7982] : Add a condition to assess the minimal fraction of a line to be fitted (two new parameters `maxDistanceToLine` & `nbSamplesMinForLineFit`)
@@ -9,8 +17,6 @@
 * [10103] : Add parameters for fitting of the wavelength offset of lines (two new parameters `lbdaOffsetMax` & `lbdaOffsetStep`)
 * [9060] : Add Soft Voting for reliability deep learning solver
 * [9962] : Provide the number of samples used to fit each line (two new output results `[FittedLine|Linemeas]NSamples`)
-### Changed
-### Deprecated
 ### Removed
 * [9882] : Remove first pass results from `TplCombinationSolve`
 ### Fixed

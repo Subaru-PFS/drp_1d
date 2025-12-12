@@ -65,6 +65,7 @@ public:
   };
   bool isTplRatio() const override { return m_pass == 1; };
   bool isRules() const override { return m_pass == 2; };
+  bool isRatioToFree() const override { return true; };
 
   void setChiSquareRatioResult(
       const Int32 index_z,

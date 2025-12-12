@@ -220,6 +220,9 @@ public:
   bool isLineRatioRules() const { return m_lineRatioManager->isRules(); }
 
   bool isLineRatioTplRatio() const { return m_lineRatioManager->isTplRatio(); }
+  bool isLineRatioRatioToFree() const {
+    return m_lineRatioManager->isRatioToFree();
+  }
 
   bool isLineRatioTplCorr() const { return m_lineRatioManager->isTplCorr(); }
 

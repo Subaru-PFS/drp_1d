@@ -427,11 +427,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
         bool modelSolutionLevel = isLineRatioRules() ? fullSolution : false;
+        m_lineRatioManager->saveResults(itratio);
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolutionCopy();
-
-        m_lineRatioManager->saveResults(itratio);
       }
       if (isContinuumComponentNoContinuum()) {
         m_models->reinitAllModels();
