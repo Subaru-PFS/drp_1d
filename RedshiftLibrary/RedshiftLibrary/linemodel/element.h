@@ -88,6 +88,7 @@ public:
                       Float64 redshift, const TFloat64Range &lambdaRange,
                       Float64 max_offset = 0.0);
   TInt32RangeList getSupportNoOverlap() const;
+  TInt32RangeList getSortedSupportNoOverlap() const;
   TInt32RangeList getSupport() const;
   Int32 getLeftSampleIndex() const;
 

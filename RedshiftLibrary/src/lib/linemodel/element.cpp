@@ -423,6 +423,20 @@ TInt32RangeList CLineModelElement::getSupportNoOverlap() const {
   return support;
 }
 
+TInt32RangeList CLineModelElement::getSortedSupportNoOverlap() const {
+  TInt32RangeList support;
+  if (m_OutsideLambdaRange)
+    return support;
+
+  ASSERT(!m_sortedLineIndices.empty(), ErrorCode::INTERNAL_ERROR,
+         "m_sortedLineIndices was not computed");
+
+  for (Int32 index : m_sortedLineIndices)
+    support.push_back(m_rangeNoOverlap[index]);
+
+  return support;
+}
+
 TInt32RangeList CLineModelElement::getSupport() const {
   TInt32RangeList support;
 
