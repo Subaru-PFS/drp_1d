@@ -165,10 +165,7 @@ std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
   return std::make_pair(cont, contStd);
 }
 
-/**
- * \brief Returns the theoretical support range for the line
- **/
-void CLineModelElement::EstimateTheoreticalSupport(
+void CLineModelElement::EstimateSupport(
     Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
     Float64 redshift, const TFloat64Range &lambdaRange, Float64 max_offset) {
   Float64 mu = GetObservedPosition(line_index, redshift);
@@ -185,7 +182,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
-  m_rangeTheoretical[line_index] = supportRange;
+  m_range[line_index] = supportRange;
   m_rangeNoOverlap[line_index] = supportRange;
 
   EstimateLineVisbility(line_index, spectralAxis, mu, sigma,
@@ -196,7 +193,7 @@ void CLineModelElement::EstimateLineVisbility(
     Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
     Float64 line_lambda, Float64 sigma, Float64 max_offset) {
 
-  auto const &supportRange = m_rangeTheoretical[line_index];
+  auto const &supportRange = m_range[line_index];
   if (supportRange.GetLength() < 0) {
     // in this case the line is completely outside the
     // lambdarange
@@ -285,13 +282,13 @@ void CLineModelElement::initSupport(const CSpectrumSpectralAxis &spectralAxis,
   Int32 nLines = GetSize();
   m_OutsideLambdaRange = true;
   m_rangeNoOverlap.assign(nLines, TInt32Range{undefIdx, undefIdx});
-  m_rangeTheoretical.assign(nLines, TInt32Range{undefIdx, undefIdx});
+  m_range.assign(nLines, TInt32Range{undefIdx, undefIdx});
   m_OutsideLambdaRangeList.assign(nLines, true);
   m_LineIsActiveOnSupport.assign(nLines, TBoolList(nLines, false));
+  m_sortedLineIndices.clear();
 
   for (Int32 index = 0; index != nLines; ++index) {
-    EstimateTheoreticalSupport(index, spectralAxis, redshift, lambdaRange,
-                               max_offset);
+    EstimateSupport(index, spectralAxis, redshift, lambdaRange, max_offset);
     // set the lines active on their own support
     m_LineIsActiveOnSupport[index][index] = true;
   }
@@ -309,38 +306,35 @@ bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
   return true;
 }
 
-TInt32List CLineModelElement::sortLinesByLeftIndex() const {
+void CLineModelElement::sortLinesByLeftIndex() {
   Int32 nLines = GetSize();
-  TInt32List sortedIndices;
-  sortedIndices.reserve(nLines);
+  m_sortedLineIndices.reserve(nLines);
 
   // list visible lines
   for (Int32 index = 0; index != nLines; ++index)
     if (!m_OutsideLambdaRangeList[index])
-      sortedIndices.push_back(index);
+      m_sortedLineIndices.push_back(index);
 
   // then sort by left most index
-  std::sort(sortedIndices.begin(), sortedIndices.end(),
+  std::sort(m_sortedLineIndices.begin(), m_sortedLineIndices.end(),
             [this](Int32 l, Int32 r) {
               return m_rangeNoOverlap[l] < m_rangeNoOverlap[r];
             });
-
-  return sortedIndices;
 }
 
-void CLineModelElement::resolveOverlaps() {
+void CLineModelElement::mergeOverlapingLines() {
   auto alreadyMerged = [this](Int32 index) {
     return m_rangeNoOverlap[index].GetLength() < 0;
   };
 
-  auto const &sortedLines = sortLinesByLeftIndex();
-  for (auto iter_left = sortedLines.begin(); iter_left != sortedLines.end();
-       ++iter_left) {
+  // assumes lines are sorted by left boundary
+  for (auto iter_left = m_sortedLineIndices.begin();
+       iter_left != m_sortedLineIndices.end(); ++iter_left) {
     if (alreadyMerged(*iter_left))
       continue;
 
-    for (auto iter_right = iter_left + 1; iter_right != sortedLines.end();
-         ++iter_right) {
+    for (auto iter_right = iter_left + 1;
+         iter_right != m_sortedLineIndices.end(); ++iter_right) {
       if (alreadyMerged(*iter_right))
         continue;
 
@@ -358,7 +352,8 @@ void CLineModelElement::prepareSupport(
   initSupport(spectralAxis, redshift, lambdaRange, max_offset);
 
   if (!IsOutsideLambdaRange()) {
-    resolveOverlaps();
+    sortLinesByLeftIndex();
+    mergeOverlapingLines();
     if (detectRemainingOverlaps())
       THROWG(ErrorCode::INTERNAL_ERROR, "Remaining overlaps");
   }
@@ -414,7 +409,7 @@ void CLineModelElement::propagateOverlap(Int32 i, Int32 j) {
  *m_OutsideLambdaRange, for each m_Lines element which is also not outside
  *lambda range, add its support to the return value.
  **/
-TInt32RangeList CLineModelElement::getSupport() const {
+TInt32RangeList CLineModelElement::getSupportNoOverlap() const {
   TInt32RangeList support;
   if (m_OutsideLambdaRange)
     return support;
@@ -428,7 +423,7 @@ TInt32RangeList CLineModelElement::getSupport() const {
   return support;
 }
 
-TInt32RangeList CLineModelElement::getTheoreticalSupport() const {
+TInt32RangeList CLineModelElement::getSupport() const {
   TInt32RangeList support;
 
   if (m_OutsideLambdaRange)
@@ -438,7 +433,7 @@ TInt32RangeList CLineModelElement::getTheoreticalSupport() const {
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    support.push_back(m_rangeTheoretical[index]);
+    support.push_back(m_range[index]);
   }
 
   return support;
@@ -841,8 +836,7 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
        << m_ElementParam->m_FittedAmplitudesStd[i] << "\t"
        << m_ElementParam->m_NominalAmplitudes[i] << "\t"
        << m_rangeNoOverlap[i].GetBegin() << "\t" << m_rangeNoOverlap[i].GetEnd()
-       << "\t" << m_rangeTheoretical[i].GetBegin() << "\t"
-       << m_rangeTheoretical[i].GetEnd() << "\n";
+       << "\t" << m_range[i].GetBegin() << "\t" << m_range[i].GetEnd() << "\n";
   }
 
   os << "\n";

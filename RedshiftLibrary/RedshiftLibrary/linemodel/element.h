@@ -87,21 +87,22 @@ public:
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange,
                       Float64 max_offset = 0.0);
+  TInt32RangeList getSupportNoOverlap() const;
   TInt32RangeList getSupport() const;
-  TInt32RangeList getTheoreticalSupport() const;
-  void EstimateTheoreticalSupport(Int32 line_index,
-                                  const CSpectrumSpectralAxis &spectralAxis,
-                                  Float64 redshift,
-                                  const TFloat64Range &lambdaRange,
-                                  Float64 max_offset = 0.0);
+  Int32 getLeftSampleIndex() const;
+
+  void EstimateSupport(Int32 line_index,
+                       const CSpectrumSpectralAxis &spectralAxis,
+                       Float64 redshift, const TFloat64Range &lambdaRange,
+                       Float64 max_offset = 0.0);
   void EstimateLineVisbility(Int32 line_index,
                              const CSpectrumSpectralAxis &spectralAxis,
                              Float64 line_lambda, Float64 sigma,
                              Float64 max_offset);
   void computeOutsideLambdaRange();
 
+  TInt32Range const &getSupportNoOverlapSubElt(Int32 line_index) const;
   TInt32Range const &getSupportSubElt(Int32 line_index) const;
-  TInt32Range const &getTheoreticalSupportSubElt(Int32 line_index) const;
 
   static TInt32Range
   EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
@@ -199,7 +200,8 @@ protected:
   std::vector<TBoolList> m_LineIsActiveOnSupport;
 
   TInt32RangeList m_rangeNoOverlap;
-  TInt32RangeList m_rangeTheoretical;
+  TInt32RangeList m_range;
+  TInt32List m_sortedLineIndices;
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
@@ -207,8 +209,8 @@ protected:
   void initSupport(const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
                    const TFloat64Range &lambdaRange, Float64 max_offset = 0.0);
   bool mergeIfOverlapping(Int32 i, Int32 j);
-  TInt32List sortLinesByLeftIndex() const;
-  void resolveOverlaps();
+  void sortLinesByLeftIndex();
+  void mergeOverlapingLines();
   bool detectRemainingOverlaps();
   void propagateOverlap(Int32 i, Int32 j);
 };
@@ -231,13 +233,19 @@ inline bool CLineModelElement::isLineActiveOnSupport(Int32 lineindexA,
 }
 
 inline TInt32Range const &
-CLineModelElement::getSupportSubElt(Int32 line_index) const {
+CLineModelElement::getSupportNoOverlapSubElt(Int32 line_index) const {
   return m_rangeNoOverlap[line_index];
 }
 
 inline TInt32Range const &
-CLineModelElement::getTheoreticalSupportSubElt(Int32 line_index) const {
-  return m_rangeTheoretical[line_index];
+CLineModelElement::getSupportSubElt(Int32 line_index) const {
+  return m_range[line_index];
+}
+
+inline Int32 CLineModelElement::getLeftSampleIndex() const {
+  ASSERT(!m_sortedLineIndices.empty(), ErrorCode::INTERNAL_ERROR,
+         "m_sortedLineIndices was not computed");
+  return m_range[m_sortedLineIndices.front()].GetBegin();
 }
 
 inline void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {

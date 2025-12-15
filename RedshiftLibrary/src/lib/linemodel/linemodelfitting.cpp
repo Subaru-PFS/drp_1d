@@ -622,7 +622,7 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
         continue;
       auto const &line = elt_param->GetLines()[index];
       isStrongList.push_back(line.IsStrong());
-      supportList.push_back(elt->getTheoreticalSupportSubElt(index));
+      supportList.push_back(elt->getSupportSubElt(index));
     }
   }
 
@@ -902,7 +902,7 @@ Int32 CLineModelFitting::computeNSamplesUnderLine(Int32 eIdx,
     const auto &elt = getElementList()[eIdx];
     if (elt->IsOutsideLambdaRangeLine(line_index))
       continue;
-    NSamples += elt->getTheoreticalSupportSubElt(line_index).GetLength() + 1;
+    NSamples += elt->getSupportSubElt(line_index).GetLength() + 1;
   }
   return NSamples;
 }

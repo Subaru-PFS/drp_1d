@@ -257,7 +257,7 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
   Float64 currentLbda = spectralAxis[sampleIndex];
 
   for (const Int32 iElts : EltsIdx) {
-    for (const auto &range : m_Elements[iElts]->getTheoreticalSupport()) {
+    for (const auto &range : m_Elements[iElts]->getSupport()) {
       if (sampleIndex <= range.GetBegin() || sampleIndex >= range.GetEnd())
         continue;
 
@@ -289,7 +289,7 @@ CSpectrumModel::GetLineRangeAndProfile(Int32 eIdx, Int32 line_id,
 
   auto const &profile = elt->getElementParam()->getLineProfile(line_id);
 
-  TInt32Range const indexRange = elt->getTheoreticalSupportSubElt(line_id);
+  TInt32Range const indexRange = elt->getSupportSubElt(line_id);
 
   auto const &[mu, sigma] =
       elt->getObservedPositionAndLineWidth(redshift, line_id);

@@ -251,7 +251,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
     if (m_Elements[iElts]->IsOutsideLambdaRange())
       continue;
 
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
+    TInt32RangeList s = m_Elements[iElts]->getSupportNoOverlap();
     support.insert(support.end(), s.begin(), s.end());
   }
 
@@ -450,7 +450,7 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
     if (sigma_support ==
         elt->getElementParam()->getLineProfile(subeIdx)->GetNSigmaSupport()) {
       // same Nsigma support, get already computed support indices
-      indexRangeList[i] = elt->getTheoreticalSupportSubElt(subeIdx);
+      indexRangeList[i] = elt->getSupportSubElt(subeIdx);
     } else {
       // different Nsigma support, thus need to recompute support indices
       auto const &[mu, LineWidth] =
