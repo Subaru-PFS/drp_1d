@@ -101,7 +101,12 @@ class TestLineMeasSolve:
 
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
             param_dict = self._make_parameter_dict(
-                **{"fittingMethod": "lbfgsb", "velocityFit": False, "lbdaOffsetFit": False}
+                **{
+                    "fittingMethod": "lbfgsb",
+                    "velocityFit": False,
+                    "lbdaOffsetFit": False,
+                    "ampOffsetFit": False,
+                }
             )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
@@ -120,6 +125,7 @@ class TestLineMeasSolve:
                     "fittingMethod": fitting_method,
                     "velocityFit": velocity_fit,
                     "lbdaOffsetFit": True,
+                    "ampOffsetFit": False,
                     "lbdaOffsetMax": 400,
                     "lbdaOffsetStep": lbda_offset_step,
                 }
@@ -158,10 +164,48 @@ class TestLineMeasSolve:
             ):
                 check_from_parameter_dict(param_dict)
 
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_Ok_if_ampOffsetFit_and_mandatory_fields_present(self, fitting_method, zflag):
+            velocity_fit = False if fitting_method == "lbfgsb" else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "fittingMethod": fitting_method,
+                    "velocityFit": velocity_fit,
+                    "lbdaOffsetFit": False,
+                    "ampOffsetFit": True,
+                    "nSigmaAmpOffset": 6,
+                }
+            )
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_ampOffsetFit_and_mandatory_nsigmaAmpOffset_absent(self, fitting_method, zflag):
+            velocity_fit = False if fitting_method == "lbfgsb" else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "fittingMethod": fitting_method,
+                    "velocityFit": velocity_fit,
+                    "lbdaOffsetFit": False,
+                    "ampOffsetFit": True,
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineMeasSolve lineModel nSigmaAmpOffset"
+            ):
+                check_from_parameter_dict(param_dict)
+
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
             param_dict = make_parameter_dict_at_linemeas_solve_level(
-                **{"lineModel": {"fittingMethod": "lbfgsb", "lbdaOffsetFit": False, **kwargs}}
+                **{
+                    "lineModel": {
+                        "fittingMethod": "lbfgsb",
+                        "lbdaOffsetFit": False,
+                        "ampOffsetFit": False,
+                        **kwargs,
+                    }
+                }
             )
             return param_dict
 
@@ -169,7 +213,12 @@ class TestLineMeasSolve:
             param_dict = make_parameter_dict_linemeas_solve_piped_linemodel(
                 linemodel_level_params=linemodel_params,
                 linemeas_level_params={
-                    "lineModel": {"fittingMethod": "lbfgsb", "lbdaOffsetFit": False, **linemeas_params}
+                    "lineModel": {
+                        "fittingMethod": "lbfgsb",
+                        "lbdaOffsetFit": False,
+                        "ampOffsetFit": False,
+                        **linemeas_params,
+                    }
                 },
             )
             return param_dict

@@ -111,6 +111,8 @@ CLineModelFitting::CLineModelFitting(
   initParameters();
   // override ortho specific parameters
   m_fittingmethod = "hybrid";
+  m_enableAmplitudeOffsets = false;
+  m_enableLbdaOffsets = false;
 
   auto lineRatioType = CLineRatioManager::EType::rules;
   initMembers(continuumFittingOperator, lineRatioType,
@@ -125,8 +127,6 @@ CLineModelFitting::CLineModelFitting(
 void CLineModelFitting::initParameters() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
-  m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
-  m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
@@ -134,6 +134,14 @@ void CLineModelFitting::initParameters() {
     m_opt_secondpass_fittingmethod = m_fittingmethod;
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
+  }
+
+  std::set<std::string> const lbdaOffsetFitters{"svd", "hybrid", "lbfgsb"};
+  if (lbdaOffsetFitters.find(m_fittingmethod) != lbdaOffsetFitters.end() ||
+      lbdaOffsetFitters.find(m_opt_firstpass_fittingmethod) !=
+          lbdaOffsetFitters.end()) {
+    m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
+    m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
   }
 
   TContinuumComponent continuumComponent(

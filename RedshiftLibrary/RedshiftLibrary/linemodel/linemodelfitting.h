@@ -323,14 +323,14 @@ private:
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;
-  std::string m_opt_firstpass_fittingmethod = "hybrid";
-  std::string m_opt_secondpass_fittingmethod = "hybrid";
+  std::string m_opt_firstpass_fittingmethod;
+  std::string m_opt_secondpass_fittingmethod;
 
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
-  bool m_enableAmplitudeOffsets;
-  bool m_enableLbdaOffsets;
+  bool m_enableAmplitudeOffsets = false;
+  bool m_enableLbdaOffsets = false;
 
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
