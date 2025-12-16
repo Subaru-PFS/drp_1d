@@ -232,24 +232,25 @@ CLineModelElementList::findElementIndex(Int32 line_id) const {
  *index. Sort this list and remove multiple entries. Return this clean list.
  **/
 TInt32List
-CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
+CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx,
+                                         bool polynomialMargin) const {
   TInt32List indexes;
 
   if (!EltsIdx.size())
     return indexes;
-  TInt32RangeList support;
+  TInt32RangeList supportList;
   for (Int32 iElts : EltsIdx) {
     if (m_Elements[iElts]->IsOutsideLambdaRange())
       continue;
 
-    TInt32RangeList s = m_Elements[iElts]->getSupportNoOverlap();
-    support.insert(support.end(), s.begin(), s.end());
+    TInt32RangeList s =
+        m_Elements[iElts]->getSupportNoOverlap(polynomialMargin);
+    supportList.insert(supportList.end(), s.begin(), s.end());
   }
 
-  for (Int32 iS = 0; iS < ssize(support); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++)
+  for (auto const &support : supportList)
+    for (Int32 j : support)
       indexes.push_back(j);
-  }
 
   std::sort(indexes.begin(), indexes.end());
   indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
@@ -281,7 +282,7 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
                  });
     if (valid_eIdx_list.empty())
       continue;
-    auto samples = getSupportIndexes(valid_eIdx_list);
+    auto samples = getSupportIndexes(valid_eIdx_list, true);
     const auto &pCoeffs = m_Elements[valid_eIdx_list.front()]
                               ->getElementParam()
                               ->GetPolynomCoeffs();

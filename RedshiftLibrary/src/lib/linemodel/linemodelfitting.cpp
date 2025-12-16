@@ -205,7 +205,8 @@ void CLineModelFitting::setElementsVector(
   // Here must pass lineRatioType as arg because is used before
   // m_lineRatioManager initialization
   m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_spectraIndex, m_RestLineList, element_composition);
+      m_spectraIndex, m_RestLineList, element_composition,
+      m_enableAmplitudeOffsets);
 }
 
 void CLineModelFitting::logParameters() {

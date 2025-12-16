@@ -107,7 +107,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   if (EltsIdx.size() < 1)
     THROWG(ErrorCode::INTERNAL_ERROR, "empty Line element list to fit");
 
-  TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
+  TInt32List xInds = getElementList().getSupportIndexes(EltsIdx, useAmpOffset);
   Int32 n = xInds.size();
   if (n < 1)
     THROWG(ErrorCode::INTERNAL_ERROR,

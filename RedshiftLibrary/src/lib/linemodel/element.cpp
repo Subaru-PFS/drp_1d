@@ -53,12 +53,9 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    const TLineModelElementParam_ptr elementParam, Float64 maxDistanceToLine,
-    Int32 minSamplesNumberForLineFit)
-    : m_ElementParam(std::move(elementParam)),
-      m_maxDistanceToLine(maxDistanceToLine),
-      m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
-      m_OutsideLambdaRange(true), m_size(m_ElementParam->size()){};
+    const TLineModelElementParam_ptr elementParam)
+    : m_ElementParam(std::move(elementParam)), m_OutsideLambdaRange(true),
+      m_size(m_ElementParam->size()){};
 
 void TLineModelElementParam::resetFittingParams() {
   // init the fitted amplitude values and related variables
@@ -179,14 +176,21 @@ void CLineModelElement::EstimateSupport(
   Float64 winsize =
       getElementParam()->getLineProfile(line_index)->GetNSigmaSupport() * sigma;
   winsize += 2 * max_offset_angstrom;
-  TInt32Range supportRange =
+  m_range[line_index] =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
-  m_range[line_index] = supportRange;
-  m_rangeNoOverlap[line_index] = supportRange;
+  m_rangeNoOverlap[line_index] = m_range[line_index];
 
   EstimateLineVisbility(line_index, spectralAxis, mu, sigma,
                         max_offset_angstrom);
+
+  if (getElementParam()->m_useAmpOffsetsCoeffs &&
+      !m_OutsideLambdaRangeList[line_index]) {
+    winsize += getElementParam()->m_nSigmaAmpOffsets * sigma;
+    m_rangeNoOverlapMargin[line_index] =
+        EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
+    ;
+  }
 }
 
 void CLineModelElement::EstimateLineVisbility(
@@ -212,9 +216,11 @@ void CLineModelElement::EstimateLineVisbility(
       [line_lambda](Float64 lambda) { return std::abs(lambda - line_lambda); });
   auto const &min_distance =
       *std::min_element(distance.begin(), distance.end());
-
-  if (min_distance > (m_maxDistanceToLine * sigma + max_offset) ||
-      (nsupport < m_minSamplesNumberForLineFit)) {
+  auto const maxDistanceToLine = getElementParam()->m_maxDistanceToLine;
+  auto const minSamplesNumberForLineFit =
+      getElementParam()->m_minSamplesNumberForLineFit;
+  if (min_distance > (maxDistanceToLine * sigma + max_offset) ||
+      (nsupport < minSamplesNumberForLineFit)) {
     m_OutsideLambdaRangeList[line_index] = true;
   } else {
     m_OutsideLambdaRangeList[line_index] = false;
@@ -282,6 +288,7 @@ void CLineModelElement::initSupport(const CSpectrumSpectralAxis &spectralAxis,
   Int32 nLines = GetSize();
   m_OutsideLambdaRange = true;
   m_rangeNoOverlap.assign(nLines, TInt32Range{undefIdx, undefIdx});
+  m_rangeNoOverlapMargin.assign(nLines, TInt32Range{undefIdx, undefIdx});
   m_range.assign(nLines, TInt32Range{undefIdx, undefIdx});
   m_OutsideLambdaRangeList.assign(nLines, true);
   m_LineIsActiveOnSupport.assign(nLines, TBoolList(nLines, false));
@@ -303,6 +310,10 @@ bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
   // deactivate j
   m_rangeNoOverlap[j] = {m_rangeNoOverlap[i].GetEnd(),
                          m_rangeNoOverlap[i].GetEnd() - 1};
+  if (getElementParam()->m_useAmpOffsetsCoeffs)
+    m_rangeNoOverlapMargin[j] = {m_rangeNoOverlapMargin[i].GetEnd(),
+                                 m_rangeNoOverlapMargin[i].GetEnd() - 1};
+
   return true;
 }
 
@@ -409,16 +420,19 @@ void CLineModelElement::propagateOverlap(Int32 i, Int32 j) {
  *m_OutsideLambdaRange, for each m_Lines element which is also not outside
  *lambda range, add its support to the return value.
  **/
-TInt32RangeList CLineModelElement::getSupportNoOverlap() const {
+TInt32RangeList
+CLineModelElement::getSupportNoOverlap(bool polynomialMargin) const {
   TInt32RangeList support;
   if (m_OutsideLambdaRange)
     return support;
 
+  auto const &rangeNoOverlap =
+      polynomialMargin ? m_rangeNoOverlapMargin : m_rangeNoOverlap;
   for (Int32 index = 0; index != GetSize(); ++index) {
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    support.push_back(m_rangeNoOverlap[index]);
+    support.push_back(rangeNoOverlap[index]);
   }
   return support;
 }

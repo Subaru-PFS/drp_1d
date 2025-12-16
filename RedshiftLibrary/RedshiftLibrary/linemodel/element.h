@@ -71,9 +71,7 @@ using ConstTLineModelElementParam_ptr =
 class CLineModelElement {
 
 public:
-  CLineModelElement(const TLineModelElementParam_ptr elementParam,
-                    Float64 maxDistanceToLine = 1.0,
-                    Int32 minSamplesNumberForLineFit = -1);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam);
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -87,7 +85,7 @@ public:
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange,
                       Float64 max_offset = 0.0);
-  TInt32RangeList getSupportNoOverlap() const;
+  TInt32RangeList getSupportNoOverlap(bool polynomialMargin = false) const;
   TInt32RangeList getSortedSupportNoOverlap() const;
   TInt32RangeList getSupport() const;
   Int32 getLeftSampleIndex() const;
@@ -191,9 +189,6 @@ protected:
 
   const TLineModelElementParam_ptr m_ElementParam;
 
-  Float64 m_maxDistanceToLine;
-  Int32 m_minSamplesNumberForLineFit;
-
   bool m_OutsideLambdaRange;
 
   std::shared_ptr<const CLSF> m_LSF;
@@ -201,6 +196,7 @@ protected:
   std::vector<TBoolList> m_LineIsActiveOnSupport;
 
   TInt32RangeList m_rangeNoOverlap;
+  TInt32RangeList m_rangeNoOverlapMargin;
   TInt32RangeList m_range;
   TInt32List m_sortedLineIndices;
 
