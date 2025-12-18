@@ -63,13 +63,15 @@ Float64 computeResidual(const Float64 expData, const Float64 refData,
 
 TFitQuality computeFitQuality(TFloat64List spcFlux, TFloat64List modelFlux,
                               TFloat64List spcFluxError, Float64 chi2 = NAN,
-                              Int32 nPixels = undefIdx);
+                              Int32 nPixelsOfResiduals = undefIdx,
+                              Int32 nPixelsUsedForFit = undefIdx);
 
 TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
                               const std::vector<TFloat64List> &modelFlux,
                               const std::vector<TFloat64List> &spcFluxError,
                               Float64 chi2 = NAN,
-                              Int32 nPixels = undefIdx,
+                              Int32 nPixelsOfResiduals = undefIdx,
+                              Int32 nPixelsUsedForFit = undefIdx,
                               const std::vector<CMask> &mask = {});
 }; // namespace NSEpic::NSFitQuality
 

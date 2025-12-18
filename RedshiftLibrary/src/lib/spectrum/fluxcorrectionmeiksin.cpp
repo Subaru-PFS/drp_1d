@@ -110,7 +110,7 @@ Float64 CSpectrumFluxCorrectionMeiksin::getCorrectionDerivLbdaRest(
  */
 Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
   Int32 index = undefIdx;
-  TFloat64Index::getClosestLowerIndex(m_zbins, z, index);
+  NSIndexing::getClosestLowerIndex(m_zbins, z, index);
 
   // keep last curves above last bin
   if (index == ssize(m_zbins) - 1)

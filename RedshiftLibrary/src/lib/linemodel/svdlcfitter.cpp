@@ -80,7 +80,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
 
   std::string fitGroupTag = "svdlc";
-  for (auto const &param : m_ElementsVector->getElementParam())
+  for (auto const &param : m_ElementsVector->getElementsParams())
     param->SetFittingGroupInfo(fitGroupTag);
 
   TFloat64List ampsfitted;
@@ -130,9 +130,9 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
       std ::max(m_fitc_polyOrder + 1,
                 0); // number of param to be fitted=nlines+continuum
 
-  Int32 imin = -1, imax = -1;
-  getLambdaRange().getClosedIntervalIndices(spectralAxis.GetSamplesVector(),
-                                            imin, imax);
+  auto const &[imin, imax] =
+      getLambdaRange().getClosestInnerIndices(spectralAxis.GetSamplesVector());
+
   ampsfitted.assign(nddl_ini, NAN);
   errorsfitted.assign(nddl_ini, NAN);
 
@@ -278,7 +278,7 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
       // set the amplitude to NAN
       Int32 elt_idx = EltsIdx[iddl];
       m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
-      m_ElementsVector->getElementParam()[elt_idx]->m_nullLineProfiles = true;
+      m_ElementsVector->getElementsParams()[elt_idx]->m_nullLineProfiles = true;
       Flag.warning(WarningCode::NULL_LINES_PROFILE,
                    Formatter() << "Null lines profile"
                                << " of elt " << elt_idx);

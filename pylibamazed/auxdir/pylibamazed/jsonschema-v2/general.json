@@ -12,6 +12,7 @@
     "autoCorrectInput",
     "spectrumModels",
     "nbSamplesMin",
+    "nbSamplesMinForContinuumFit",
     "secondPassAfterClassification"
   ],
   "additionalProperties": false,
@@ -183,6 +184,11 @@
       "type": "integer",
       "title": "Minimum number of samples in a spectrum",
       "description": ""
+    },
+    "nbSamplesMinForContinuumFit": {
+      "type": "integer",
+      "title": "Minimum number of samples for continuum fit",
+      "description": "Minimum number of valid samples to perform continuum fit"
     },
     "secondPassAfterClassification": {
       "type": "boolean",

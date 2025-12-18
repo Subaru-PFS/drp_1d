@@ -90,9 +90,6 @@ public:
           const CPriorHelper::TPriorZEList &logpriorze =
               CPriorHelper::TPriorZEList(),
           Int32 FitEbmvIdx = allIdx, Int32 FitMeiksinIdx = allIdx);
-
-  Float64 ComputeDtD(const CSpectrumFluxAxis &spcFluxAxis,
-                     const TInt32Range &range); // could be also made static
   CModelSpectrumResult ComputeSpectrumModel(
       const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
       Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
@@ -123,8 +120,8 @@ private:
   std::vector<CMask> m_masksRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;
   using COperatorContinuumFitting::EstimateLikelihoodCstLog;
-  Float64 EstimateLikelihoodCstLog(const CSpectrum &spectrum,
-                                   const TFloat64Range &lambdaRange);
+  Float64 EstimateLikelihoodCstLogForSpectrum(const CSpectrum &spectrum,
+                                              const TFloat64Range &lambdaRange);
 
   Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis &correctedFlux,
                                 const CSpectrumFluxAxis &spcFluxAxis,

@@ -60,7 +60,7 @@ Int32 CContinuumFitStore::GetRedshiftIndex(Float64 z) const {
 
 Int32 CContinuumFitStore::getClosestLowerRedshiftIndex(Float64 z) const {
   Int32 idx = -1;
-  CIndexing<Float64>::getClosestLowerIndex(m_redshiftgrid, z, idx);
+  NSIndexing::getClosestLowerIndex(m_redshiftgrid, z, idx);
   return idx;
 }
 

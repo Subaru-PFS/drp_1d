@@ -10,10 +10,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+import subprocess
 
-sys.path.insert(0, os.path.abspath("../../python/pylibamazed"))
+
+def run_generate_schema_doc(app):
+    md_output_dir = "./pylibamazed/doc/source/json-schema/"
+    source_dir = "pylibamazed/auxdir/pylibamazed/jsonschema-v2"
+    subprocess.run(
+        ["generate-schema-doc", "--config", "template_name=md", source_dir, md_output_dir],
+        check=True,
+    )
 
 
 # -- Project information -----------------------------------------------------
@@ -38,6 +44,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
+    "sphinx_multiversion",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -47,6 +54,15 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+
+# ---- sphinx_multiversion configuration ----
+# Whitelist pattern for tags (set to None to ignore all tags)
+smv_tag_whitelist = r"^1.\d\d+.*$"
+
+# Whitelist pattern for branches (set to None to ignore all branches)
+smv_branch_whitelist = r"^.*develop$"
+smv_remote_whitelist = r"^.*$"
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -108,3 +124,4 @@ def skip_member(app, what, name, obj, skip, opts):
 
 def setup(app):
     app.connect("autodoc-skip-member", skip_member)
+    app.connect("builder-inited", run_generate_schema_doc)

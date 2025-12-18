@@ -39,88 +39,83 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
 
-#include <iostream>
 #include <vector>
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/log/log.h"
-namespace NSEpic {
+namespace NSEpic::NSIndexing {
 
 /**
  * \ingroup Redshift
  * Templated INDEX manipulation class
  */
-template <typename T> class CIndexing {
 
-public:
-  static Int32 getIndex(const std::vector<T> &list, const T z) {
-    typename std::vector<T>::const_iterator itr =
-        std::find(list.begin(), list.end(), z);
-    if (itr == list.end())
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "Could not find index for " << z);
+template <typename T> Int32 getIndex(const std::vector<T> &list, const T z) {
+  typename std::vector<T>::const_iterator itr =
+      std::find(list.begin(), list.end(), z);
+  if (itr == list.end())
+    THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
+                                          << "Could not find index for " << z);
 
-    return (itr - list.begin());
-  }
+  return (itr - list.begin());
+}
 
-  // getIndex in orded_values corresponding to value:
-  // value[index] can be equal or smaller than Z
-  static bool getClosestLowerIndex(const std::vector<T> &ordered_values,
-                                   const T &value, Int32 &i_min) {
-    i_min = undefIdx;
-    if (value < ordered_values.front())
-      return false;
+// getIndex in orded_values corresponding to value:
+// value[index] can be equal or smaller than Z
+template <typename T>
+bool getClosestLowerIndex(const std::vector<T> &ordered_values, const T &value,
+                          Int32 &i_min) {
+  i_min = undefIdx;
+  if (value < ordered_values.front())
+    return false;
 
-    typename std::vector<T>::const_iterator it_min =
-        std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
-    if (it_min == ordered_values.end() || *it_min != value)
-      --it_min;
+  typename std::vector<T>::const_iterator it_min =
+      std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+  if (it_min == ordered_values.end() || *it_min != value)
+    --it_min;
 
-    i_min = it_min - ordered_values.begin();
-    return true;
-  }
+  i_min = it_min - ordered_values.begin();
+  return true;
+}
 
-  // the closest at left or right
-  static Int32 getCloserIndex(const std::vector<T> &ordered_values,
-                              const T &value) {
-    typename std::vector<T>::const_iterator it =
-        std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+// the closest at left or right
+template <typename T>
+Int32 getClosestIndex(const std::vector<T> &ordered_values, const T &value) {
+  typename std::vector<T>::const_iterator it =
+      std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
 
-    // check if referring to the last element
-    if (it == ordered_values.end())
+  // check if referring to the last element
+  if (it == ordered_values.end())
+    --it;
+
+  else if (it != ordered_values.begin()) {
+    // compare diff between value and it and it-1 --> select the it that gives
+    // the minimal difference
+    if (std::abs(*it - value) > std::abs(*(it - 1) - value))
       --it;
-
-    else if (it != ordered_values.begin()) {
-      // compare diff between value and it and it-1 --> select the it that gives
-      // the minimal difference
-      if (std::abs(*it - value) > std::abs(*(it - 1) - value))
-        --it;
-    }
-
-    Int32 i_min = it - ordered_values.begin();
-    return i_min;
   }
 
-  // value[index] can be equal or higher than Z
-  static bool getClosestUpperIndex(const std::vector<T> &ordered_values,
-                                   const T &value, Int32 &i) {
-    i = undefIdx;
-    if (value > ordered_values.back()) {
-      return false;
-    }
-    typename std::vector<T>::const_iterator it =
-        std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+  Int32 i_min = it - ordered_values.begin();
+  return i_min;
+}
 
-    i = it - ordered_values.begin();
-    return true;
+// value[index] can be equal or higher than Z
+template <typename T>
+bool getClosestUpperIndex(const std::vector<T> &ordered_values, const T &value,
+                          Int32 &i) {
+  i = undefIdx;
+  if (value > ordered_values.back()) {
+    return false;
   }
-};
-typedef CIndexing<Int32> TInt32Index;
-typedef CIndexing<Float64> TFloat64Index;
+  typename std::vector<T>::const_iterator it =
+      std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
 
-} // namespace NSEpic
+  i = it - ordered_values.begin();
+  return true;
+}
+
+} // namespace NSEpic::NSIndexing
 
 #endif

@@ -15,7 +15,6 @@ variables:
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
-  DOC_VERSION: ""
   CCACHE_BASEDIR: $CI_PROJECT_DIR
   CCACHE_DIR: $CI_PROJECT_DIR/ccache
 
@@ -132,7 +131,7 @@ push-rc-38-osx:
   script:
     - source /venv/p39/bin/activate
     - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
-    - pip install . -v -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
+    - pip install . -v -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR -C cmake.define.CMAKE_COMPILE_WARNING_AS_ERROR=ON
     # - cd build-pip
     # - pip install ninja
     # - ninja install
@@ -148,7 +147,7 @@ push-rc-38-osx:
   script:
     - source /venv/p39/bin/activate
     - if [ "$ENABLE_GCC10" == "True" ]; then source /opt/rh/devtoolset-10/enable; fi
-    - pip install . -v -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR -C cmake.build-type=Coverage
+    - pip install . -v -C build-dir=build -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR -C cmake.define.CMAKE_COMPILE_WARNING_AS_ERROR=ON -C cmake.build-type=Coverage
     - cd build
     - ninja test
     - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR} --gcov-ignore-errors all
@@ -179,7 +178,7 @@ push-rc-38-osx:
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip install build #to remove
-    - python -m build -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.BUILD_TESTING=OFF
+    - python -m build -C build-dir=build-pip -C cmake.define.CMAKE_PREFIX_PATH=/root/local -C cmake.define.CMAKE_COMPILE_WARNING_AS_ERROR=ON -C cmake.define.BUILD_TESTING=OFF 
     - ccache-swig -s
     - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
@@ -265,19 +264,19 @@ push-rc-38-osx:
 
 .pages-linux:
   stage: deploy
+  variables:
+    GIT_DEPTH: 0
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*$PLATFORM*.whl
     - pip install -r pip-doc-requirements.txt
-    - generate-schema-doc --config template_name=md pylibamazed/auxdir/pylibamazed/jsonschema-v2 pylibamazed/doc/source/json-schema/
-    - sphinx-build -b html pylibamazed/doc/source public/$DOC_VERSION
+    - python pylibamazed/doc/source/build_doc.py public
+    - find public -type d -name ".doctrees" -exec rm -rf {} +
   artifacts:
     paths:
     - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        DOC_VERSION: $CI_DEFAULT_BRANCH
 
 # Almalinux9 stages
 .almalinux9:

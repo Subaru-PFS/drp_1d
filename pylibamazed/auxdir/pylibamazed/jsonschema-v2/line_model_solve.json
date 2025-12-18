@@ -28,6 +28,8 @@
         "nOfZPriorStrength",
         "pdfCombination",
         "nSigmaSupport",
+        "maxDistanceToLine",
+        "nbSamplesMinForLineFit",
         "hAlphaPrior",
         "enablePhotometry",
         "lya",
@@ -99,11 +101,13 @@
         },
         "velocityEmission": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity",
           "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
         "velocityAbsorption": {
           "type": "number",
+          "minimum": 0,
           "title": "Absorption lines velocity",
           "description": "Unique non-fitted speed used in firstPass for linemodel solve. In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
         },
@@ -114,31 +118,37 @@
         },
         "emVelocityFitMin": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity min",
           "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. Must be > 0 if lineWidthType=velocityDriven"
         },
         "emVelocityFitMax": {
           "type": "number",
+          "minimum": 0,
           "title": "Emission lines velocity max",
           "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines"
         },
         "emVelocityFitStep": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Emission lines velocity step",
           "description": "Tabulation of velocity for line width fitting in km s-1: step for emission lines"
         },
         "absVelocityFitMin": {
           "type": "number",
+          "minimum": 0,
           "title": "Aborption lines velocity min",
           "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines"
         },
         "absVelocityFitMax": {
           "type": "number",
+          "minimum": 0,
           "title": "Aborption lines velocity max",
           "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines"
         },
         "absVelocityFitStep": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Aborption lines velocity step",
           "description": "Tabulation of velocity for line width fitting in km s-1: step for absorption lines"
         },
@@ -146,6 +156,18 @@
           "type": "boolean",
           "title": "Wether to fit wavelength offset",
           "description": "Wether the 2nd pass includes lines wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "lbdaOffsetMax": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Maxiumun authorized wavelength offset in each direction",
+          "description": "Size in km/s of the wavelength range of the effective line center arround the position given by the redshift. Relevant only when lbdaOffsetFit is set to true"
+        },
+        "lbdaOffsetStep": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Wavelength offset steps in km/s",
+          "description": "Steps of the wavelength offset fitting loop. Relevant only when lbdaOffsetFit is set to true and fittingMethod=svd or hybrid (not used for fittingMethod=lbfgsb)"
         },
         "ampOffsetFit": {
           "type": "boolean",
@@ -160,6 +182,7 @@
         },
         "extremaCount": {
           "type": "integer",
+          "minimum": 1,
           "title": "Extrema count",
           "description": "Number of candidates to retain"
         },
@@ -214,6 +237,35 @@
           "title": "Continuum processing method",
           "description": "Selects the method for processing the continuum: \n * **fromspectrum**: remove an estimated continuum (the continuum estmation is then tuned via continuumRemoval parameters). The redshift is thus only estimated from the lines \n * **tplfit** : fit a set of redshifted template (aka \"fullmodel\" ie contiuum model + line model) \n * **tplfitauto** : same than \"tplfit\", but switch to \"fromspectrum\" if the fitted continuum amplitude is found significantly negative (at all z) \n * **powerLaw**: Fits continuum with two power laws \n * **powerLawAuto**: Switches to fromSpectrum if continuum amplitude is unphysical"
         },
+        "powerLaw": {
+          "type": "object",
+          "title": "Power law coefficients boundaries",
+          "description": "Power law coefficients boundaries for the continuum fit. Used only if `continuumComponent=powerLaw` or `powerLawAuto`. If a fitted value is found higher or lower than the limits, it is forced to the limit value. Note that the limits are not applied in case there are two little pixels (currently set at 10 pixels) to fit the powerLaw : in this case the power law power coefficients are forced to zero whatever the limits.",
+          "required": [
+            "firstPowerCoefMin",
+            "firstPowerCoefMax",
+            "secondPowerCoefMin",
+            "secondPowerCoefMax"
+          ],
+          "properties": {
+            "firstPowerCoefMin": {
+              "type": "number",
+              "title": "First power coefficient minimum value"
+            },
+            "firstPowerCoefMax": {
+              "type": "number",
+              "title": "First power coefficient maximum value"
+            },
+            "secondPowerCoefMin": {
+              "type": "number",
+              "title": "Second power coefficient minimum value"
+            },
+            "secondPowerCoefMax": {
+              "type": "number",
+              "title": "Second power coefficient maximum value"
+            }
+          }
+        },
         "continuumReestimation": {
           "type": "string",
           "enum": [
@@ -245,8 +297,21 @@
         },
         "nSigmaSupport": {
           "type": "number",
+          "exclusiveMinimum": 0,
           "title": "Support size",
           "description": "Full (not half) size of each line support in sigma of the gaussian profile "
+        },
+        "maxDistanceToLine": {
+          "type": "number",
+          "minimum": 0,
+          "title": "maximal distance of closest sample to line center",
+          "description": "A line can be fitted if at least one sample is closer to the center, expressed in the Gaussian width: sigma.\nFor instance, with a value of 1.0 a line is excluded from the model if there are no samples in the range [-1, +1] sigma."
+        },
+        "nbSamplesMinForLineFit": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "minimum number of samples required inside the line support",
+          "description": "A line can be fitted if there are at least this number of samples inside the support range defined by nSigmaSupport."
         },
         "hAlphaPrior": {
           "type": "number",

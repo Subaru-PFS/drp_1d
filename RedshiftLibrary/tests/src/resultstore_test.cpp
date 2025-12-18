@@ -44,7 +44,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/method/classificationresult.h"
-#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
@@ -378,23 +377,6 @@ BOOST_AUTO_TEST_CASE(GetClassificationResult_test) {
                                     "classification");
   BOOST_CHECK(result_out->getType() == "CClassificationResult");
   BOOST_CHECK(result_out->m_TypeLabel == "label");
-}
-
-//---------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(GetReliabilityResult_test) {
-  auto scopeStack = getScopeStack();
-
-  std::shared_ptr<const CReliabilityResult> result_in =
-      std::make_shared<const CReliabilityResult>();
-
-  COperatorResultStore store(scopeStack);
-  store.StoreScopedGlobalResult("reliability", result_in);
-
-  std::shared_ptr<const CReliabilityResult> result_out =
-      store.GetReliabilityResult("spectrumModel", "stage", "method",
-                                 "reliability");
-  BOOST_CHECK(result_out->getType() == "CReliabilityResult");
-  BOOST_CHECK(result_out->m_ReliabilityLabel == "C6");
 }
 
 //---------------------------------------------------------------

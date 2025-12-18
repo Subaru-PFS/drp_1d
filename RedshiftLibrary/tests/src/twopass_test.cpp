@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(spanRedshift_test) {
       std::is_sorted(std::begin(extendedList), std::end(extendedList)) == true);
   BOOST_CHECK(extendedList == extendedRedshifts_ref);
   // check presence of z in extendedList
-  Int32 idx = CIndexing<Float64>::getIndex(extendedList, z);
+  Int32 idx = NSIndexing::getIndex(extendedList, z);
   BOOST_CHECK(idx == ref_idx);
 }
 

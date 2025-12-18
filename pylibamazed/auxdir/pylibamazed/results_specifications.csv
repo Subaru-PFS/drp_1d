@@ -24,6 +24,8 @@ ContinuumResidualsKs	model_parameters	False	candidate	fittedContinuum.ksResidual
 ContinuumResidualsKsStd	model_parameters	False	candidate	fittedContinuum.ksStdResiduals	extrema_results	f8
 ContinuumResidualsKsStdMean	model_parameters	False	candidate	fittedContinuum.ksStdMeanResiduals	extrema_results	f8
 ContinuumResidualsAnderson	model_parameters	False	candidate	fittedContinuum.andersonResiduals	extrema_results	f8
+ContinuumNPixelsUsedForFit	model_parameters	False	candidate	fittedContinuum.nPixelsUsedForFit	extrema_results	i
+ContinuumNPixelsOfResiduals	model_parameters	False	candidate	fittedContinuum.nPixelsOfResiduals	extrema_results	i
 ContinuumLeastSquarePhot	model_parameters	True	candidate	fittedContinuum.tplMeritPhot	extrema_results	f8
 ContinuumLogPrior	model_parameters	True	candidate	fittedContinuum.tplLogPrior	extrema_results	f8
 ContinuumPowerLawa1	model_parameters	True	candidate	fittedContinuum.a1	extrema_results	f8
@@ -46,6 +48,7 @@ ResidualsKs	model_parameters	False	candidate	ksResiduals	extrema_results	f8
 ResidualsKsStd	model_parameters	False	candidate	ksStdResiduals	extrema_results	f8
 ResidualsKsStdMean	model_parameters	False	candidate	ksStdMeanResiduals	extrema_results	f8
 ResidualsAnderson	model_parameters	False	candidate	andersonResiduals	extrema_results	f8
+NPixels	model_parameters	False	candidate	nPixels	extrema_results	i
 VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
 VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
 EmissionLinesSNR	model_parameters	False	candidate	ELSNR	extrema_results	f8
@@ -70,6 +73,7 @@ FittedLineWidth	fitted_lines	False	candidate	Sigmas	extrema_results	f8
 FittedLineAmplitude	fitted_lines	True	candidate	Amplitudes	extrema_results	f8
 FittedLineAmplitudeUncertainty	fitted_lines	True	candidate	AmplitudesUncertainties	extrema_results	f8
 FittedLineSNR	fitted_lines	True	candidate	SNR	extrema_results	f8
+FittedLineNSamples	fitted_lines	True	candidate	NSamples	extrema_results	i
 FittedLineVelocity	fitted_lines	True	candidate	Velocity	extrema_results	f8
 FittedLineOffset	fitted_lines	True	candidate	Offset	extrema_results	f8
 FittedLineNotFitted	fitted_lines	True	candidate	NotFitted	extrema_results	i
@@ -127,8 +131,8 @@ FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	
 Type	classification	False	root	m_TypeLabel	solveResult	S1
 WarningFlags	classification	False	root	flagValue	warningFlag	i
 LogZPdfNative	pdf	False	object	valProbaLog	pdf	f8
-ContinuumVectAmplitude	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeList	extrema_results	f8
-ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
+ContinuumVectAmplitude	modeltplCombination_parameters	False	candidate	FittedTplAmplitudeList	extrema_results	f8
+ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	False	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
 LinemeasLineLambda	linemeas	False	object	LambdaObs	linemeas	f8
 LinemeasLineID	linemeas	False	object	lineId	linemeas	i
 LinemeasLineFlux	linemeas	False	object	Flux	linemeas	f8
@@ -142,15 +146,16 @@ LinemeasLineWidth	linemeas	False	object	Sigmas	linemeas	f8
 LinemeasLineAmplitude	linemeas	True	object	Amplitudes	linemeas	f8
 LinemeasLineAmplitudeUncertainty	linemeas	True	object	AmplitudesUncertainties	linemeas	f8
 LinemeasLineSNR	linemeas	True	object	SNR	linemeas	f8
+LinemeasLineNSamples	linemeas	True	object	NSamples	linemeas	i
 LinemeasLineVelocity	linemeas	False	object	Velocity	linemeas	f8
 LinemeasLineVelocityUncertainty	linemeas	False	object	VelocityUncertainty	linemeas	f8
 LinemeasLineOffset	linemeas	False	object	Offset	linemeas	f8
 LinemeasLineOffsetUncertainty	linemeas	False	object	OffsetUncertainty	linemeas	f8
 LinemeasLineNotFitted	linemeas	True	object	NotFitted	linemeas	i
 LinemeasLineFittingGroupInfo	linemeas	True	object	fittingGroupInfo	linemeas	S10
-LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	i
-LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	i
-LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	i
+LinemeasContinuumPCoeff0	linemeas	True	object	continuum_pCoeff0	linemeas	f8
+LinemeasContinuumPCoeff1	linemeas	True	object	continuum_pCoeff1	linemeas	f8
+LinemeasContinuumPCoeff2	linemeas	True	object	continuum_pCoeff2	linemeas	f8
 LinemeasLineWidthUncertainty	linemeas	True	object	SigmasUncertainty	linemeas	f8
 LinemeasEquivalentWidth	linemeas	True	object	EquivalentWidth	linemeas	f8
 LinemeasEquivalentWidthUncertainty	linemeas	True	object	EquivalentWidthUncertainty	linemeas	f8
@@ -186,7 +191,7 @@ zstep	pdf_params	False	object	zstep	pdf_params	f8
 zcenter	pdf_params	False	object	zcenter	pdf_params	f8
 CorrScaleMarg	model_parameters	True	candidate	CorrScaleMarg	extrema_results	f8
 NDof	model_parameters	True	candidate	NDof	extrema_results	i
-NLinesOverThreshold	model_parameters	True	candidate	NLinesOverThreshold	extrema_results	f8
+NLinesOverThreshold	model_parameters	False	candidate	NLinesOverThreshold	extrema_results	f8
 ResidualRMSOutsideLines	model_parameters	True	candidate	OutsideLinesResidualRMS	extrema_results	f8
 InputStDevRMSOutsideLines	model_parameters	True	candidate	OutsideLinesInputStDevRMS	extrema_results	f8
 BayesianInformationCriterion	model_parameters	True	candidate	bic	extrema_results	f8

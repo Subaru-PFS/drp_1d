@@ -71,7 +71,9 @@ using ConstTLineModelElementParam_ptr =
 class CLineModelElement {
 
 public:
-  CLineModelElement(const TLineModelElementParam_ptr elementParam);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam,
+                    Float64 maxDistanceToLine = 1.0,
+                    Int32 minSamplesNumberForLineFit = -1);
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -92,6 +94,11 @@ public:
                                   Float64 redshift,
                                   const TFloat64Range &lambdaRange,
                                   Float64 max_offset = 0.0);
+  void EstimateLineVisbility(Int32 line_index,
+                             const CSpectrumSpectralAxis &spectralAxis,
+                             const TInt32Range &supportRange,
+                             Float64 line_lambda, Float64 sigma,
+                             Float64 max_offset);
   void computeOutsideLambdaRange();
 
   TInt32Range getSupportSubElt(Int32 line_index) const;
@@ -185,7 +192,9 @@ protected:
 
   const TLineModelElementParam_ptr m_ElementParam;
 
-  const Float64 m_OutsideLambdaRangeOverlapThreshold;
+  Float64 m_maxDistanceToLine;
+  Int32 m_minSamplesNumberForLineFit;
+
   bool m_OutsideLambdaRange;
 
   std::shared_ptr<const CLSF> m_LSF;
@@ -199,6 +208,13 @@ protected:
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
+
+  void initSupport(const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
+                   const TFloat64Range &lambdaRange, Float64 max_offset = 0.0);
+  bool mergeIfOverlapping(Int32 i, Int32 j);
+  void resolveOverlaps();
+  bool detectDuplicateOverlaps();
+  void propagateOverlap(Int32 i, Int32 j);
 };
 
 inline bool CLineModelElement::IsOutsideLambdaRange() const {

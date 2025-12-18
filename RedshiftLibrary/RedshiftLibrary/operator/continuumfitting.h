@@ -47,6 +47,10 @@
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/spectrum/maskBuilder.h"
 
+namespace continuumFitting_test {
+class simple_powerlaw;
+}
+
 namespace NSEpic {
 
 class CSpectrum;
@@ -64,7 +68,8 @@ struct TFitQuality {
   Float64 ksStdResiduals = INFINITY;
   Float64 ksStdMeanResiduals = INFINITY;
   Float64 andersonResiduals = INFINITY;
-  Int32 nPixels = 0;
+  Int32 nPixelsUsedForFit = 0;
+  Int32 nPixelsOfResiduals = 0;
 };
 
 struct TContinuumResult {
@@ -93,14 +98,17 @@ public:
   }
 
 protected:
+  friend continuumFitting_test::simple_powerlaw;
+
   std::shared_ptr<CMaskBuilder> m_maskBuilder;
   std::vector<std::shared_ptr<const CSpectrum>> m_spectra;
   std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRanges;
   TInt32List m_kStart, m_kEnd;
 
-  const void checkTemplateOverlap(const Float64 overlapFraction,
-                                  const Float64 overlapThreshold);
+  void checkTemplateOverlap(const Float64 overlapFraction,
+                            const Float64 overlapThreshold);
   virtual Float64 EstimateLikelihoodCstLog() const;
+  Int32 m_nSamplesMinForContinuumFit;
 };
 } // namespace NSEpic
 

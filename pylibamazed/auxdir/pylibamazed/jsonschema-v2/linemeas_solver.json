@@ -34,6 +34,8 @@
             "lya",
             "lineCatalog",
             "nSigmaSupport",
+            "maxDistanceToLine",
+            "nbSamplesMinForLineFit",
             "lineWidthType",
             "fittingMethod",
             "velocityFit",
@@ -86,6 +88,7 @@
             },
             "polynomialDegree": {
               "type": "integer",
+              "minimum": 0,
               "title": "Polynomial degree",
               "description": "Value between 0 and 2, referring to the polynom degree to represent the continuum below lines. Useful only if ampOffsetFit=True."
             },
@@ -99,8 +102,21 @@
             },
             "nSigmaSupport": {
               "type": "number",
+              "exclusiveMinimum": 0,
               "title": "Support size",
               "description": "Full (not half) size of each line support in sigma of the gaussian profile."
+            },
+            "maxDistanceToLine": {
+              "type": "number",
+              "minimum": 0,
+              "title": "maximal distance of closest sample to line center",
+              "description": "A line can be fitted if at least one sample is closer to the center, expressed in the Gaussian width: sigma.\nFor instance, with a value of 1.0 a line is excluded from the model if there are no samples in the range [-1, +1] sigma."
+            },
+            "nbSamplesMinForLineFit": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "minimum number of samples required inside the line support",
+              "description": "A line can be fitted if there are at least this number of samples inside the support range defined by nSigmaSupport."
             },
             "lineWidthType": {
               "type": "string",
@@ -125,11 +141,13 @@
             },
             "velocityEmission": {
               "type": "number",
+              "minimum": 0,
               "title": "Emission lines velocity",
               "description": "velocity dispersion used if not found in redshiftSolver output (or input linemeas catalog). In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
             },
             "velocityAbsorption": {
               "type": "number",
+              "minimum": 0,
               "title": "Absorption lines velocity",
               "description": "velocity dispersion used if not found in redshiftSolver output (or input linemeas catalog). In km s-1. Used for `lineWidthType=combined` or `velocityDriven`"
             },
@@ -140,21 +158,25 @@
             },
             "emVelocityFitMin": {
               "type": "number",
+              "minimum": 0,
               "title": "Emission lines velocity min",
               "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for emission lines. To specify only if fittingMethod is lbfgsb. Must be > 0 if lineWidthType=velocityDriven. "
             },
             "emVelocityFitMax": {
               "type": "number",
+              "minimum": 0,
               "title": "Emission lines velocity max",
               "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for emission lines. To specify only if fittingMethod is lbfgsb."
             },
             "absVelocityFitMin": {
               "type": "number",
+              "minimum": 0,
               "title": "Aborption lines velocity min",
               "description": "Tabulation of velocity for line width fitting in km s-1: minimal value for absorption lines. To specify only if fittingMethod is lbfgsb."
             },
             "absVelocityFitMax": {
               "type": "number",
+              "minimum": 0,
               "title": "Aborption lines velocity max",
               "description": "Tabulation of velocity for line width fitting in km s-1: maximal value for absorption lines. To specify only if fittingMethod is lbfgsb."
             },
@@ -162,6 +184,18 @@
               "type": "boolean",
               "title": "Wether to fit wavelength offset",
               "description": "Wether to include wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+            },
+            "lbdaOffsetMax": {
+              "type": "number",
+              "minimum": 0,
+              "title": "Maxiumun authorized wavelength offset in each direction",
+              "description": "Size in km/s of the wavelength range of the effective line center arround the position given by the redshift. Relevant only when lbdaOffsetFit is set to true"
+            },
+            "lbdaOffsetStep": {
+              "type": "number",
+              "minimum": 0,
+              "title": "Wavelength offset steps in km/s",
+              "description": "Steps of the wavelength offset fitting loop. Relevant only when lbdaOffsetFit is set to true and fittingMethod=svd or hybrid (not used for fittingMethod=lbfgsb)"
             },
             "ampOffsetFit": {
               "type": "boolean",

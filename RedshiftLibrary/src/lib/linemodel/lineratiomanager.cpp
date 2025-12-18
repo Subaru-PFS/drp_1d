@@ -99,7 +99,8 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
     auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
     Int32 line_idx_LyaE = line_indices_LyaE.front();
 
-    auto const &param_LyaE = m_elementsVector->getElementParam()[elt_idx_LyaE];
+    auto const &param_LyaE =
+        m_elementsVector->getElementsParams()[elt_idx_LyaE];
     auto const &profile = param_LyaE->getLineProfile(line_idx_LyaE);
 
     if (profile->isAsym())
@@ -109,7 +110,7 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
   {
     for (auto const &[elt_idx_igm, line_indices_igm] : indices_Igm) {
       auto const &param_EltIgm =
-          m_elementsVector->getElementParam()[elt_idx_igm];
+          m_elementsVector->getElementsParams()[elt_idx_igm];
 
       // const auto &elt = getElementList()[elt_idx_igm];
       auto line_indices_filtered = line_indices_igm;
@@ -128,7 +129,7 @@ void CLineRatioManager::setLyaProfile(Float64 redshift,
 void CLineRatioManager::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
                                        Float64 redshift,
                                        const CLineMap &catalog) {
-  auto const &param_LyaE = m_elementsVector->getElementParam()[idxLyaE];
+  auto const &param_LyaE = m_elementsVector->getElementsParams()[idxLyaE];
   Int32 lineId = param_LyaE->m_Lines[idxLineLyaE].GetID();
   auto const &ref_line = catalog.at(lineId);
 
@@ -153,7 +154,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
 
-  auto const &param_EltIgm = m_elementsVector->getElementParam()[iElts];
+  auto const &param_EltIgm = m_elementsVector->getElementsParams()[iElts];
 
   bool fixedIGM =
       (m_continuumManager->isContinuumComponentFitter()) &&
@@ -221,11 +222,9 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
 
     Float64 diff = 0.0;
 
-    Int32 imin =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetBegin());
-    Int32 imax =
-        spcSpectralAxis.GetIndexAtWaveLength(getLambdaRange().GetEnd());
-    for (Int32 j = imin; j < imax; j++) {
+    auto const &irange =
+        spcSpectralAxis.GetIndexRangeAtWaveLengthRange(getLambdaRange());
+    for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
       diff = (Yspc[j] - Ymodel[j]);
       fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
     }
@@ -240,8 +239,9 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
           Formatter()
           << "CLineModelFitting::getLeastSquareMerit: NaN value found on "
              "the true observed spectral axis lambdarange = ("
-          << spcSpectralAxis[imin] << ", " << spcSpectralAxis[imax] << ")");
-      for (Int32 j = imin; j < imax; j++) {
+          << spcSpectralAxis[irange.GetBegin()] << ", "
+          << spcSpectralAxis[irange.GetEnd()] << ")");
+      for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
         if (std::isnan(Yspc[j])) {
           Log.LogDetail(
               Formatter()

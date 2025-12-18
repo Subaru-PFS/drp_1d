@@ -546,6 +546,15 @@ class ParametersAccessor:
     def get_linemodel_extremacount(self, spectrum_model: str):
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "extremaCount")
 
+    def get_linemodel_lbda_offset_fit(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetFit")
+
+    def get_linemodel_lbda_offset_max(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetMax")
+
+    def get_linemodel_lbda_offset_step(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetStep")
+
     def get_linemodel_velocity_fit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "velocityFit")
 
@@ -622,6 +631,15 @@ class ParametersAccessor:
     def get_linemeas_nsigmasupport(self, spectrum_model: str) -> float:
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaSupport")
 
+    def get_linemeas_lbda_offset_fit(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetFit")
+
+    def get_linemeas_lbda_offset_max(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetMax")
+
+    def get_linemeas_lbda_offset_step(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetStep")
+
     def get_nsigmasupport(self, spectrum_model: str, method: ESolveMethod) -> Optional[float]:
         nsigmasupport = None
         if method == ESolveMethod.LINE_MODEL:
@@ -665,6 +683,9 @@ class ParametersAccessor:
     def get_nb_samples_min(self):
         return self.parameters["nbSamplesMin"]
 
+    def get_nb_samples_min_continuum(self):
+        return self.parameters["nbSamplesMinForContinuumFit"]
+
     def _get_or_create_section(self, parent_section_getter, child_section_name: str, create: bool, *args):
         parent_section = parent_section_getter(*args, create)
         child_section = self._get_on_None(parent_section, child_section_name)
@@ -684,3 +705,7 @@ class ParametersAccessor:
 
     def second_pass_after_classification(self):
         return self.parameters["secondPassAfterClassification"]
+
+    def get_power_law_section(self, spectum_model: str):
+        section = self.get_linemodel_section(spectum_model, ESolveMethod.LINE_MODEL)
+        return self._get_on_None(section, "powerLaw")

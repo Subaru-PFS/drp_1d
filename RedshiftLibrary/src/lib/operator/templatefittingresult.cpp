@@ -65,12 +65,12 @@ CTemplateFittingResult::CTemplateFittingResult(Int32 n, Int32 EbmvListSize,
 }
 
 Int32 CTemplateFittingResult::getIsmIndexInIntermediate(Int32 ebmvIdx) const {
-  return CIndexing<Int32>::getIndex(IsmEbmvIdxIntermediate.front(), ebmvIdx);
+  return NSIndexing::getIndex(IsmEbmvIdxIntermediate.front(), ebmvIdx);
 }
 
 Int32 CTemplateFittingResult::getIgmIndexInIntermediate(Int32 zIdx,
                                                         Int32 igmIdx) const {
-  return CIndexing<Int32>::getIndex(IgmMeiksinIdxIntermediate[zIdx], igmIdx);
+  return NSIndexing::getIndex(IgmMeiksinIdxIntermediate[zIdx], igmIdx);
 }
 
 void CTemplateFittingResult::set_at_redshift(Int32 i,

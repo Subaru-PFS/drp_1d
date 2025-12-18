@@ -256,8 +256,10 @@ struct TLineModelElementParam {
   void setLambdaOffsetStd(Int32 line_index, Float64 val) {
     m_OffsetsStd[line_index] = val;
   }
-  Float64 getLambdaOffset(Int32 line_index) { return m_Offsets[line_index]; }
-  Float64 getLambdaOffsetStd(Int32 line_index) {
+  Float64 getLambdaOffset(Int32 line_index) const {
+    return m_Offsets[line_index];
+  }
+  Float64 getLambdaOffsetStd(Int32 line_index) const {
     return m_OffsetsStd[line_index];
   }
 

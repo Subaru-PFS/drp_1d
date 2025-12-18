@@ -57,6 +57,7 @@ const std::string jsonStringMO =
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -136,7 +137,9 @@ const std::string jsonStringOrtho =
     "\"velocityAbsorption\": 100,"
     "\"lineRatioType\": \"tplRatio\","
     "\"lineTypeFilter\" : \"no\","
-    "\"lineForceFilter\" : \"no\"}}}}}";
+    "\"lineForceFilter\" : \"no\","
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\"}}}}}";
 
 class fixture_inputcontextTest {
 public:

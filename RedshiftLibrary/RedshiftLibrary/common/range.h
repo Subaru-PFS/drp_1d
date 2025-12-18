@@ -63,6 +63,9 @@ public:
 
   CRange(const T begin, const T end) : m_Begin(begin), m_End(end) {}
 
+  CRange(const std::pair<T, T> &pair)
+      : m_Begin(pair.first), m_End(pair.second) {}
+
   CRange(const std::vector<T> &v)
       : m_Begin(v.empty() ? T() : v.front()),
         m_End(v.empty() ? T() : v.back()) {}
@@ -122,6 +125,8 @@ public:
   const T &GetBegin() const { return m_Begin; }
 
   const T &GetEnd() const { return m_End; }
+
+  operator std::pair<T, T>() const { return {m_Begin, m_End}; }
 
   auto begin() const { return boost::counting_iterator<T>(m_Begin); }
   auto end() const { return boost::counting_iterator<T>(m_End + 1); }
@@ -294,11 +299,11 @@ public:
     return vect;
   }
 
-  // enclosed refers to having i_max referring to m_End or higher and i_min
+  // Outer means i_max referring to m_End or higher and i_min
   // referring to m_Begin or lower
-  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   const T &value, Int32 &i_min,
-                                   Int32 &i_max) const {
+  std::pair<Int32, Int32>
+  getClosestOuterIndices(const std::vector<T> &ordered_values,
+                         const T &value) const {
     if (value < m_Begin || value > m_End) {
       THROWG(ErrorCode::IE_CRANGE_VALUE_OUTSIDERANGE,
              Formatter() << "Value " << value << " not inside ]" << m_Begin
@@ -325,12 +330,13 @@ public:
     if (*it_min > m_Begin)
       it_min = it_min - 1;
 
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
+    Int32 const i_min = it_min - ordered_values.begin();
+    Int32 const i_max = it_max - ordered_values.begin();
+    return {i_min, i_max};
   }
 
-  void getEnclosingIntervalIndices(const std::vector<T> &ordered_values,
-                                   Int32 &i_min, Int32 &i_max) const {
+  std::pair<Int32, Int32>
+  getClosestOuterIndices(const std::vector<T> &ordered_values) const {
 
     if (ordered_values.size() == 0) {
       THROWG(ErrorCode::IE_EMPTY_LIST,
@@ -350,14 +356,15 @@ public:
     if (*it_min > m_Begin)
       it_min = it_min - 1;
 
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
+    Int32 const i_min = it_min - ordered_values.begin();
+    Int32 const i_max = it_max - ordered_values.begin();
+    return {i_min, i_max};
   }
 
-  // closed refers to having i_min referring to m_Begin index or higher and
+  // Inner means i_min referring to m_Begin index or higher and
   // i_max referring to m_End index or lower
-  void getClosedIntervalIndices(const std::vector<T> &ordered_values,
-                                Int32 &i_min, Int32 &i_max) const {
+  std::pair<Int32, Int32>
+  getClosestInnerIndices(const std::vector<T> &ordered_values) const {
     if (ordered_values.size() == 0) {
       THROWG(ErrorCode::IE_EMPTY_LIST,
              "Input ordered values is an empty vector.");
@@ -378,13 +385,14 @@ public:
     else if (*it_max > m_End)
       --it_max;
 
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
-    if (i_min > i_max) {
+    Int32 const i_min = it_min - ordered_values.begin();
+    Int32 const i_max = it_max - ordered_values.begin();
+    if (i_min > i_max)
       THROWG(ErrorCode::IE_CRANGE_NO_INTERSECTION,
              Formatter() << "There is no sample inside range (min,max indices=["
                          << i_min << "," << i_max << "]");
-    }
+
+    return {i_min, i_max};
   }
 
   static bool HasIntersection(const CRange<T> &a, const CRange<T> &b) {

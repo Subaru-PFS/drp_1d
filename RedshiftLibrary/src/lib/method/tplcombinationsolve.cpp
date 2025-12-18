@@ -387,6 +387,11 @@ CTplCombinationSolve::buildExtremaResults(
         TplFitResult->FitQuality[idx].ksStdMeanResiduals;
     candidate->fittedContinuum.andersonResiduals =
         TplFitResult->FitQuality[idx].andersonResiduals;
+    candidate->fittedContinuum.nPixelsUsedForFit =
+        TplFitResult->FitQuality[idx].nPixelsUsedForFit;
+    candidate->fittedContinuum.nPixelsOfResiduals =
+        TplFitResult->FitQuality[idx].nPixelsOfResiduals;
+    candidate->nPixels = TplFitResult->FitQuality[idx].nPixelsUsedForFit;
     candidate->fittedContinuum.tplMeritPhot = TplFitResult->ChiSquarePhot[idx];
     candidate->fittedContinuum.meiksinIdx = TplFitResult->FitMeiksinIdx[idx];
     candidate->fittedContinuum.ebmvCoef = TplFitResult->FitEbmvCoeff[idx];

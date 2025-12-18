@@ -9,4 +9,5 @@ API documentation
    api/methods
    api/reference
    api/errorswarnings
+   api/output_quantities
    api/changelog
