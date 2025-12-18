@@ -67,7 +67,6 @@
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
 %shared_ptr(CClassificationResult)
-%shared_ptr(CReliabilityResult)
 %shared_ptr(CLogZPdfResult)
 %shared_ptr(TCandidateZ)
 %shared_ptr(TExtremaResult)
@@ -121,7 +120,6 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/fullspectrum.h"
 #include "RedshiftLibrary/method/classificationresult.h"
-#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
@@ -138,7 +136,6 @@
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
-#include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
@@ -440,7 +437,6 @@ public:
 %template(TZGridListParams) std::vector<CZGridParam>;
 
 %include "method/classificationresult.i"
-%include "method/reliabilityresult.i"
 %include "method/linemodelsolveresult.i"
 %include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
@@ -551,10 +547,6 @@ class COperatorResultStore
                                                                        const std::string& method,
                                                                        const std::string& name ) const;
 
-  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType, const std::string& stage,
-									 const std::string& method,
-                                                                       const std::string& name ) const;
-
   std::shared_ptr<const CLogZPdfResult> GetLogZPdfResult(const std::string& objectType, const std::string& stage,
 								    const std::string& method,
 								    const std::string& name ) const;
@@ -574,7 +566,8 @@ class COperatorResultStore
 										 const std::string& method,
 										 const std::string& name ,
 								     const std::string &dataset,
-										 const int& rank
+										 const int& rank,
+                     bool firstpassResults
 										 ) const;
   std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType, const std::string& stage,
 										 const std::string& method,
@@ -960,13 +953,6 @@ public:
 
     CClassificationSolve();
 
-  };
-  class CReliabilitySolve:public CSolve
-  {
-
-  public:
-
-    CReliabilitySolve();
   };
   class CLineModelSolve:public CTwoPassSolve
   {

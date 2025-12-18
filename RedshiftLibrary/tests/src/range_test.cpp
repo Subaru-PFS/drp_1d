@@ -651,14 +651,14 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
 
   TFloat64Range range = TFloat64Range(6.5, 10.3);
 
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector, target);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(myVector[i_min + 1] > range.GetBegin());
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10.3);
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector, target);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10);
-  range.getEnclosingIntervalIndices(myVector, target, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector, target);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -675,46 +675,40 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
 
   // Check errors
   range = TFloat64Range(9, 10.3);
-  BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, target),
+                    AmzException);
 
   range = TFloat64Range(6, 7.5);
-  BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, target),
+                    AmzException);
 
   range = TFloat64Range(0, 10.3);
-  BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, target),
+                    AmzException);
 
   range = TFloat64Range(6, 16);
-  BOOST_CHECK_THROW(
-      range.getEnclosingIntervalIndices(myVector, target, i_min, i_max),
-      AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector, target),
+                    AmzException);
 
   // -- TEST WITHOUT TARGET --
 
   // Check errors
   range = TFloat64Range(0, 10.3);
-  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
-                    AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector), AmzException);
 
   range = TFloat64Range(6, 16);
-  BOOST_CHECK_THROW(range.getEnclosingIntervalIndices(myVector, i_min, i_max),
-                    AmzException);
+  BOOST_CHECK_THROW(range.getClosestOuterIndices(myVector), AmzException);
 
   // TEST OK
   range = TFloat64Range(6.5, 10.3);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(myVector[i_min + 1] > range.GetBegin());
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10.3);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -722,7 +716,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6.5, 10);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -730,7 +724,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval) {
   BOOST_CHECK(myVector[i_max - 1] < range.GetEnd());
 
   range = TFloat64Range(6, 10);
-  range.getEnclosingIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestOuterIndices(myVector);
 
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
@@ -749,16 +743,14 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
 
   // Check errors
   TFloat64Range range = TFloat64Range(20, 25);
-  BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
-                    AmzException);
+  BOOST_CHECK_THROW(range.getClosestInnerIndices(myVector), AmzException);
 
   range = TFloat64Range(-10, -5);
-  BOOST_CHECK_THROW(range.getClosedIntervalIndices(myVector, i_min, i_max),
-                    AmzException);
+  BOOST_CHECK_THROW(range.getClosestInnerIndices(myVector), AmzException);
 
   // range borders belong to orderded values
   range = TFloat64Range(6.5, 10.3);
-  range.getClosedIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestInnerIndices(myVector);
   BOOST_CHECK(myVector[i_min] >= range.GetBegin());
   BOOST_CHECK(myVector[i_max] <= range.GetEnd());
   BOOST_CHECK(i_min == 6);
@@ -767,7 +759,7 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
   i_min = -1, i_max = -1;
   // range borders belong to orderded values
   range = TFloat64Range(6., 10.);
-  range.getClosedIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestInnerIndices(myVector);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(i_min == 5);
@@ -776,7 +768,7 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
   // range borders correspond to min/max orderded values
   i_min = -1, i_max = -1;
   range = TFloat64Range(1., 15.);
-  range.getClosedIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestInnerIndices(myVector);
   BOOST_CHECK(myVector[i_min] <= range.GetBegin());
   BOOST_CHECK(myVector[i_max] >= range.GetEnd());
   BOOST_CHECK(i_min == 0);
@@ -784,13 +776,13 @@ BOOST_AUTO_TEST_CASE(Closed_interval) {
 
   i_min = -1, i_max = -1;
   range = TFloat64Range(-2., 17.);
-  range.getClosedIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestInnerIndices(myVector);
   BOOST_CHECK(i_min == 0);
   BOOST_CHECK(i_max == 14);
 
   i_min = -1, i_max = -1;
   range = TFloat64Range(0, 1);
-  range.getClosedIntervalIndices(myVector, i_min, i_max);
+  std::tie(i_min, i_max) = range.getClosestInnerIndices(myVector);
   BOOST_CHECK(i_min == 0);
   BOOST_CHECK(i_max == 0);
 }
@@ -804,9 +796,7 @@ BOOST_AUTO_TEST_CASE(maskedRange) {
 
   TFloat64Range otherRange(otherVector[range.GetBegin()],
                            otherVector[range.GetEnd()]);
-  Int32 kstart = -1, kend = -1;
-  BOOST_CHECK_THROW(otherRange.getClosedIntervalIndices(ssVector, kstart, kend),
-                    AmzException);
+  BOOST_CHECK_THROW(otherRange.getClosestInnerIndices(ssVector), AmzException);
 }
 BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   TInt32Range range(1, 5);
@@ -819,8 +809,8 @@ BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   TFloat64Range otherRange(otherVector[range.GetBegin()],
                            otherVector[range.GetEnd()]);
   Int32 kstart = -1, kend = -1;
-  BOOST_CHECK_NO_THROW(
-      otherRange.getClosedIntervalIndices(ssVector, kstart, kend));
+  BOOST_CHECK_NO_THROW(std::tie(kstart, kend) =
+                           otherRange.getClosestInnerIndices(ssVector));
   BOOST_CHECK(kstart == 1);
   BOOST_CHECK(kend == 1);
 }

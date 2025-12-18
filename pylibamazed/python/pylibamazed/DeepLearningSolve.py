@@ -55,13 +55,13 @@ class DeepLearningSolve(AbstractReliabilitySolver):
             auto_load=False,
             extended_results=False,
         )
-        model = self.calibration_library.reliability["deep"][self.object_type]["models"][0]
+        models = self.calibration_library.reliability["deep"][self.object_type]["models"]
         model_parameters = self.calibration_library.reliability["deep"][self.object_type]["parameters"]
         success = model_parameters["classes"][-1]
-        return self.get_probas(output, model, model_parameters)[success]
+        return self.get_probas(output, models, model_parameters)[success]
 
     @doc_method
-    def get_probas(self, output, model, model_parameters):
+    def get_probas(self, output, models, model_parameters):
         c_zgrid_zend = model_parameters["zgrid_end"]
 
         logsampling = self.parameters.is_log_sampling(self.object_type)
@@ -74,10 +74,12 @@ class DeepLearningSolve(AbstractReliabilitySolver):
         pdfval = pdf.valProbaLog
 
         zgrid_end = zgrid[-1]
-        if pdfval.shape[0] != model.input_shape[1]:
-            raise APIException(
-                ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES, "PDF and model shapes are not compatible"
-            )
+        for m in models:
+            shape = m.input_shape[1]
+            if shape != pdfval.shape[0]:
+                raise APIException(
+                    ErrorCode.INCOMPATIBLE_PDF_MODELSHAPES, "PDF and model shapes are not compatible"
+                )
         # The model needs a PDF, not LogPDF
         zend_diff = (zgrid_end - c_zgrid_zend) / zgrid_end
         if zend_diff > 1e-6:
@@ -95,12 +97,14 @@ class DeepLearningSolve(AbstractReliabilitySolver):
                 "PDF and model shapes are not compatible, zgrid differ in the end : "
                 f"{z_step} != {np.exp(c_zrange_step)}",
             )
-        ret = dict()
+        results = list()
         classes = model_parameters["classes"]
-        probas = model.predict(np.exp(pdfval[None, :, None]))
-        for i in range(1, len(classes)):
-            ret[classes[i]] = probas[0, i]
-        return ret
+        for model in models:
+            p = model.predict(np.exp([pdfval]), verbose=False).reshape(len(classes))
+            results.append(p)
+
+        probas = np.mean(np.array(results), axis=0)
+        return {c: p for c, p in zip(classes, probas)}
 
 
 register_reliability_solver("deepLearningSolver", DeepLearningSolve, "deep")

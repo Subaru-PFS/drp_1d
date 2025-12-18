@@ -6,6 +6,7 @@
     18500
   ],
   "nbSamplesMin": 1,
+  "nbSamplesMinForContinuumFit": 20,
   "smoothWidth": 0.0,
   "templateCatalog": {
     "continuumRemoval": {
@@ -142,6 +143,8 @@
             }
           },
           "nSigmaSupport": 8,
+          "maxDistanceToLine": 1,
+          "nbSamplesMinForLineFit": 2,
           "enablePhotometry": true,
           "photometry": {
             "weight": 1.0
@@ -160,6 +163,8 @@
           "lineTypeFilter": "E",
           "lineForceFilter": "no",
           "nSigmaSupport": 8,
+          "maxDistanceToLine": 1,
+          "nbSamplesMinForLineFit": 2,
           "lineWidthType": "combined",
           "fittingMethod": "hybrid",
           "polynomialDegree": 2,

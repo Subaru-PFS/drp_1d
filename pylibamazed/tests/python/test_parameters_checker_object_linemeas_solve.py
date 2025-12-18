@@ -95,12 +95,14 @@ class TestLineMeasSolve:
             return param_dict
 
         def test_error_if_fittingmethod_is_lbfgsb_but_velocityfit_is_absent(self):
-            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb"})
+            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb", "lbdaOffsetFit": False})
             with pytest.raises(APIException, match=r"Missing parameter lineMeasSolve velocityFit"):
                 check_from_parameter_dict(param_dict)
 
         def test_ok_if_fittingmethod_is_lbfgsb_and_velocityfit_is_present(self, zflag):
-            param_dict = self._make_parameter_dict(**{"fittingMethod": "lbfgsb", "velocityFit": False})
+            param_dict = self._make_parameter_dict(
+                **{"fittingMethod": "lbfgsb", "velocityFit": False, "lbdaOffsetFit": False}
+            )
             check_from_parameter_dict(param_dict)
             assert not WarningUtils.has_any_warning()
 
@@ -109,17 +111,66 @@ class TestLineMeasSolve:
             check_from_parameter_dict(param_dict)
             assert WarningUtils.has_any_warning()
 
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_Ok_if_lbdaOffsetFit_and_mandatory_fields_present(self, fitting_method, zflag):
+            lbda_offset_step = 25 if fitting_method != "lbfgsb" else None
+            velocity_fit = False if fitting_method == "lbfgsb" else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "fittingMethod": fitting_method,
+                    "velocityFit": velocity_fit,
+                    "lbdaOffsetFit": True,
+                    "lbdaOffsetMax": 400,
+                    "lbdaOffsetStep": lbda_offset_step,
+                }
+            )
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_lbdaOffsetFit_and_mandatory_lbdaOffsetMax_absent(self, fitting_method, zflag):
+            lbda_offset_step = 25 if fitting_method != "lbfgsb" else None
+            velocity_fit = False if fitting_method == "lbfgsb" else None
+            param_dict = self._make_parameter_dict(
+                **{
+                    "fittingMethod": fitting_method,
+                    "velocityFit": velocity_fit,
+                    "lbdaOffsetFit": True,
+                    "lbdaOffsetStep": lbda_offset_step,
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineMeasSolve lineModel lbdaOffsetMax"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd"])
+        def test_error_if_lbdaOffsetFit_and_mandatory_lbdaOffsetStep_absent(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "fittingMethod": fitting_method,
+                    "lbdaOffsetFit": True,
+                    "lbdaOffsetMax": 400,
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineMeasSolve lineModel lbdaOffsetStep"
+            ):
+                check_from_parameter_dict(param_dict)
+
     class TestVelocityFit:
         def _make_parameter_dict(self, **kwargs):
             param_dict = make_parameter_dict_at_linemeas_solve_level(
-                **{"lineModel": {"fittingMethod": "lbfgsb", **kwargs}}
+                **{"lineModel": {"fittingMethod": "lbfgsb", "lbdaOffsetFit": False, **kwargs}}
             )
             return param_dict
 
         def _make_parameter_pipe_dict(self, linemodel_params, linemeas_params):
             param_dict = make_parameter_dict_linemeas_solve_piped_linemodel(
                 linemodel_level_params=linemodel_params,
-                linemeas_level_params={"lineModel": {"fittingMethod": "lbfgsb", **linemeas_params}},
+                linemeas_level_params={
+                    "lineModel": {"fittingMethod": "lbfgsb", "lbdaOffsetFit": False, **linemeas_params}
+                },
             )
             return param_dict
 

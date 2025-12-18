@@ -37,6 +37,8 @@ struct CContinuumModelSolution {
   Float64 ksStdResiduals = NAN;
   Float64 ksStdMeanResiduals = NAN;
   Float64 andersonResiduals = NAN;
+  Int32 nPixelsUsedForFit = undefIdx;
+  Int32 nPixelsOfResiduals = undefIdx;
   Float64 SNR = NAN;
   Int32 meiksinIdx = undefIdx;
   Float64 ebmvCoef = NAN;

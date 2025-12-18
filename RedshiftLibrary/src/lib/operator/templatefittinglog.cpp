@@ -407,7 +407,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
         GetIGMStartingRedshiftValue(m_spectraFull[0]->GetSpectralAxis()[0]);
     if (zmin_igm > redshifts.front() && zmin_igm < redshifts.back()) {
       Int32 i_zmin_igm = -1;
-      TFloat64Index::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
+      NSIndexing::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
       zsplit.push_back(i_zmin_igm);
     }
     if (zmin_igm < redshifts.back()) {
@@ -420,7 +420,7 @@ COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts) {
         if (z >= redshifts.back())
           break;
         Int32 iz = -1;
-        TFloat64Index::getClosestLowerIndex(redshifts, z, iz);
+        NSIndexing::getClosestLowerIndex(redshifts, z, iz);
         zsplit.push_back(iz);
       }
     }
@@ -653,7 +653,6 @@ void COperatorTemplateFittingLog::applyPrior(
         // check negative amplitude
         ampl_sigma = ampl / ampl_err;
         applyPositiveAndNonNullConstraint(ampl_sigma, ampl);
-
         result->FitAmplitude[fullResultIdx] = ampl;
         result->FitAmplitudeError[fullResultIdx] = ampl_err;
         result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
@@ -741,7 +740,8 @@ void COperatorTemplateFittingLog::computeFitQuality(
     maskVect.push_back(std::move(combinedMask));
     result->FitQuality[fullResultIdx] = NSFitQuality::computeFitQuality(
         spcFluxVect, modelFluxVect, spcFluxErrorVect,
-        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels, maskVect);
+        result->ChiSquare[fullResultIdx], nSpcUnmaskedPixels,
+        nSpcUnmaskedPixels, maskVect);
   }
 }
 
@@ -976,11 +976,13 @@ void COperatorTemplateFittingLog::FitRangez(
       TFloat64List amp_sigma(nshifts);
       TFloat64List amp_err(nshifts, DBL_MAX);
       for (Int32 k = 0; k < nshifts; k++) {
-        if (mtm_vec[k] == 0.0) {
-          amp[k] = 0.0;
-          amp_err[k] = 0.0;
-          amp_sigma[k] = 0.0;
-          chi2[k] = dtd; // keep at maximum
+        if (nValidSamples_vec[k] < m_nSamplesMinForContinuumFit) {
+          amp[k] = 0;
+          amp_err[k] = INFINITY;
+          amp_sigma[k] = -INFINITY;
+          chi2[k] = INFINITY;
+        } else if (mtm_vec[k] == 0.0) {
+          THROWG(ErrorCode::INTERNAL_ERROR, "mtm_vec[k] == 0");
         } else {
           amp[k] = dtm_vec[k] / mtm_vec[k];
           amp_err[k] = sqrt(1. / mtm_vec[k]);
@@ -1013,6 +1015,7 @@ void COperatorTemplateFittingLog::FitRangez(
           bestFitDtm[k] = dtm_vec[k];
           bestFitMtm[k] = mtm_vec[k];
           bestFitSNR[k] = -1.;
+          bestFitQuality[k].nPixelsUsedForFit = nValidSamples_vec[k];
           if (bestFitMtm[k] > 0) {
             bestFitSNR[k] = bestFitDtm[k] / std::sqrt(bestFitMtm[k]);
           }
@@ -1292,10 +1295,8 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector());
     for (Int32 j = imin; j <= imax; j++) {
       if (mask[j]) {
         numDevs++;

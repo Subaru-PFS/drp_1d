@@ -88,7 +88,7 @@ public:
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
                                            bool with_continuum,
-                                           bool with_weight = true) {
+                                           bool with_weight = true) const {
     return m_models->getModelResidualRmsUnderElements(EltsIdx, with_continuum,
                                                       with_weight);
   }
@@ -113,7 +113,8 @@ protected:
 
   void setLambdaOffset(const TInt32List &EltsIdx, Int32 offsetCount);
 
-  bool HasLambdaOffsetFitting(TInt32List EltsIdx,
+  virtual bool HasLambdaOffsetFitting() const { return false; };
+  bool HasLineElementToOffset(TInt32List EltsIdx,
                               bool enableOffsetFitting) const;
   Int32 GetLambdaOffsetSteps(bool atLeastOneOffsetToFit) const;
 
@@ -139,11 +140,12 @@ protected:
     return m_ElementsVector->getElementList();
   }
 
-  std::vector<TLineModelElementParam_ptr> &getElementParam() {
-    return m_ElementsVector->getElementParam();
+  std::vector<TLineModelElementParam_ptr> &getElementsParams() {
+    return m_ElementsVector->getElementsParams();
   }
-  const std::vector<TLineModelElementParam_ptr> &getElementParam() const {
-    return m_ElementsVector->getElementParam();
+  std::vector<ConstTLineModelElementParam_ptr> getElementsParams() const {
+    return std::static_pointer_cast<const CLMEltListVector>(m_ElementsVector)
+        ->getElementsParams();
   }
 
   Int32 m_nbElements;

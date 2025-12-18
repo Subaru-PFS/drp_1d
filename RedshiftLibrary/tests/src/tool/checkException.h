@@ -36,27 +36,18 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/method/reliabilitysolve.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/method/reliabilityresult.h"
-#include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
+
+#ifndef CHECK_EXCEPTIONS_FOR_TESTS
+#define CHECK_EXCEPTIONS_FOR_TESTS
+
+#include "RedshiftLibrary/common/exception.h"
 
 using namespace NSEpic;
 
-CReliabilitySolve::CReliabilitySolve() : CSolve("reliabilityFromProbaSolver") {}
+bool check_error_code(AmzException const &e, ErrorCode const &code);
 
-std::shared_ptr<CSolveResult> CReliabilitySolve::compute() {
-
-  std::shared_ptr<CReliabilityResult> reliabResult =
-      std::make_shared<CReliabilityResult>();
-  Float64 merit = 1;
-  int reliability = 6 - floor(merit * 6);
-  if (reliability == 0)
-    reliability = 1;
-  std::ostringstream os;
-  os << "C" << reliability;
-  reliabResult->m_ReliabilityLabel = os.str();
-
-  return reliabResult;
+inline bool check_error_code(AmzException const &e, ErrorCode const &code) {
+  return e.getErrorCode() == code;
 }
+
+#endif

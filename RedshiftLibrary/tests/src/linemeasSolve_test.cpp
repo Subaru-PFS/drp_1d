@@ -51,6 +51,7 @@ const std::string jsonString =
     "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -68,12 +69,11 @@ const std::string jsonString =
     "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : null ,"
-    "\"linemeas_method\" : \"lineMeasSolve\","
     "\"lineMeasDzHalf\" : 0.0,"
     "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
     "\"lineMeasSolver\" : {"
+    "\"method\" : \"lineMeasSolve\","
     "\"lineMeasSolve\" : {"
     "\"lineModel\" : {"
     "\"lya\": {\"profile\": \"igm\"},"
@@ -83,12 +83,16 @@ const std::string jsonString =
     "\"lineTypeFilter\" : \"E\","
     "\"lineForceFilter\" : \"no\","
     "\"nSigmaSupport\" : 8,"
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\","
     "\"lineWidthType\" : \"combined\","
     "\"fittingMethod\" : \"hybrid\","
     "\"polynomialDegree\" : 2,"
     "\"velocityFit\" : false,"
     "\"ampOffsetFit\": \"true\","
     "\"lbdaOffsetFit\": \"true\","
+    "\"lbdaOffsetMax\": \"400\","
+    "\"lbdaOffsetStep\": \"25\","
     "\"lineRatioType\" : \"rules\","
     "\"rules\" : \"no\","
     "\"improveBalmerFit\" : true,"
@@ -100,6 +104,7 @@ const std::string jsonString_lbfgsb =
     "\"lambdaRange\" : [ 4680, 4712 ],"
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -117,12 +122,11 @@ const std::string jsonString_lbfgsb =
     "\"autoCorrectInput\" : false,"
     "\"galaxy\" : {"
     "\"redshiftSampling\" : \"log\","
-    "\"method\" : null ,"
-    "\"linemeas_method\" : \"lineMeasSolve\","
     "\"lineMeasDzHalf\" : 0.0,"
     "\"lineMeasRedshiftStep\" : 0.0001,"
     "\"redshiftref\" : 0.25969245809934272,"
     "\"lineMeasSolver\" : {"
+    "\"method\" : \"lineMeasSolve\","
     "\"lineMeasSolve\" : {"
     "\"lineModel\" : {"
     "\"lya\": {\"profile\": \"igm\"},"
@@ -132,12 +136,15 @@ const std::string jsonString_lbfgsb =
     "\"lineTypeFilter\" : \"E\","
     "\"lineForceFilter\" : \"no\","
     "\"nSigmaSupport\" : 14,"
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\","
     "\"lineWidthType\" : \"combined\","
     "\"fittingMethod\" : \"lbfgsb\","
     "\"polynomialDegree\" : 2,"
     "\"velocityFit\" : true,"
     "\"ampOffsetFit\": \"true\","
     "\"lbdaOffsetFit\": \"true\","
+    "\"lbdaOffsetMax\": \"400\","
     "\"emVelocityFitMin\" : 10,"
     "\"emVelocityFitMax\" : 400,"
     "\"absVelocityFitMin\" : 150,"
@@ -258,10 +265,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII;
-  BOOST_CHECK_CLOSE(snrOII, 16.196486940733053, 1e-6);
+  BOOST_CHECK_CLOSE(snrOII, 16.133673282026134, 1e-6);
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.658215485050579, 1e-6);
+  BOOST_CHECK_CLOSE(lfOII, -15.656149251090058, 1e-6);
 
   ctx.reset();
 }
@@ -284,9 +291,9 @@ BOOST_FIXTURE_TEST_CASE(compute_test_lbfgs, fixture_LinemeasSolveLbfgsbTest) {
       Context.GetResultStore()->GetLineModelSolution(
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
-  BOOST_CHECK_CLOSE(res->snrOII_DI, 21.480993641608535, 1);
+  BOOST_CHECK_CLOSE(res->snrOII_DI, 22.998600370737098, 1);
 
-  BOOST_CHECK_CLOSE(res->lfOII_DI, -15.78954228328228, 0.1); // 0.1%
+  BOOST_CHECK_CLOSE(res->lfOII_DI, -15.792660594203932, 0.1); // 0.1%
 
   BOOST_CHECK_CLOSE(res->lfOII, -15.778872598441525, 0.1); // 0.1%
 

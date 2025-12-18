@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/line/airvacuum.h"
@@ -296,32 +297,17 @@ void CSpectrumSpectralAxis::ClampLambdaRange(
 /**
  *
  */
-TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange(
+TInt32Range CSpectrumSpectralAxis::GetIndexRangeAtWaveLengthRange(
     const TFloat64Range &waveLengthRange) const {
-  TInt32Range r;
-
-  r.SetBegin(GetIndexAtWaveLength(waveLengthRange.GetBegin()));
-  r.SetEnd(GetIndexAtWaveLength(waveLengthRange.GetEnd()));
-
-  return r;
+  return TInt32Range(
+      waveLengthRange.getClosestInnerIndices(GetSamplesVector()));
 }
 
 /**
  *
  */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength(Float64 waveLength) const {
-  Int32 lo = 0;
-  Int32 hi = GetSamplesCount() - 1;
-
-  if (waveLength <= m_Samples[lo])
-    return lo;
-
-  if (waveLength >= m_Samples[hi])
-    return hi;
-
-  auto it = std::lower_bound(m_Samples.begin(), m_Samples.end(), waveLength);
-
-  return (it - m_Samples.begin());
+  return NSIndexing::getClosestIndex(m_Samples, waveLength);
 }
 
 /**
@@ -406,9 +392,8 @@ TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const {
 
 TMaskList CSpectrumSpectralAxis::GetSubSamplingMask(
     Int32 ssratio, TFloat64Range const &lambdarange) const {
-  Int32 imin = -1, imax = m_Samples.size();
-  lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
-  return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
+  TInt32Range const irange = lambdarange.getClosestInnerIndices(m_Samples);
+  return GetSubSamplingMask(ssratio, irange);
 }
 
 /*@ssratio stands for sub-samplingRatio*/

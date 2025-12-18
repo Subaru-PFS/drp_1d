@@ -83,6 +83,7 @@ BOOST_FIXTURE_TEST_CASE(fitQuality_test,
   BOOST_CHECK_CLOSE(result.chiSquare, 335.74709, 1e-4);
   BOOST_CHECK_CLOSE(result.fitQuality.reducedChiSquare, 6.3348507, 1e-4);
   BOOST_CHECK_CLOSE(result.fitQuality.pValue, 3.952430e-43, 1e-4);
+  BOOST_CHECK_EQUAL(result.fitQuality.nPixelsUsedForFit, 53);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

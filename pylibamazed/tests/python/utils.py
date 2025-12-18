@@ -38,7 +38,7 @@
 # ============================================================================
 from pylibamazed.CustomParametersChecker import CustomParametersChecker
 from pylibamazed.redshift import CFlagWarning, WarningCode
-from typing import Optional, Union, Dict
+from typing import Optional, Dict
 
 default_object_type = "galaxy"
 

@@ -62,7 +62,7 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
     // k = gsl_interp_bsearch
     // (Xsrc.data(), Xtgt[j], kprev,
     // n);
-    k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[cursor]);
+    k = NSIndexing::getClosestIndex(Xsrc, Xtgt[cursor]);
     Float64 xSrcStep = NAN;
     if (k == ssize(Xsrc) - 1)
       xSrcStep = Xsrc[k] - Xsrc[k - 1];

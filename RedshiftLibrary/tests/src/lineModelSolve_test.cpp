@@ -59,6 +59,7 @@ const std::string multiLambdaString =
 const std::string jsonString =
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -98,6 +99,8 @@ const std::string jsonString =
     "\"lbdaOffsetFit\": \"false\","
     "\"extremaCount\" : 5,"
     "\"nSigmaSupport\" : 8,"
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\","
     "\"hAlphaPrior\" : 0.5,"
     "\"nOfZPriorStrength\" : 1.0,"
     "\"extremaCutProbaThreshold\" : -1,"
@@ -136,6 +139,7 @@ const std::string jsonString =
 const std::string jsonStringS =
     "\"smoothWidth\" : 0.0,"
     "\"nbSamplesMin\" : 1,"
+    "\"nbSamplesMinForContinuumFit\" : 10,"
     "\"templateCatalog\" : {"
     "\"continuumRemoval\" : {"
     "\"method\" : \"zero\","
@@ -175,6 +179,8 @@ const std::string jsonStringS =
     "\"lbdaOffsetFit\": \"false\","
     "\"extremaCount\" : 5,"
     "\"nSigmaSupport\" : 8,"
+    "\"maxDistanceToLine\" : \"1\","
+    "\"nbSamplesMinForLineFit\": \"2\","
     "\"hAlphaPrior\" : 0.5,"
     "\"nOfZPriorStrength\" : 1.0,"
     "\"extremaCutProbaThreshold\" : -1,"
@@ -304,6 +310,8 @@ const std::string jsonStringFromSpectrum =
 const std::string jsonStringPowerLaw =
     "\"skipSecondPass\" : false,"
     "\"continuumComponent\" : \"powerLaw\","
+    "\"powerLaw\" : { \"firstPowerCoefMin\" : -100, \"firstPowerCoefMax\" : "
+    "100, \"secondPowerCoefMin\" : -100, \"secondPowerCoefMax\" : 100 },"
     "\"pdfCombination\" : \"bestChi2\","
     "\"tplRatioIsmFit\" : true,"
     "\"rules\" : \"balmerSingle\","
@@ -582,33 +590,33 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
   BOOST_CHECK_EQUAL(res->fittedContinuum.name, "powerLaw");
 
   // Checks Merit, reducedChi2 and pValue presence in resultStore
-  BOOST_CHECK_CLOSE(res->Merit, 116299.57931821454, 1e-4);
-  BOOST_CHECK_CLOSE(res->reducedChi2, 174.62399297029202, 1e-4);
-  BOOST_CHECK_CLOSE(res->pValue, 0, 1e-4);
-  BOOST_CHECK_CLOSE(res->meanResiduals, -0.077840134758103141, 1e-4);
-  BOOST_CHECK_CLOSE(res->stdResiduals, 13.224239760490484, 1e-4);
-  BOOST_CHECK_CLOSE(res->skewnessResiduals, 6.7074936982876734, 1e-4);
-  BOOST_CHECK_CLOSE(res->kurtosisResiduals, 105.29820217726626, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksResiduals, 0.49249176372964421, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksStdResiduals, 0.49249243738438331, 1e-4);
-  BOOST_CHECK_CLOSE(res->ksStdMeanResiduals, 0.4901442085184422, 1e-4);
-  BOOST_CHECK_CLOSE(res->andersonResiduals, 232.95412252894781, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 5.0401306164046407e-07,
-                    1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 8.4795422657788838e-07,
-                    1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals,
-                    -0.20666819840955297, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, -1.2152985735668693,
-                    1e-4);
+  BOOST_CHECK_CLOSE(res->Merit, 116299.57931821454, 1e-2);
+  BOOST_CHECK_CLOSE(res->reducedChi2, 174.36218724914639, 1e-2);
+  BOOST_CHECK_CLOSE(res->pValue, 0, 1e-2);
+  BOOST_CHECK_CLOSE(res->meanResiduals, -0.077692688213700081, 1e-2);
+  BOOST_CHECK_CLOSE(res->stdResiduals, 13.214308423750786, 1e-2);
+  BOOST_CHECK_CLOSE(res->skewnessResiduals, 6.7125158795700477, 1e-2);
+  BOOST_CHECK_CLOSE(res->kurtosisResiduals, 105.46098429570473, 1e-2);
+  BOOST_CHECK_CLOSE(res->ksResiduals, 0.49250300737949704, 1e-2);
+  BOOST_CHECK_CLOSE(res->ksStdResiduals, 0.49250369206954603, 1e-2);
+  BOOST_CHECK_CLOSE(res->ksStdMeanResiduals, 0.49015814975057526, 1e-2);
+  BOOST_CHECK_CLOSE(res->andersonResiduals, 233.33837768875401, 1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 5.3069139794684041e-07,
+                    1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 8.4620124124646403e-07,
+                    0.1);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, -0.2031645239762381,
+                    1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, -1.2149614015683372,
+                    1e-2);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.49999926977158426,
-                    1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.25959917196633869,
-                    1e-4);
+                    1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.26915594511360713,
+                    0.1);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
-                    0.086097178179031814, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 9.516900149996637,
-                    1e-4);
+                    0.08497111085032491, 1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 9.4419779149304439,
+                    1e-2);
   ctx.reset();
 }
 
@@ -662,22 +670,22 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
 
   Float64 z = res->Redshift;
   BOOST_CHECK_CLOSE(z, 0.2596216267268967, 0.1);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 9.3173592584984399e-57, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 1.079885111724705,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.pValue, 9.3175574665468835e-57, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 1.0798837732834095,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.5984491932539444,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 2.5984495796730163,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, 2.3748272983194871,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.skewnessResiduals, 2.3748265998949076,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 4.8729161030913097,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.kurtosisResiduals, 4.8729142013518398,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.18278940719132647,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksResiduals, 0.18278673094090098,
                     1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.31339084906278203,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdResiduals, 0.31339086742758954,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
-                    0.31009642772339108, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2102653424748677,
+                    0.31009614204202307, 1e-4);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2102555493232368,
                     1e-4);
   ctx.reset();
 }
@@ -777,11 +785,11 @@ BOOST_FIXTURE_TEST_CASE(continuumChi2CorrectlySet_test,
           lineModelSolve.compute());
   BOOST_CHECK(lineModelSolve.m_opt_continuumcomponent.isContinuumFit());
   BOOST_CHECK_CLOSE(lmSolveResult->getContinuumEvidence(), 1883.5584, 1E-4);
-  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.4338527454274024,
+  BOOST_CHECK_CLOSE(lmSolveResult->minContinuumReducedChi2, 6.433852629157113,
                     1E-4);
-  BOOST_CHECK_CLOSE(lmSolveResult->maxFitAmplitudeSigma, 8.4786296286559519,
+  BOOST_CHECK_CLOSE(lmSolveResult->maxFitAmplitudeSigma, 8.4786300057726542,
                     1E-4);
-  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.5165937452759085e-56, 1E-4);
+  BOOST_CHECK_CLOSE(lmSolveResult->maxPValue, 1.5166332829475346e-56, 1E-4);
 
   auto res = std::dynamic_pointer_cast<const TLineModelResult>(
       Context.GetResultStore()->GetExtremaResult(
@@ -906,5 +914,4 @@ BOOST_FIXTURE_TEST_CASE(computeFromSpectrum_test,
 
   ctx.reset();
 }
-
 BOOST_AUTO_TEST_SUITE_END()

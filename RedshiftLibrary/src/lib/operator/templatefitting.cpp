@@ -102,13 +102,23 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
                   result.overlapFraction[spcIndex], overlapThreshold, spcIndex);
     // Sets template indexes between which data is of interest for this given
     // spectrum / redshift
-    currentRanges[spcIndex].getClosedIntervalIndices(
-        m_templateRebined_bf[spcIndex].GetSpectralAxis().GetSamplesVector(),
-        m_kStart[spcIndex], m_kEnd[spcIndex]);
+    std::tie(m_kStart[spcIndex], m_kEnd[spcIndex]) =
+        currentRanges[spcIndex].getClosestInnerIndices(
+            m_templateRebined_bf[spcIndex]
+                .GetSpectralAxis()
+                .GetSamplesVector());
   }
 
   // get masks & determine number of samples actually used
   auto &&[mask_list, n_samples] = getMaskListAndNSamples(redshift);
+
+  if (n_samples < m_nSamplesMinForContinuumFit) {
+    result.ampl = 0;
+    result.ampl_sigma = -INFINITY;
+    result.ampl_err = INFINITY;
+    result.chiSquare = INFINITY;
+    return result;
+  }
 
   if (opt_extinction)
     opt_extinction = igmIsInRange(currentRanges);
@@ -250,10 +260,9 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
 
     maskInRange.push_back(CMask(std::move(mask), kStart, kEnd + 1));
   }
-
   result.fitQuality = NSFitQuality::computeFitQuality(
       spcFluxInRange, modelFluxInRange, spcFluxErrorInRange, result.chiSquare,
-      nPixels, maskInRange);
+      nPixels, nPixels, maskInRange);
 }
 
 void COperatorTemplateFitting::init_fast_igm_processing(Int32 EbmvListSize) {
@@ -355,7 +364,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   }
 
   if (sumT == 0.0) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "empty leastsquare sum");
+    THROWG(ErrorCode::INTERNAL_ERROR, "Empty leastsquare sum");
   }
 
   return fitResult;

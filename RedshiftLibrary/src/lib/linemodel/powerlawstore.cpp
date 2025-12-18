@@ -73,6 +73,8 @@ void CPowerLawStore::Add(const Float64 ismEbmvCoeff, const Int32 igmMeiksinIdx,
   tmpCContinuumModelSolution.ksStdResiduals = fitQuality.ksStdResiduals;
   tmpCContinuumModelSolution.ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
   tmpCContinuumModelSolution.andersonResiduals = fitQuality.andersonResiduals;
+  tmpCContinuumModelSolution.nPixelsUsedForFit = fitQuality.nPixelsUsedForFit;
+  tmpCContinuumModelSolution.nPixelsOfResiduals = fitQuality.nPixelsOfResiduals;
   tmpCContinuumModelSolution.SNR = snr;
 
   Int32 idxz = GetRedshiftIndex(redshift);

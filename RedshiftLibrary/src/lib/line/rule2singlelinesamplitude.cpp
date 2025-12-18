@@ -97,12 +97,14 @@ void CRule2SingleLinesAmplitude::Correct(
                              << " has same index as line " << m_LineB);
     return;
   }
-  if (LineModelElementList.getElementParam()[iEltA]->isFittable() &&
-      LineModelElementList.getElementParam()[iEltB]->isFittable()) {
+  if (LineModelElementList.getElementsParams()[iEltA]->isFittable() &&
+      LineModelElementList.getElementsParams()[iEltB]->isFittable()) {
     Float64 ampA =
-        LineModelElementList.getElementParam()[iEltA]->GetFittedAmplitude(idA);
+        LineModelElementList.getElementsParams()[iEltA]->GetFittedAmplitude(
+            idA);
     Float64 ampB =
-        LineModelElementList.getElementParam()[iEltB]->GetFittedAmplitude(idB);
+        LineModelElementList.getElementsParams()[iEltB]->GetFittedAmplitude(
+            idB);
 
     if (!(ampA <= 0.0 && ampB <= 0.0)) {
       //*
@@ -110,7 +112,7 @@ void CRule2SingleLinesAmplitude::Correct(
       // account
       Float64 maxB = (m_Coefficient * ampA);
       if (maxB == std::min(maxB, ampB)) {
-        LineModelElementList.getElementParam()[iEltB]->LimitFittedAmplitude(
+        LineModelElementList.getElementsParams()[iEltB]->LimitFittedAmplitude(
             idB, maxB);
         // log the correction
         {

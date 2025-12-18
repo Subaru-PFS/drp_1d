@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/operator/logZPdfResult.h"
@@ -202,16 +201,6 @@ COperatorResultStore::GetClassificationResult(const std::string &spectrumModel,
           .lock());
 }
 
-std::shared_ptr<const CReliabilityResult>
-COperatorResultStore::GetReliabilityResult(const std::string &spectrumModel,
-                                           const std::string &stage,
-                                           const std::string &method,
-                                           const std::string &name) const {
-  return std::dynamic_pointer_cast<const CReliabilityResult>(
-      GetGlobalResult(buildFullname(spectrumModel, stage, method, name))
-          .lock());
-}
-
 std::shared_ptr<const CLogZPdfResult> COperatorResultStore::GetLogZPdfResult(
     const std::string &spectrumModel, const std::string &stage,
     const std::string &method, const std::string &name) const {
@@ -250,14 +239,15 @@ COperatorResultStore::GetLineModelResult(
 }
 
 std::shared_ptr<const TTplCombinationResult>
-COperatorResultStore::GetTplCombinationResult(const std::string &spectrumModel,
-                                              const std::string &stage,
-                                              const std::string &method,
-                                              const std::string &name,
-                                              const std::string &dataset,
-                                              const int &rank) const
+COperatorResultStore::GetTplCombinationResult(
+    const std::string &spectrumModel, const std::string &stage,
+    const std::string &method, const std::string &name,
+    const std::string &dataset, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
+  if (firstpassCorrespondingResult)
+    return nullptr;
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(spectrumModel, stage, method, name)
           .lock()

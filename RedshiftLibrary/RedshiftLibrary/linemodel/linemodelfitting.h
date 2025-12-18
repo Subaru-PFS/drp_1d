@@ -187,8 +187,12 @@ public:
   const CLineModelElementList &getElementList() const {
     return m_ElementsVector->getElementList();
   }
-  std::vector<TLineModelElementParam_ptr> &getElementParam() {
-    return m_ElementsVector->getElementParam();
+  std::vector<TLineModelElementParam_ptr> &getElementsParams() {
+    return m_ElementsVector->getElementsParams();
+  }
+  std::vector<ConstTLineModelElementParam_ptr> getElementsParams() const {
+    return std::static_pointer_cast<const CLMEltListVector>(m_ElementsVector)
+        ->getElementsParams();
   }
 
   const TLambdaRange &getLambdaRange() const {
@@ -209,19 +213,15 @@ public:
   Int32 getTplratio_count() const;
   TFloat64List getTplratio_priors() const;
 
-  CLineRatioManager::EType const getLineRatioStrictType() const {
+  CLineRatioManager::EType getLineRatioStrictType() const {
     return m_lineRatioManager->getStrictType();
   }
 
-  bool const isLineRatioRules() const { return m_lineRatioManager->isRules(); }
+  bool isLineRatioRules() const { return m_lineRatioManager->isRules(); }
 
-  bool const isLineRatioTplRatio() const {
-    return m_lineRatioManager->isTplRatio();
-  }
+  bool isLineRatioTplRatio() const { return m_lineRatioManager->isTplRatio(); }
 
-  bool const isLineRatioTplCorr() const {
-    return m_lineRatioManager->isTplCorr();
-  }
+  bool isLineRatioTplCorr() const { return m_lineRatioManager->isTplCorr(); }
 
   CSpectraGlobalIndex &getSpectraIndex() const { return m_spectraIndex; }
   void refreshAllModels();
@@ -255,21 +255,47 @@ private:
   void computeSpectrumFluxWithoutContinuum();
 
   void SetLSF(std::shared_ptr<const CLSF> const &lsf = nullptr);
-  CLineModelSolution GetModelSolution(bool fullSolution = false);
-  void ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution);
+  CLineModelSolution GetModelSolution(bool fullSolution = false) const;
+  void
+  ComputeAndAddOptionalLineProperties(CLineModelSolution &modelSolution) const;
 
   // Multi obs combination/aggregation methods on elements Lists
 
-  std::pair<Float64, Float64>
-  GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index, Float64 redshift);
+  std::pair<Float64, Float64> GetMeanContinuumUnderLine(Int32 eltIdx,
+                                                        Int32 line_index,
+                                                        Float64 redshift) const;
 
   std::pair<Float64, Float64>
-  GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index, Float64 redshift);
+  GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
+                              Float64 redshift) const;
 
   std::pair<Float64, Float64>
   getFluxDirectIntegration(const TInt32List &eIdx_list,
                            const TInt32List &subeIdx_list,
                            bool substract_abslinesmodel) const;
+  void processSingleLine(Int32 iRestLine, CLineModelSolution &modelSolution,
+                         TInt32List &eIdx_oii, TInt32List &subeIdx_oii,
+                         Float64 &flux_oii, Float64 &fluxVar_oii,
+                         TInt32List &eIdx_ha, TInt32List &subeIdx_ha,
+                         Float64 &flux_ha, Float64 &fluxVar_ha) const;
+
+  void updateResidualsAndContinuum(Int32 iRestLine,
+                                   CLineModelSolution &modelSolution,
+                                   Int32 eIdx, Int32 line_index) const;
+
+  Int32 computeNSamplesUnderLine(Int32 Elt_id, Int32 line_index) const;
+
+  std::tuple<Float64, Float64, bool>
+  computeLineFlux(Int32 iRestLine, CLineModelSolution &modelSolution,
+                  Int32 eIdx, Int32 line_index) const;
+  void accumulateLineFluxes(Float64 flux, Float64 fluxError, Int32 eIdx,
+                            Int32 line_index, Int32 line_id,
+                            CLineModelSolution &modelSolution,
+                            TInt32List &eIdx_ha, TInt32List &subeIdx_ha,
+                            Float64 &flux_ha, Float64 &fluxVar_ha,
+                            TInt32List &eIdx_oii, TInt32List &subeIdx_oii,
+                            Float64 &flux_oii, Float64 &fluxVar_oii) const;
+  void addLyaParams(CLineModelSolution &modelSolution) const;
 
   const CLineMap m_RestLineList;
 

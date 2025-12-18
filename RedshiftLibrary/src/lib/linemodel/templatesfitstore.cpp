@@ -85,6 +85,8 @@ void CTemplatesFitStore::Add(
   tmpCContinuumModelSolution.ksStdResiduals = fitQuality.ksStdResiduals;
   tmpCContinuumModelSolution.ksStdMeanResiduals = fitQuality.ksStdMeanResiduals;
   tmpCContinuumModelSolution.andersonResiduals = fitQuality.andersonResiduals;
+  tmpCContinuumModelSolution.nPixelsUsedForFit = fitQuality.nPixelsUsedForFit;
+  tmpCContinuumModelSolution.nPixelsOfResiduals = fitQuality.nPixelsOfResiduals;
   tmpCContinuumModelSolution.tplMeritPhot = chiSquare_phot;
   tmpCContinuumModelSolution.tplAmplitude = fitAmplitude;
   tmpCContinuumModelSolution.tplAmplitudeError = fitAmplitudeError;

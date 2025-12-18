@@ -98,6 +98,8 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
   CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
   std::string const jsonString = {
       "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
+      "\"maxDistanceToLine\" : \"1\","
+      "\"nbSamplesMinForLineFit\": \"2\","
       "\"velocityEmission\": 100,"
       "\"lineWidthType\": \"instrumentDriven\""
       "}}}}}"};
@@ -114,12 +116,12 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
 
 void RuleStrongHigherThanWeak_fixture::setLineModelElementsAmplitudes(
     TFloat64List amps) {
-  auto &param1 = *(element_list_vector.getElementParam()[0]);
+  auto &param1 = *(element_list_vector.getElementsParams()[0]);
   param1.m_FittedAmplitudes = {amps[2], amps[3]};
   param1.m_NominalAmplitudes = {amps[2], amps[3]};
   param1.m_FittedAmplitudesStd = TFloat64List(param1.size());
 
-  auto &param2 = *(element_list_vector.getElementParam()[1]);
+  auto &param2 = *(element_list_vector.getElementsParams()[1]);
   param2.m_FittedAmplitudes = {amps[0], amps[1]};
   param2.m_NominalAmplitudes = {amps[0], amps[1]};
   param2.m_FittedAmplitudesStd = TFloat64List(param2.size());
@@ -144,7 +146,7 @@ BOOST_AUTO_TEST_CASE(Correct_test_no_change) {
   rule.SetUp(true, CLine::EType::nType_Emission);
   rule.Correct(element_list_vector);
 
-  auto &params = element_list_vector.getElementParam();
+  auto &params = element_list_vector.getElementsParams();
   Float64 correctedAmpWeak1 = params[1]->m_FittedAmplitudes[0];
   Float64 correctedAmpWeak2 = params[1]->m_FittedAmplitudes[1];
   Float64 correctedAmpStrong1 = params[0]->m_FittedAmplitudes[0];
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Correct_test_one_high_weak) {
   rule.SetUp(true, CLine::EType::nType_Emission);
   rule.Correct(element_list_vector);
 
-  auto &params = element_list_vector.getElementParam();
+  auto &params = element_list_vector.getElementsParams();
   Float64 correctedAmpWeak1 = params[1]->m_FittedAmplitudes[0];
   Float64 correctedAmpWeak2 = params[1]->m_FittedAmplitudes[1];
   Float64 correctedAmpStrong1 = params[0]->m_FittedAmplitudes[0];

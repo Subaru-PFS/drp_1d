@@ -283,8 +283,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
                                 LineModelSolutions[solutionIdx].ElementId[j]) !=
                       indexesSols.end();
 
-    if (alreadysol || !restLineList.at(line_id).IsStrong() ||
-        !restLineList.at(line_id).IsEmission())
+    if (alreadysol || !restLineList.at(line_id).IsEmission())
       continue;
 
     Float64 const noise =

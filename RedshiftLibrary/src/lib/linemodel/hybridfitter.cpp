@@ -136,7 +136,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
       std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
-      m_ElementsVector->getElementParam()[overlapping_iElt]
+      m_ElementsVector->getElementsParams()[overlapping_iElt]
           ->SetFittingGroupInfo(fitGroupTag);
     }
 
@@ -174,149 +174,187 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
   }
 }
 
+TStringList CHybridFitter::initEmissionBalmerTags() {
+  return {linetags::halpha_em, linetags::hbeta_em, linetags::hgamma_em,
+          linetags::hdelta_em};
+}
+
+TStringList CHybridFitter::initAbsorptionBalmerTags() {
+  return {linetags::halpha_abs, linetags::hbeta_abs, linetags::hgamma_abs,
+          linetags::hdelta_abs};
+}
+
+std::vector<TStringList> CHybridFitter::initAdditionalTags() {
+  // Additional lines to be fitted with the Balmer lines, WARNING: only
+  // EMISSION for now !!
+  TStringList linetagsNII = {linetags::niia_em, linetags::niib_em};
+  TStringList empty;
+  return {linetagsNII, empty, empty, empty};
+}
+
 // return error: 1=can't find element index, 2=Abs_width not high enough
 // compared to Em_width
 void CHybridFitter::improveBalmerFit(Float64 redshift) {
+  auto linetagsE = initEmissionBalmerTags();
+  auto linetagsA = initAbsorptionBalmerTags();
+  auto linetagsMore = initAdditionalTags();
 
-  // Emission Balmer lines
-  TStringList linetagsE;
-  linetagsE.push_back(linetags::halpha_em);
-  linetagsE.push_back(linetags::hbeta_em);
-  linetagsE.push_back(linetags::hgamma_em);
-  linetagsE.push_back(linetags::hdelta_em);
-  // Absorption Balmer lines
-  TStringList linetagsA;
-  linetagsA.push_back(linetags::halpha_abs);
-  linetagsA.push_back(linetags::hbeta_abs);
-  linetagsA.push_back(linetags::hgamma_abs);
-  linetagsA.push_back(linetags::hdelta_abs);
-  // Additional lines to be fitted with the Balmer lines, WARNING: only
-  // EMISSION for now !!
-  TStringList linetagsNII;
-  linetagsNII.push_back(linetags::niia_em);
-  linetagsNII.push_back(linetags::niib_em);
-  TStringList linetagsVoid;
-  std::vector<TStringList> linetagsMore;
-  linetagsMore.push_back(linetagsNII);
-  linetagsMore.push_back(linetagsVoid);
-  linetagsMore.push_back(linetagsVoid);
-  linetagsMore.push_back(linetagsVoid);
-
-  if (linetagsE.size() != linetagsA.size() ||
-      linetagsE.size() != linetagsMore.size()) {
+  if (!validateTagSizes(linetagsE, linetagsA, linetagsMore)) {
     return;
   }
 
   for (Int32 itag = 0; itag < ssize(linetagsE); itag++) {
-    std::string tagE = linetagsE[itag];
-    std::string tagA = linetagsA[itag];
-
-    auto const &[iElt_lineE, lineE_id] =
-        m_ElementsVector->findElementIndex(tagE, CLine::EType::nType_Emission);
-    auto const &[iElt_lineA, lineA_id] = m_ElementsVector->findElementIndex(
-        tagA, CLine::EType::nType_Absorption);
-    // Were the lines indexes found ?
-    if (iElt_lineE == undefIdx || iElt_lineA == undefIdx)
-      continue;
-
-    // for now only allow this process if Em and Abs line are single lines
-    if (getElementList()[iElt_lineE]->GetSize() > 1 ||
-        getElementList()[iElt_lineA]->GetSize() > 1) {
-      continue;
-    }
-
-    // check if line is visible:
-    if (getElementParam()[iElt_lineE]->isNotFittable() ||
-        getElementParam()[iElt_lineA]->isNotFittable())
-      continue;
-
-    // find the linesMore unique elements indexes
-    TInt32List ilinesMore;
-    TInt32List linesMoreIds;
-    for (Int32 imore = 0; imore < ssize(linetagsMore[itag]); imore++) {
-      std::string tagMore = linetagsMore[itag][imore];
-      auto const &[iElt_lineMore, lineMore_id] =
-          m_ElementsVector->findElementIndex(tagMore,
-                                             CLine::EType::nType_Emission);
-      if (iElt_lineMore == undefIdx ||
-          getElementParam()[iElt_lineMore]->isNotFittable())
-        continue;
-
-      ilinesMore.push_back(iElt_lineMore);
-      linesMoreIds.push_back(lineMore_id);
-    }
-    std::sort(ilinesMore.begin(), ilinesMore.end());
-    ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
-                     ilinesMore.end());
-    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
-      Log.LogDebug(Formatter() << "    model: balmerImprove more tags = "
-                               << ilinesMore[imore]);
-    }
-
-    // try if the width is significantly different: abs > em
-    Float64 const AbsVSEmWidthCoeffThreshold = 2.0;
-    auto const &[muE, sigmaE] =
-        getElementList()[iElt_lineE]->getObservedPositionAndLineWidth(
-            redshift, lineE_id,
-            false); // do not apply Lya asym offset
-    auto const &[muA, sigmaA] =
-        getElementList()[iElt_lineA]->getObservedPositionAndLineWidth(
-            redshift, lineA_id,
-            false); // do not apply Lya asym offset
-    if (sigmaA < AbsVSEmWidthCoeffThreshold * sigmaE) {
-      continue;
-    }
-
-    // simulatneous fit with linsolve
-    Float64 modelErr_init =
-        getModelResidualRmsUnderElements({iElt_lineA}, true);
-    Float64 ampA = getElementParam()[iElt_lineA]->GetFittedAmplitude(lineA_id);
-    Float64 amp_errorA =
-        getElementParam()[iElt_lineA]->GetFittedAmplitudeStd(lineA_id);
-    Float64 ampE = getElementParam()[iElt_lineE]->GetFittedAmplitude(lineE_id);
-    Float64 amp_errorE =
-        getElementParam()[iElt_lineE]->GetFittedAmplitudeStd(lineE_id);
-    TFloat64List ampsMore;
-    TFloat64List ampErrorsMore;
-    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
-      Float64 amp = getElementParam()[ilinesMore[imore]]->GetFittedAmplitude(0);
-      Float64 ampErr =
-          getElementParam()[ilinesMore[imore]]->GetFittedAmplitudeStd(0);
-      ampsMore.push_back(amp);
-      ampErrorsMore.push_back(ampErr);
-    }
-
-    TInt32List eltsIdx;
-    eltsIdx.push_back(iElt_lineA);
-    eltsIdx.push_back(iElt_lineE);
-    for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
-      eltsIdx.push_back(ilinesMore[imore]);
-    }
-    TFloat64List ampsfitted;
-    TFloat64List errorsfitted;
-    fitAmplitudesLinSolve(eltsIdx, ampsfitted, errorsfitted, redshift);
-
-    // decide if the fit is better than previous amps
-    getModel().refreshModelUnderElements(eltsIdx);
-    Float64 modelErr_withfit =
-        getModelResidualRmsUnderElements({iElt_lineA}, true);
-    if (modelErr_withfit > modelErr_init) {
-      Float64 nominal_ampA =
-          getElementParam()[iElt_lineA]->GetNominalAmplitude(lineA_id);
-      Float64 nominal_ampE =
-          getElementParam()[iElt_lineE]->GetNominalAmplitude(lineE_id);
-      m_ElementsVector->SetElementAmplitude(iElt_lineA, ampA / nominal_ampA,
-                                            amp_errorA / nominal_ampA);
-      m_ElementsVector->SetElementAmplitude(iElt_lineE, ampE / nominal_ampE,
-                                            amp_errorE / nominal_ampE);
-      for (Int32 imore = 0; imore < ssize(ilinesMore); imore++) {
-        Float64 nominal_ampMore =
-            getElementParam()[ilinesMore[imore]]->GetNominalAmplitude(
-                linesMoreIds[imore]);
-        m_ElementsVector->SetElementAmplitude(
-            ilinesMore[imore], ampsMore[imore] / nominal_ampMore,
-            ampErrorsMore[imore] / nominal_ampMore);
-      }
-    }
+    processBalmerPair(itag, redshift, linetagsE, linetagsA, linetagsMore);
   }
+}
+
+void CHybridFitter::processBalmerPair(
+    Int32 itag, Float64 redshift, const TStringList &linetagsE,
+    const TStringList &linetagsA,
+    const std::vector<TStringList> &linetagsMore) {
+  auto const &[iEltE, lineE_id] = m_ElementsVector->findElementIndex(
+      linetagsE[itag], CLine::EType::nType_Emission);
+  auto const &[iEltA, lineA_id] = m_ElementsVector->findElementIndex(
+      linetagsA[itag], CLine::EType::nType_Absorption);
+
+  if (!isValidBalmerPair(iEltE, iEltA, lineE_id, lineA_id)) {
+    return;
+  }
+
+  auto [ilinesMore, linesMoreIds] = collectAdditionalLines(itag, linetagsMore);
+
+  if (!widthConditionSatisfied(iEltE, lineE_id, iEltA, lineA_id, redshift)) {
+    return;
+  }
+
+  attemptBalmerRefit(iEltA, lineA_id, iEltE, lineE_id, ilinesMore, linesMoreIds,
+                     redshift);
+}
+
+bool CHybridFitter::isValidBalmerPair(Int32 iEltE, Int32 iEltA, Int32 lineE_id,
+                                      Int32 lineA_id) {
+  if (iEltE == undefIdx || iEltA == undefIdx)
+    return false;
+  if (getElementList()[iEltE]->GetSize() > 1 ||
+      getElementList()[iEltA]->GetSize() > 1)
+    return false;
+  if (getElementsParams()[iEltE]->isNotFittable() ||
+      getElementsParams()[iEltA]->isNotFittable())
+    return false;
+  return true;
+}
+
+std::pair<TInt32List, TInt32List> CHybridFitter::collectAdditionalLines(
+    Int32 itag, const std::vector<TStringList> &linetagsMore) {
+  TInt32List ilinesMore, ids;
+  for (Int32 imore = 0; imore < ssize(linetagsMore[itag]); imore++) {
+    auto const &[iElt, id] = m_ElementsVector->findElementIndex(
+        linetagsMore[itag][imore], CLine::EType::nType_Emission);
+    if (iElt == undefIdx || getElementsParams()[iElt]->isNotFittable())
+      continue;
+
+    ilinesMore.push_back(iElt);
+    ids.push_back(id);
+  }
+  std::sort(ilinesMore.begin(), ilinesMore.end());
+  ilinesMore.erase(std::unique(ilinesMore.begin(), ilinesMore.end()),
+                   ilinesMore.end());
+  return {ilinesMore, ids};
+}
+
+bool CHybridFitter::widthConditionSatisfied(Int32 iEltE, Int32 lineE_id,
+                                            Int32 iEltA, Int32 lineA_id,
+                                            Float64 redshift) {
+  const Float64 Threshold = 2.0;
+  auto const &[muE, sigmaE] =
+      getElementList()[iEltE]->getObservedPositionAndLineWidth(redshift,
+                                                               lineE_id, false);
+  auto const &[muA, sigmaA] =
+      getElementList()[iEltA]->getObservedPositionAndLineWidth(redshift,
+                                                               lineA_id, false);
+  return sigmaA >= Threshold * sigmaE;
+}
+
+void CHybridFitter::attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
+                                       Int32 lineE_id,
+                                       const TInt32List &ilinesMore,
+                                       const TInt32List &idsMore,
+                                       Float64 redshift) {
+  Float64 modelErr_init = getModelResidualRmsUnderElements({iEltA}, true);
+
+  // collect amps before refit
+  auto [ampA, errA] = getAmplitudeAndError(iEltA, lineA_id);
+  auto [ampE, errE] = getAmplitudeAndError(iEltE, lineE_id);
+  auto [ampsMore, errsMore] = collectAmplitudes(ilinesMore);
+
+  // refit
+  TInt32List eltsIdx = {iEltA, iEltE};
+  eltsIdx.insert(eltsIdx.end(), ilinesMore.begin(), ilinesMore.end());
+
+  TFloat64List ampsfitted, errorsfitted;
+  fitAmplitudesLinSolve(eltsIdx, ampsfitted, errorsfitted, redshift);
+
+  // check improvement
+  getModel().refreshModelUnderElements(eltsIdx);
+  Float64 modelErr_withfit = getModelResidualRmsUnderElements({iEltA}, true);
+  if (modelErr_withfit > modelErr_init) {
+    restoreAmplitudes(iEltA, lineA_id, ampA, errA, iEltE, lineE_id, ampE, errE,
+                      ilinesMore, idsMore, ampsMore, errsMore);
+  }
+}
+
+std::pair<Float64, Float64> CHybridFitter::getAmplitudeAndError(Int32 iElt,
+                                                                Int32 lineId) {
+  Float64 amp = getElementsParams()[iElt]->GetFittedAmplitude(lineId);
+  Float64 ampErr = getElementsParams()[iElt]->GetFittedAmplitudeStd(lineId);
+  return {amp, ampErr};
+}
+
+std::pair<TFloat64List, TFloat64List>
+CHybridFitter::collectAmplitudes(const TInt32List &ilines) {
+  TFloat64List amps;
+  TFloat64List ampErrors;
+
+  for (Int32 i = 0; i < ssize(ilines); ++i) {
+    Int32 idx = ilines[i];
+    Float64 amp = getElementsParams()[idx]->GetFittedAmplitude(0);
+    Float64 ampErr = getElementsParams()[idx]->GetFittedAmplitudeStd(0);
+    amps.push_back(amp);
+    ampErrors.push_back(ampErr);
+  }
+
+  return {amps, ampErrors};
+}
+
+void CHybridFitter::restoreAmplitudes(Int32 iEltA, Int32 lineA_id, Float64 ampA,
+                                      Float64 errA, Int32 iEltE, Int32 lineE_id,
+                                      Float64 ampE, Float64 errE,
+                                      const TInt32List &ilinesMore,
+                                      const TInt32List &idsMore,
+                                      const TFloat64List &ampsMore,
+                                      const TFloat64List &errsMore) {
+  // Restore absorption and emission lines
+  Float64 nominal_ampA =
+      getElementsParams()[iEltA]->GetNominalAmplitude(lineA_id);
+  Float64 nominal_ampE =
+      getElementsParams()[iEltE]->GetNominalAmplitude(lineE_id);
+
+  m_ElementsVector->SetElementAmplitude(iEltA, ampA / nominal_ampA,
+                                        errA / nominal_ampA);
+  m_ElementsVector->SetElementAmplitude(iEltE, ampE / nominal_ampE,
+                                        errE / nominal_ampE);
+
+  // Restore additional lines
+  for (Int32 i = 0; i < ssize(ilinesMore); ++i) {
+    Int32 idx = ilinesMore[i];
+    Float64 nominal_amp =
+        getElementsParams()[idx]->GetNominalAmplitude(idsMore[i]);
+    m_ElementsVector->SetElementAmplitude(idx, ampsMore[i] / nominal_amp,
+                                          errsMore[i] / nominal_amp);
+  }
+}
+
+bool CHybridFitter::validateTagSizes(const TStringList &E, const TStringList &A,
+                                     const std::vector<TStringList> &More) {
+  return E.size() == A.size() && E.size() == More.size();
 }

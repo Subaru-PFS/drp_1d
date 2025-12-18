@@ -49,7 +49,9 @@ COperatorContinuumFitting::COperatorContinuumFitting()
       m_spectra(Context.getSpectra()),
       m_lambdaRanges(Context.getClampedLambdaRanges()),
       m_kStart(Context.getSpectra().size()),
-      m_kEnd(Context.getSpectra().size()){};
+      m_kEnd(Context.getSpectra().size()),
+      m_nSamplesMinForContinuumFit(Context.GetParameterStore()->Get<Int32>(
+          "nbSamplesMinForContinuumFit")){};
 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the
@@ -68,10 +70,9 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    Int32 imin;
-    Int32 imax;
-    lambdaRange_ptr->getClosedIntervalIndices(
-        spcSpectralAxis.GetSamplesVector(), imin, imax);
+    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector());
+
     for (Int32 j = imin; j <= imax; j++) {
       numDevs++;
       sumLogNoise += log(error[j]);
@@ -81,7 +82,7 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
   return cstLog;
 }
 
-const void COperatorContinuumFitting::checkTemplateOverlap(
+void COperatorContinuumFitting::checkTemplateOverlap(
     const Float64 overlapFraction, const Float64 overlapThreshold) {
   if (overlapFraction < overlapThreshold || overlapFraction <= 0.0) {
     THROWG(ErrorCode::TEMPLATE_OVERLAP_TOO_SMALL,

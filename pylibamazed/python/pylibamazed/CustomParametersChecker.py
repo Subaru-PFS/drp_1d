@@ -65,6 +65,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_lsf()
         self._check_continuum_removal()
         self._check_templateCatalog_continuum_removal()
+        self._check_power_law_parameters()
         self._check_linemeas_runmode()
         for object in self.accessor.get_spectrum_models([]):
             self._check_object(object)
@@ -159,6 +160,15 @@ class CustomParametersChecker(ParametersChecker):
         self._check_IrregularSamplingMedian_kernel_width(fromTemplateCatalog)
         self._check_IrregularSamplingMedian_kernel_reflection(fromTemplateCatalog)
 
+    def _check_power_law_parameters(self) -> None:
+        for spectrum_model in self.accessor.get_spectrum_models([]):
+            self._check_dependant_condition(
+                self.accessor.get_linemodel_continuum_component(spectrum_model)
+                in ["powerLaw", "powerLawAuto"],
+                self.accessor.get_power_law_section(spectrum_model) is not None,
+                f"{spectrum_model} lineModelSolve lineModel powerLaw section",
+            )
+
     def _check_templateCatalog_continuum_removal(self) -> None:
         self._check_templateCatalog_continuum_removal_section_presence()
         self._check_IrregularSamplingMedian_kernel_width("templateCatalog")
@@ -252,6 +262,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemeassolve_redshiftstep(spectrum_model)
         self._check_linemeassolve_lineratiotype_rules(spectrum_model)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(spectrum_model)
+        self._check_linemeassolve_lbda_offset(spectrum_model)
         self._check_linemeassolve_velocity_fit_params(spectrum_model)
         self._check_linemeassolve_lya_fit(spectrum_model)
 
@@ -355,8 +366,8 @@ class CustomParametersChecker(ParametersChecker):
 
     def _check_templateFittingSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
         activateFft = self.accessor.get_template_fitting_fft(spectrum_model)
-        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
-        if activateFft and activatePhotometry:
+        activate_photometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
+        if activateFft and activate_photometry:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Template fitting: cannot activate both fft and photometry. Please deactivate "
@@ -365,9 +376,9 @@ class CustomParametersChecker(ParametersChecker):
             )
 
     def _check_templateFittingSolve_exclusive_twopass_photometry(self, spectrum_model: str) -> None:
-        activatePhotometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
+        activate_photometry = self.accessor.get_template_fitting_photometry_enabled(spectrum_model)
         singlePass = self.accessor.get_template_fitting_single_pass(spectrum_model)
-        if activatePhotometry and not singlePass:
+        if activate_photometry and not singlePass:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Template fitting: cannot activate both two pass and photometry. Please activate "
@@ -466,6 +477,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
+        self._check_linemodel_lbda_offset(spectrum_model)
         self._check_linemodelsolve_velocity_fit_params(spectrum_model)
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
@@ -524,9 +536,9 @@ class CustomParametersChecker(ParametersChecker):
         )
 
     def _check_lineModelSolve_exclusive_fft_photometry(self, spectrum_model: str) -> None:
-        activateContinuumFft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
-        activatePhotometry = self.accessor.get_line_model_photometry(spectrum_model)
-        if activateContinuumFft and activatePhotometry:
+        activate_continuum_fft = self.accessor.get_linemodel_continuumfit_fft(spectrum_model)
+        activate_photometry = self.accessor.get_line_model_photometry(spectrum_model)
+        if activate_continuum_fft and activate_photometry:
             raise APIException(
                 ErrorCode.INVALID_PARAMETER_FILE,
                 "Line model solve: cannot activate both fft and photometry. Please deactivate "
@@ -638,6 +650,33 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
         )
 
+    def _check_linemodel_lbda_offset(self, spectrum_model: str):
+        self._check_linemodelsolve_lbda_offset_fit(spectrum_model)
+        self._check_linemodelsolve_lbda_offset_max_and_step(spectrum_model)
+
+    def _check_linemodelsolve_lbda_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
+        )
+
+    def _check_linemodelsolve_lbda_offset_max_and_step(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model),
+            self.accessor.get_linemodel_lbda_offset_max(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetMax",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetMax",
+        )
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_lbda_offset_fit(spectrum_model)
+            and self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid"],
+            self.accessor.get_linemodel_lbda_offset_step(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
+            f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
+        )
+
     def _check_linemodelsolve_velocity_fit_params(self, spectrum_model: str):
         velocity_fit: bool = self.accessor.get_linemodel_velocity_fit(spectrum_model)
         for velocity_type in EVelocityType:
@@ -709,6 +748,33 @@ class CustomParametersChecker(ParametersChecker):
             self.accessor.get_linemeas_rules(spectrum_model) is not None,
             error_message=f"lineMeasSolve rules for object {spectrum_model}",
             warning_message=f"object {spectrum_model} LineMeasSolve rules",
+        )
+
+    def _check_linemeassolve_lbda_offset(self, spectrum_model: str):
+        self._check_linemeassolve_lbda_offset_fit(spectrum_model)
+        self._check_linemeassolve_lbda_offset_max_and_step(spectrum_model)
+
+    def _check_linemeassolve_lbda_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetFit",
+            f"{spectrum_model} lineMeaslSolve lineModel lbdaOffsetFit",
+        )
+
+    def _check_linemeassolve_lbda_offset_max_and_step(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model),
+            self.accessor.get_linemeas_lbda_offset_max(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetMax",
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetMax",
+        )
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_lbda_offset_fit(spectrum_model)
+            and self.accessor.get_linemeas_fitting_method(spectrum_model) in ["svd", "hybrid"],
+            self.accessor.get_linemeas_lbda_offset_step(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
+            f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
         )
 
     def _check_linemeassolve_fittingmethod_lbfgsb_velocityfit(self, spectrum_model: str):

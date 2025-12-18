@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/processflow/context.h"
 
 using namespace std;
 using namespace NSEpic;
@@ -53,18 +53,12 @@ using namespace NSEpic;
  *defaults.
  **/
 CLineModelElement::CLineModelElement(
-    const TLineModelElementParam_ptr elementParam)
+    const TLineModelElementParam_ptr elementParam, Float64 maxDistanceToLine,
+    Int32 minSamplesNumberForLineFit)
     : m_ElementParam(std::move(elementParam)),
-      m_OutsideLambdaRangeOverlapThreshold(
-          0.33), // 33% overlap minimum in order to keep the line
-      m_OutsideLambdaRange(
-          true) // example: 0.33 means 66% of the line is allowed to be outside
-                // the spectrum with the line still considered inside the
-                // lambda range
-
-{
-  m_size = m_ElementParam->size();
-}
+      m_maxDistanceToLine(maxDistanceToLine),
+      m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
+      m_OutsideLambdaRange(true), m_size(m_ElementParam->size()){};
 
 void TLineModelElementParam::resetFittingParams() {
   // init the fitted amplitude values and related variables
@@ -183,10 +177,12 @@ void CLineModelElement::EstimateTheoreticalSupport(
     m_OutsideLambdaRangeList[line_index] = true;
     return;
   }
-  Float64 sigma = GetLineWidth(mu);
+  Float64 const sigma = GetLineWidth(mu);
+  Float64 const max_offset_angstrom =
+      (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
   Float64 winsize =
       getElementParam()->getLineProfile(line_index)->GetNSigmaSupport() * sigma;
-  winsize += 2 * (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
+  winsize += 2 * max_offset_angstrom;
   TInt32Range supportRange =
       EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -195,24 +191,39 @@ void CLineModelElement::EstimateTheoreticalSupport(
   m_StartNoOverlap[line_index] = supportRange.GetBegin();
   m_EndNoOverlap[line_index] = supportRange.GetEnd();
 
-  if (supportRange.GetBegin() >
-      supportRange.GetEnd()) // in this case the line is completely outside the
-                             // lambdarange
-  {
+  EstimateLineVisbility(line_index, spectralAxis, supportRange, mu, sigma,
+                        max_offset_angstrom);
+}
+
+void CLineModelElement::EstimateLineVisbility(
+    Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
+    const TInt32Range &supportRange, Float64 line_lambda, Float64 sigma,
+    Float64 max_offset) {
+
+  if (supportRange.GetBegin() > supportRange.GetEnd()) {
+    // in this case the line is completely outside the
+    // lambdarange
     m_OutsideLambdaRangeList[line_index] = true;
-  } else { // in this case the line is completely inside the lambdarange or with
-           // partial overlap
+    return;
+  }
 
-    Float64 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
-    Float64 startLbda = spectralAxis[m_StartNoOverlap[line_index]];
-    Float64 endLbda = spectralAxis[m_EndNoOverlap[line_index]];
+  // in this case the line is completely inside the lambdarange or with
+  // partial overlap
+  Int32 const nsupport = supportRange.GetLength() + 1;
+  TFloat64List distance(nsupport);
+  auto const &wave_iter =
+      spectralAxis.GetSamplesVector().begin() + supportRange.GetBegin();
+  std::transform(
+      wave_iter, wave_iter + nsupport, distance.begin(),
+      [line_lambda](Float64 lambda) { return std::abs(lambda - line_lambda); });
+  auto const &min_distance =
+      *std::min_element(distance.begin(), distance.end());
 
-    if (startLbda >= (lambdaRange.GetEnd() - minLineOverlap) ||
-        endLbda <= (lambdaRange.GetBegin() + minLineOverlap)) {
-      m_OutsideLambdaRangeList[line_index] = true;
-    } else {
-      m_OutsideLambdaRangeList[line_index] = false;
-    }
+  if (min_distance > (m_maxDistanceToLine * sigma + max_offset) ||
+      (nsupport < m_minSamplesNumberForLineFit)) {
+    m_OutsideLambdaRangeList[line_index] = true;
+  } else {
+    m_OutsideLambdaRangeList[line_index] = false;
   }
 
   return;
@@ -224,29 +235,31 @@ void CLineModelElement::EstimateTheoreticalSupport(
 TInt32Range CLineModelElement::EstimateIndexRange(
     const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
     const TFloat64Range &lambdaRange, Float64 winsizeAngstrom) {
+
+  Float64 const winsize = winsizeAngstrom;
+  Float64 const lambda_start = mu - winsize / 2.0;
+  Float64 const lambda_end = mu + winsize / 2.0;
+
+  TFloat64Range elementLambdaRange{lambda_start, lambda_end};
+  auto has_intersection = elementLambdaRange.IntersectWith(lambdaRange);
   TInt32Range supportRange;
-  Float64 winsize = winsizeAngstrom;
-
-  Float64 lambda_start = mu - winsize / 2.0;
-  if (lambda_start < lambdaRange.GetBegin()) {
-    lambda_start = lambdaRange.GetBegin();
+  if (!has_intersection || elementLambdaRange.GetIsEmpty()) {
+    supportRange = {0, -1};
+    return supportRange;
   }
-  supportRange.SetBegin(spectralAxis.GetIndexAtWaveLength(lambda_start));
 
-  Float64 lambda_end = mu + winsize / 2.0;
-  if (lambda_end > lambdaRange.GetEnd()) {
-    lambda_end = lambdaRange.GetEnd();
-  }
-  supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
-
-  // correct the end value if higher than lambdaRange end
-  // spectralAxis[supportRange.GetEnd()]);
-  if (spectralAxis[supportRange.GetEnd()] > lambdaRange.GetEnd()) {
-    supportRange.SetEnd(supportRange.GetEnd() - 1);
-  }
-  // correct the end value if not higher or equal to the begin value
-  if (supportRange.GetEnd() < supportRange.GetBegin()) {
-    supportRange.SetEnd(supportRange.GetBegin() - 1);
+  try {
+    supportRange =
+        spectralAxis.GetIndexRangeAtWaveLengthRange(elementLambdaRange);
+  } catch (const AmzException &exception) {
+    if (exception.getErrorCode() == ErrorCode::IE_CRANGE_NO_INTERSECTION) {
+      Int32 imin =
+          spectralAxis.GetIndexAtWaveLength(elementLambdaRange.GetBegin());
+      TInt32Range supportRange{imin, imin - 1};
+      return supportRange;
+    } else {
+      throw exception;
+    }
   }
 
   return supportRange;
@@ -266,9 +279,11 @@ void CLineModelElement::computeOutsideLambdaRange() {
  *the m_FittedAmplitudes to -1. Sets the global outside lambda range. Inits the
  *fitted amplitude values.
  **/
-void CLineModelElement::prepareSupport(
-    const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
-    const TFloat64Range &lambdaRange, Float64 max_offset) {
+
+void CLineModelElement::initSupport(const CSpectrumSpectralAxis &spectralAxis,
+                                    Float64 redshift,
+                                    const TFloat64Range &lambdaRange,
+                                    Float64 max_offset) {
 
   Int32 nLines = GetSize();
   m_OutsideLambdaRange = true;
@@ -286,111 +301,118 @@ void CLineModelElement::prepareSupport(
     m_LineIsActiveOnSupport[index][index] = true;
   }
   computeOutsideLambdaRange();
+}
 
-  bool supportNoOverlap_has_duplicates = true;
-  Int32 x1 = 0;
-  Int32 y1 = 0;
-  Int32 x2 = 0;
-  Int32 y2 = 0;
-  Int32 icmpt = 0;
-  Int32 ncmpt = 20;
-  while (supportNoOverlap_has_duplicates && icmpt < ncmpt) {
-    icmpt++;
-    for (Int32 i = 0; i != nLines; ++i) {
-      if (m_OutsideLambdaRangeList[i])
+bool CLineModelElement::mergeIfOverlapping(Int32 i, Int32 j) {
+  Int32 x1 = m_StartNoOverlap[i];
+  Int32 x2 = m_EndNoOverlap[i];
+  Int32 y1 = m_StartNoOverlap[j];
+  Int32 y2 = m_EndNoOverlap[j];
+
+  Int32 max = std::max(x1, y1);
+  Int32 min = std::min(x2, y2);
+
+  if (max - min >= 0)
+    return false;
+
+  m_StartNoOverlap[i] = std::min(x1, y1);
+  m_EndNoOverlap[i] = std::max(x2, y2);
+
+  // deactivate j
+  m_StartNoOverlap[j] = m_EndNoOverlap[i];
+  m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1;
+  return true;
+}
+
+void CLineModelElement::resolveOverlaps() {
+  Int32 nLines = GetSize();
+
+  auto shouldContinue = [this](Int32 index) {
+    return m_OutsideLambdaRangeList[index] ||
+           m_StartNoOverlap[index] > m_EndNoOverlap[index];
+  };
+
+  for (Int32 i = 0; i != nLines; ++i) {
+    if (shouldContinue(i))
+      continue;
+
+    for (Int32 j = 0; j != nLines; ++j) {
+      if (shouldContinue(j) || i == j)
         continue;
 
-      if (m_StartNoOverlap[i] > m_EndNoOverlap[i])
-        continue;
-
-      for (Int32 j = 0; j != nLines; ++j) {
-        if (m_OutsideLambdaRangeList[j])
-          continue;
-
-        if (m_StartNoOverlap[j] > m_EndNoOverlap[j])
-          continue;
-
-        if (i == j)
-          continue;
-
-        bool lineActiveSupportToBeCorrected = false;
-        //
-        x1 = m_StartNoOverlap[i];
-        x2 = m_EndNoOverlap[i];
-        y1 = m_StartNoOverlap[j];
-        y2 = m_EndNoOverlap[j];
-        // compute overlapping region
-        Int32 max = std::max(x1, y1);
-        Int32 min = std::min(x2, y2);
-        if (max - min < 0) { // case of overlapping
-          m_StartNoOverlap[i] = std::min(x1, y1);
-          m_EndNoOverlap[i] = std::max(x2, y2);
-          m_StartNoOverlap[j] =
-              m_EndNoOverlap[i]; // deactivate j when end is start -1
-          m_EndNoOverlap[j] = m_EndNoOverlap[i] - 1; // deactivate j
-
-          lineActiveSupportToBeCorrected = true;
-        }
-
-        if (lineActiveSupportToBeCorrected) {
-          // set the lines active on the overlapping support
-          m_LineIsActiveOnSupport[i][j] = true;
-          m_LineIsActiveOnSupport[j][i] = true;
-          // append all the previously overlapping lines as active on the
-          // support
-          for (Int32 i2 = 0; i2 != nLines; ++i2) {
-            if (m_OutsideLambdaRangeList[i2])
-              continue;
-
-            if (m_LineIsActiveOnSupport[i][i2]) {
-              m_LineIsActiveOnSupport[i2][j] = true;
-              m_LineIsActiveOnSupport[j][i2] = true;
-            }
-          }
-          // append all the previously overlapping lines as active on the
-          // support
-          for (Int32 j2 = 0; j2 != nLines; ++j2) {
-            if (m_OutsideLambdaRangeList[j2])
-              continue;
-
-            if (m_LineIsActiveOnSupport[j][j2]) {
-              m_LineIsActiveOnSupport[j2][i] = true;
-              m_LineIsActiveOnSupport[i][j2] = true;
-            }
-          }
-        }
+      if (mergeIfOverlapping(i, j)) {
+        propagateOverlap(i, j);
       }
     }
+  }
+}
 
-    supportNoOverlap_has_duplicates = false;
+void CLineModelElement::prepareSupport(
+    const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
+    const TFloat64Range &lambdaRange, Float64 max_offset) {
 
-    // check that there are no overlapping sub-supports in the list
-    for (Int32 i = 0; i != nLines; ++i) {
-      if (supportNoOverlap_has_duplicates) {
-        break;
-      }
-      if (m_OutsideLambdaRangeList[i]) {
+  initSupport(spectralAxis, redshift, lambdaRange, max_offset);
+  bool hasDuplicates = true;
+  Int32 icmpt = 0;
+  const Int32 ncmpt = 20;
+
+  while (hasDuplicates && icmpt < ncmpt) {
+    icmpt++;
+    resolveOverlaps();
+    hasDuplicates = detectDuplicateOverlaps();
+  }
+}
+
+bool CLineModelElement::detectDuplicateOverlaps() {
+  Int32 nLines = GetSize();
+
+  for (Int32 i = 0; i != nLines; ++i) {
+    if (m_OutsideLambdaRangeList[i])
+      continue;
+
+    for (Int32 j = 0; j != nLines; ++j) {
+      if (m_OutsideLambdaRangeList[j] || i == j)
         continue;
-      }
-      for (Int32 j = 0; j != nLines; ++j) {
-        if (m_OutsideLambdaRangeList[j]) {
-          continue;
-        }
-        if (i == j) {
-          continue;
-        }
 
-        x1 = m_StartNoOverlap[i];
-        x2 = m_EndNoOverlap[i];
-        y1 = m_StartNoOverlap[j];
-        y2 = m_EndNoOverlap[j];
-        Int32 max = std::max(x1, y1);
-        Int32 min = std::min(x2, y2);
-        if (max - min < 0) {
-          supportNoOverlap_has_duplicates = true;
-          break;
-        }
+      Int32 x1 = m_StartNoOverlap[i];
+      Int32 x2 = m_EndNoOverlap[i];
+      Int32 y1 = m_StartNoOverlap[j];
+      Int32 y2 = m_EndNoOverlap[j];
+
+      Int32 max = std::max(x1, y1);
+      Int32 min = std::min(x2, y2);
+
+      if (max - min < 0) {
+        return true;
       }
+    }
+  }
+  return false;
+}
+
+void CLineModelElement::propagateOverlap(Int32 i, Int32 j) {
+  m_LineIsActiveOnSupport[i][j] = true;
+  m_LineIsActiveOnSupport[j][i] = true;
+
+  Int32 nLines = GetSize();
+
+  // Propagate through i
+  for (Int32 i2 = 0; i2 != nLines; ++i2) {
+    if (m_OutsideLambdaRangeList[i2])
+      continue;
+    if (m_LineIsActiveOnSupport[i][i2]) {
+      m_LineIsActiveOnSupport[i2][j] = true;
+      m_LineIsActiveOnSupport[j][i2] = true;
+    }
+  }
+
+  // Propagate through j
+  for (Int32 j2 = 0; j2 != nLines; ++j2) {
+    if (m_OutsideLambdaRangeList[j2])
+      continue;
+    if (m_LineIsActiveOnSupport[j][j2]) {
+      m_LineIsActiveOnSupport[j2][i] = true;
+      m_LineIsActiveOnSupport[i][j2] = true;
     }
   }
 }
@@ -827,8 +849,6 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
   os << "m_ElementType\t"
      << CLine::ETypeString.at(getElementParam()->GetElementType()) << "\n";
 
-  os << "m_OutsideLambdaRangeOverlapThreshold\t"
-     << m_OutsideLambdaRangeOverlapThreshold << "\n";
   os << "m_sumCross\t" << m_ElementParam->m_sumCross << "\n";
   os << "m_sumGauss\t" << m_ElementParam->m_sumGauss << "\n";
   os << "m_dtmFree\t" << m_ElementParam->m_dtmFree << "\n";

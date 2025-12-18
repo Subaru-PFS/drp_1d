@@ -513,7 +513,7 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     Float64 z = candidate->Redshift;
 
     // find the corresponding Z
-    auto const zIndex = CIndexing<Float64>::getIndex(redshifts, z);
+    auto const zIndex = NSIndexing::getIndex(redshifts, z);
 
     std::string bestName;
     std::shared_ptr<const CTemplateFittingResult> bestResult;
@@ -565,6 +565,11 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
         bestResult->FitQuality[zIndex].ksStdMeanResiduals;
     candidate->fittedContinuum.andersonResiduals =
         bestResult->FitQuality[zIndex].andersonResiduals;
+    candidate->fittedContinuum.nPixelsUsedForFit =
+        bestResult->FitQuality[zIndex].nPixelsUsedForFit;
+    candidate->nPixels = bestResult->FitQuality[zIndex].nPixelsUsedForFit;
+    candidate->fittedContinuum.nPixelsOfResiduals =
+        bestResult->FitQuality[zIndex].nPixelsOfResiduals;
     candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitude = bestResult->FitAmplitude[zIndex];
     candidate->fittedContinuum.tplAmplitudeError =

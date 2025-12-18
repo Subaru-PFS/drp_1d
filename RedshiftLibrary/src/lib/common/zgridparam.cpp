@@ -78,9 +78,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   TFloat64Range range_epsilon = {subgrid.front() - epsilon,
                                  subgrid.back() + epsilon};
   range_epsilon.IntersectWith(zgrid);
-  Int32 imin = -1;
-  Int32 imax = -1;
-  range_epsilon.getClosedIntervalIndices(zgrid, imin, imax);
+  auto const &[imin, imax] = range_epsilon.getClosestInnerIndices(zgrid);
 
   // deal with subgrid front or end
   // if truncated by intersection with zgrid
@@ -96,7 +94,7 @@ CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
   for (Int32 dup = 0; dup < ndup; ++dup) {
     Float64 const value_overwritten = zgrid[imin + dup];
     overwrittenSourceIndices[dup] =
-        CIndexing<Float64>::getCloserIndex(subgrid, value_overwritten);
+        NSIndexing::getClosestIndex(subgrid, value_overwritten);
   }
 
   NSVectorOp::insertWithDuplicates(zgrid, imin, subgrid, ndup);

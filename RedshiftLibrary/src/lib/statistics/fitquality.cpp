@@ -124,11 +124,16 @@ Float64 kurtosisGsl(const TFloat64List &data, const Float64 mean,
 Float64 andersonDarlingTest(const TFloat64List &data, Float64 mean,
                             Float64 stdev) {
   // NB this method can also take mean and std if needed
+  const Int32 n = data.size();
+  if (n < 2)
+    return NAN;
   return anderson_darling_normality_statistic(data, mean, stdev);
 }
 
 Float64 ksTest(const TFloat64List &data, const Float64 mean,
                const Float64 stdev, const bool sorted) {
+  if (data.size() < 2)
+    return NAN;
   auto dataBis = data;
   auto empiricalCdf =
       empirical_cumulative_distribution_function(std::move(dataBis), sorted);
@@ -154,7 +159,8 @@ Float64 computeResidual(const Float64 expData, const Float64 refData,
 
 TFitQuality computeFitQuality(TFloat64List spcFlux, TFloat64List modelFlux,
                               TFloat64List spcFluxError, Float64 chi2,
-                              Int32 nPixels) {
+                              Int32 nPixelsOfResiduals,
+                              Int32 nPixelsUsedForFit) {
   // kEnd set to -1 means take the full spectrum
   if (ssize(spcFlux) != ssize(modelFlux) ||
       ssize(spcFlux) != ssize(spcFluxError)) {
@@ -170,13 +176,14 @@ TFitQuality computeFitQuality(TFloat64List spcFlux, TFloat64List modelFlux,
   spcFluxErrorVect.push_back(std::move(spcFluxError));
 
   return computeFitQuality(spcFluxVect, modelFluxVect, spcFluxErrorVect, chi2,
-                           nPixels);
+                           nPixelsOfResiduals, nPixelsUsedForFit);
 }
 
 TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
                               const std::vector<TFloat64List> &modelFlux,
                               const std::vector<TFloat64List> &spcFluxError,
-                              Float64 chi2, Int32 nPixels,
+                              Float64 chi2, Int32 nPixelsOfResiduals,
+                              Int32 nPixelsUsedForFit,
                               const std::vector<CMask> &mask) {
   // It is expected that the input vectors are of the same size
 
@@ -233,11 +240,13 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   if (std::isnan(chi2))
     chi2 = NSFitQuality::chi2(residuals);
   else {
-    // if chi2 is given as input then nPixels should be given as well.
-    if (nPixels == undefIdx)
-      THROWG(ErrorCode::INTERNAL_ERROR, "undefined nPixels argument, it should "
-                                        "be given since chi2 was given");
-    sumNPixels = nPixels;
+    // if chi2 is given as input then nPixelsOfResiduals should be given as
+    // well.
+    if (nPixelsOfResiduals == undefIdx)
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             "undefined nPixelsOfResiduals argument, it should "
+             "be given since chi2 was given");
+    sumNPixels = nPixelsOfResiduals;
   }
 
   TFitQuality fitQuality;
@@ -262,7 +271,8 @@ TFitQuality computeFitQuality(const std::vector<TFloat64List> &spcFlux,
   }
   fitQuality.andersonResiduals = NSFitQuality::andersonDarlingTest(
       residuals, fitQuality.meanResiduals, fitQuality.stdResiduals);
-  fitQuality.nPixels = sumNPixels;
+  fitQuality.nPixelsOfResiduals = sumNPixels;
+  fitQuality.nPixelsUsedForFit = nPixelsUsedForFit;
   return fitQuality;
 }
 
