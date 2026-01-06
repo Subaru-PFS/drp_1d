@@ -128,39 +128,39 @@ std::shared_ptr<CFullSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   if (spectrum.GetSpectralAxis().IsLogSampled()) {
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "spectrum is already log-sampled");
-  } else {
-    // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
-    // reference grid) to be passed to computeTargetLogSpectralAxis in
-    // loglambdaRebinSpectrum
-    spectrum.GetSpectralAxis().ClampLambdaRange(m_lambdaRange_ref,
-                                                lambdaRange_spc);
-    Float64 loglambda_start_spc = log(lambdaRange_spc.GetBegin());
-    Float64 loglambda_end_spc = log(lambdaRange_spc.GetEnd());
-    Float64 loglambda_start_ref = log(m_lambdaRange_ref.GetBegin());
-    Float64 loglambda_end_ref = log(m_lambdaRange_ref.GetEnd());
-    if (lambdaRange_spc.GetBegin() > m_lambdaRange_ref.GetBegin()) {
-      loglambda_start_spc =
-          loglambda_start_ref +
-          ceil((loglambda_start_spc - loglambda_start_ref) / m_logGridStep) *
-              m_logGridStep; // ceil to be bigger or equal the first sample
-      lambdaRange_spc.SetBegin(exp(loglambda_start_spc));
-    }
-    if (lambdaRange_spc.GetEnd() < m_lambdaRange_ref.GetEnd()) {
-      loglambda_end_spc =
-          loglambda_end_ref -
-          ceil((loglambda_end_ref - loglambda_end_spc) / m_logGridStep) *
-              m_logGridStep; // ceil to be less or equal the last sample
-      lambdaRange_spc.SetEnd(exp(loglambda_end_spc));
-    }
-    Float64 count_ = (loglambda_end_spc - loglambda_start_spc) /
-                     m_logGridStep; // should integer at numerical precision...
-    loglambda_count_spc = round(count_) + 1;
+  }
 
-    if (loglambda_count_spc < 2) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             Formatter() << "Cannot rebin spectrum of a grid of size:  "
-                         << loglambda_count_spc << "<2");
-    }
+  // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on
+  // reference grid) to be passed to computeTargetLogSpectralAxis in
+  // loglambdaRebinSpectrum
+  spectrum.GetSpectralAxis().ClampLambdaRange(m_lambdaRange_ref,
+                                              lambdaRange_spc);
+  Float64 loglambda_start_spc = log(lambdaRange_spc.GetBegin());
+  Float64 loglambda_end_spc = log(lambdaRange_spc.GetEnd());
+  Float64 loglambda_start_ref = log(m_lambdaRange_ref.GetBegin());
+  Float64 loglambda_end_ref = log(m_lambdaRange_ref.GetEnd());
+  if (lambdaRange_spc.GetBegin() > m_lambdaRange_ref.GetBegin()) {
+    loglambda_start_spc =
+        loglambda_start_ref +
+        ceil((loglambda_start_spc - loglambda_start_ref) / m_logGridStep) *
+            m_logGridStep; // ceil to be bigger or equal the first sample
+    lambdaRange_spc.SetBegin(exp(loglambda_start_spc));
+  }
+  if (lambdaRange_spc.GetEnd() < m_lambdaRange_ref.GetEnd()) {
+    loglambda_end_spc =
+        loglambda_end_ref -
+        ceil((loglambda_end_ref - loglambda_end_spc) / m_logGridStep) *
+            m_logGridStep; // ceil to be less or equal the last sample
+    lambdaRange_spc.SetEnd(exp(loglambda_end_spc));
+  }
+  Float64 count_ = (loglambda_end_spc - loglambda_start_spc) /
+                   m_logGridStep; // should integer at numerical precision...
+  loglambda_count_spc = round(count_) + 1;
+
+  if (loglambda_count_spc < 2) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           Formatter() << "Cannot rebin spectrum of a grid of size:  "
+                       << loglambda_count_spc << "<2");
   }
 
   // prepare return rebinned vector
@@ -171,9 +171,7 @@ std::shared_ptr<CFullSpectrum> CSpectrumLogRebinning::loglambdaRebinSpectrum(
   const CSpectrumSpectralAxis targetSpectralAxis =
       computeTargetLogSpectralAxis(lambdaRange_spc, loglambda_count_spc);
 
-  TFloat64Range spcLbdaRange(targetSpectralAxis[0] - 0.5 * m_logGridStep,
-                             targetSpectralAxis[loglambda_count_spc - 1] +
-                                 0.5 * m_logGridStep);
+  TFloat64Range spcLbdaRange(targetSpectralAxis.GetSamplesVector());
 
   // rebin the spectrum
   spectrum.setRebinInterpMethod("linFull");
@@ -270,9 +268,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::loglambdaRebinTemplate(
   templateRebinedLog->m_igmCorrectionMeiksin = tpl->m_igmCorrectionMeiksin;
   CMask mskRebinedLog;
 
-  TFloat64Range tplLbdaRange(targetSpectralAxis[0] - 0.5 * m_logGridStep,
-                             targetSpectralAxis[loglambda_count_tpl - 1] +
-                                 0.5 * m_logGridStep);
+  TFloat64Range tplLbdaRange(targetSpectralAxis.GetSamplesVector());
 
   tpl->setRebinInterpMethod(m_rebinMethod);
   tpl->Rebin(tplLbdaRange, targetSpectralAxis, *templateRebinedLog,
