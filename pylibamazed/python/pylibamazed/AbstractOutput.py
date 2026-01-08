@@ -157,44 +157,52 @@ class AbstractOutput(metaclass=ABCMeta):
             self._load_candidate_level(object_type)
         self.cache = True
 
+    def _handle_errors(self, attr_parts):
+        if self._has_error(attr_parts[1], attr_parts[2]):
+            return self._get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
+        elif self._has_error(None, attr_parts[1]):
+            return self._get_error(None, attr_parts[1])[attr_parts[2]]
+        return None
+
+    def _handle_perfs(self, attr_parts):
+        if attr_parts[1] == "init":
+            perf = attr_parts[2]
+            return self.get_perfs(None, "init")[perf].at[0, perf]
+        else:
+            spectrum_model = attr_parts[1]
+            stage = attr_parts[2]
+            mode = None
+            if len(attr_parts) == 5:
+                mode = attr_parts[3]
+            perf = attr_parts[-1]
+            return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
+
     @doc_method
     def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
         return self._get_attribute_short(attribute, lines_ids, pdf_builder)
 
     def _get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
+        output = None
+
         attr_parts = attribute.split(".")
         root = attr_parts[0]
         attr_name = attr_parts[-1]
         rank = None
-        if root == "classification":
-            return self._get_attribute(None, "classification", attr_name, None)
-        elif root == "error":
-            if self._has_error(attr_parts[1], attr_parts[2]):
-                return self._get_error(attr_parts[1], attr_parts[2])[attr_parts[3]]
-            elif self._has_error(None, attr_parts[1]):
-                return self._get_error(None, attr_parts[1])[attr_parts[2]]
-            else:
-                return None
-        elif root == "ContextWarningFlags":
-            return self._get_attribute(None, "context_warningFlag", "ContextWarningFlags")
-        elif root == "InitWarningFlags":
-            return self._get_attribute(None, "init_warningFlag", "InitWarningFlags")
-        elif root == "objectInfo":
-            return self._get_attribute(None, "objectInfo", attr_name)
-        elif "WarningFlags" in attr_name:
-            return self._get_attribute(root, "warningFlag", attr_name)
-        elif root == "perfs":
-            if attr_parts[1] == "init":
-                perf = attr_parts[2]
-                return self.get_perfs(None, "init")[perf].at[0, perf]
-            else:
-                spectrum_model = attr_parts[1]
-                stage = attr_parts[2]
-                mode = None
-                if len(attr_parts) == 5:
-                    mode = attr_parts[3]
-                perf = attr_parts[-1]
-                return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
+
+        root_mapping = {
+            "classification": lambda: self._get_attribute(None, "classification", attr_name, None),
+            "ContextWarningFlags": lambda: self._get_attribute(
+                None, "context_warningFlag", "ContextWarningFlags"
+            ),
+            "InitWarningFlags": lambda: self._get_attribute(None, "init_warningFlag", "InitWarningFlags"),
+            "objectInfo": lambda: self._get_attribute(None, "objectInfo", attr_name),
+            "WarningFlags": lambda: self._get_attribute(root, "warningFlag", attr_name),
+            "error": lambda: self._handle_errors(attr_parts),
+            "perfs": lambda: self._handle_perfs(attr_parts),
+        }
+
+        if root in root_mapping:
+            output = root_mapping[root]()
         else:
             object_type = root
             LINES_DATASETS = ["linemeas", "fitted_lines"]
@@ -219,10 +227,10 @@ class AbstractOutput(metaclass=ABCMeta):
             elif dataset.startswith("reliability"):
                 dataset = dataset.replace("<relName>", attr_parts[1])
                 if self._has_attribute(object_type, dataset, attr_name, rank):
-                    return self._get_attribute(object_type, dataset, attr_name, rank)
+                    output = self._get_attribute(object_type, dataset, attr_name, rank)
             if dataset not in LINES_DATASETS:
                 if self._has_attribute(object_type, dataset, attr_name, rank):
-                    return self._get_attribute(object_type, dataset, attr_name, rank)
+                    output = self._get_attribute(object_type, dataset, attr_name, rank)
             else:
                 line_name = attr_parts[1]
                 col_name = attr_name
@@ -237,8 +245,9 @@ class AbstractOutput(metaclass=ABCMeta):
                 fitted_lines_attr = self._get_attribute(object_type, dataset, col_name, rank)
                 fitted_lines_idx = self._get_attribute(object_type, dataset, index_col, rank)
                 df = pd.DataFrame({"idx": fitted_lines_idx, col_name: fitted_lines_attr}).set_index("idx")
-                return df.at[lines_ids[line_name], col_name]
-            return None
+                output = df.at[lines_ids[line_name], col_name]
+
+        return output
 
     def get_pdf_attribute(self, object_type, attribute, pdf_builder):
         return self._get_pdf_attribute(object_type, attribute, pdf_builder)
@@ -272,17 +281,19 @@ class AbstractOutput(metaclass=ABCMeta):
         return self._get_attribute(object_type, dataset, attribute, rank)
 
     def _get_attribute(self, object_type, dataset, attribute, rank=None):
+        output = None
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
             return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank)
         if object_type:
             if rank is None:
-                return self.object_results[object_type][dataset][attribute]
+                output = self.object_results[object_type][dataset][attribute]
             else:
-                return self.object_results[object_type][dataset][rank][attribute]
+                output = self.object_results[object_type][dataset][rank][attribute]
         else:
-            return self.root_results[dataset][attribute]
+            output = self.root_results[dataset][attribute]
+        return output
 
     def has_dataset(self, object_type, dataset):
         if object_type in self.object_results:
@@ -294,42 +305,37 @@ class AbstractOutput(metaclass=ABCMeta):
         return self._get_method(object_type, dataset)
 
     def _get_method(self, object_type, dataset) -> Optional[str]:
+        output = None
         if object_type is None:
-            return None
+            return output
         if dataset == "linemeas":
-            return getattr(self.parameters.get_linemeas_method(object_type), "value", None)
+            output = getattr(self.parameters.get_linemeas_method(object_type), "value", None)
         elif dataset.startswith("reliability"):
-            return get_reliability_solver_name(dataset[len("reliability") :])
+            output = get_reliability_solver_name(dataset[len("reliability") :])
         else:
-            return getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
+            output = getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
+        return output
 
     @doc_method
     def has_attribute(self, object_type, dataset, attribute, rank=None):
         return self._has_attribute(object_type, dataset, attribute, rank)
 
     def _has_attribute(self, object_type, dataset, attribute, rank=None):
+        output = False
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
             return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank)
         if not object_type:
             if dataset in self.root_results:
-                return attribute in self.root_results[dataset]
-            else:
-                return False
+                output = attribute in self.root_results[dataset]
         elif object_type in self.object_results and dataset in self.object_results[object_type]:
+            data = self.object_results[object_type][dataset]
             if rank is None:
-                return attribute in self.object_results[object_type][dataset]
-            else:
-                if type(self.object_results[object_type][dataset]) is list:
-                    if len(self.object_results[object_type][dataset]) > rank:
-                        return attribute in self.object_results[object_type][dataset][rank]
-                    else:
-                        return False
-                else:
-                    return False
-        else:
-            return False
+                output = attribute in data
+            elif type(data) is list and len(data) > rank:
+                output = attribute in data[rank]
+        return output
 
     @doc_method
     def get_dataset_type(self, object_type, dataset, rank=None):

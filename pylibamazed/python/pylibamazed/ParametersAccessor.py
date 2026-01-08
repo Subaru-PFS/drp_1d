@@ -242,17 +242,20 @@ class ParametersAccessor:
     def get_additional_cols(self, default=None) -> List[str]:
         return self.parameters.get("additionalCols") or default
 
-    def get_filters(self, default=[], obs_id=""):
+    def get_filters(self, default=None, obs_id=""):
+        if default is None:
+            default = []
         if not obs_id:
             return self.parameters.get("filters", default)
+        filters = self.parameters.get("filters")
+        if filters:
+            try:
+                output = filters.get(obs_id, default)
+            except AttributeError:
+                output = filters
         else:
-            if self.parameters.get("filters"):
-                try:
-                    return self.parameters.get("filters").get(obs_id, default)
-                except AttributeError:
-                    return self.parameters.get("filters")
-            else:
-                return default
+            output = default
+        return output
 
     def get_lsf(self) -> Optional[dict]:
         return self.parameters.get("lsf")

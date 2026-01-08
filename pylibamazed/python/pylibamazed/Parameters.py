@@ -162,21 +162,17 @@ class Parameters(ParametersAccessor):
 
     @doc_method
     def stage_enabled(self, spectrum_model, stage) -> bool:
-        if stage == "redshiftSolver":
-            return self.get_redshift_solver_method(spectrum_model) is not None
-        elif stage == "lineMeasSolver":
-            return self.get_linemeas_method(spectrum_model) is not None
-        elif stage == "linemeas_catalog_load":
-            return (
-                self.get_linemeas_method(spectrum_model) is not None
-                and self.get_redshift_solver_method(spectrum_model) is None
-            )
-        elif stage == "reliabilitySolver":
-            return self.get_reliability_enabled(spectrum_model)
-        elif stage == "subClassifSolver":
-            return self.is_tplratio_catalog_needed(spectrum_model)
-        else:
+        mapping = {
+            "redshiftSolver": lambda: self.get_redshift_solver_method(spectrum_model) is not None,
+            "lineMeasSolver": lambda: self.get_linemeas_method(spectrum_model) is not None,
+            "linemeas_catalog_load": lambda: self.get_linemeas_method(spectrum_model) is not None
+            and self.get_redshift_solver_method(spectrum_model) is None,
+            "reliabilitySolver": lambda: self.get_reliability_enabled(spectrum_model),
+            "subClassifSolver": lambda: self.is_tplratio_catalog_needed(spectrum_model),
+        }
+        if stage not in mapping:
             raise APIException(ErrorCode.UNKNOWN_ATTRIBUTE, "Unknown stage {stage}")
+        return mapping[stage]()
 
     def is_two_pass_active(self, spectrum_model):
         solve_method = self.get_redshift_solver_method(spectrum_model)
