@@ -319,15 +319,15 @@ void CLMEltListVector::computeGlobalOutsideLambdaRange() {
   }
 }
 
-void CLMEltListVector::setAllAbsLinesFittable() {
-  m_allAbsLinesNoContinuum = false;
+void CLMEltListVector::unsetAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = false;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
   }
 }
 
-void CLMEltListVector::setAllAbsLinesNotFittable() {
-  m_allAbsLinesNoContinuum = true;
+void CLMEltListVector::setAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = true;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
     if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
@@ -357,16 +357,25 @@ void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
     if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
         elt_param_ptr->m_globalOutsideLambdaRange)
       continue;
-    if (m_allAbsLinesNoContinuum ||
+    if (m_allAbsLinesNullContinuum ||
         models->getMaxContinuumUnderElement(eIdx) <= 0.)
       elt_param_ptr->m_absLinesNullContinuum = true;
   }
 }
 
+void CLMEltListVector::computeAbsLineValidity(CSpcModelVectorPtr const &models,
+                                              bool checkNullContinuum) {
+  if (checkNullContinuum)
+    setAbsLinesNullContinuumNotFittable(models);
+  else {
+    unsetAllAbsLinesNullContinuum();
+  }
+}
+
 void CLMEltListVector::computeGlobalLineValidity(
-    CSpcModelVectorPtr const &models) {
+    CSpcModelVectorPtr const &models, bool checkNullContinuum) {
+  computeAbsLineValidity(models, checkNullContinuum);
   computeGlobalOutsideLambdaRange();
   setNullNominalAmplitudesNotFittable();
-  setAbsLinesNullContinuumNotFittable(models);
   resetNullLineProfiles();
 };

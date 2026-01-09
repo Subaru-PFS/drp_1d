@@ -308,7 +308,7 @@ void CLineModelFitting::initDtd() {
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   if (isContinuumComponentNoContinuum()) {
-    m_ElementsVector->setAllAbsLinesNotFittable();
+    m_ElementsVector->setAllAbsLinesNullContinuum();
     return;
   }
 
@@ -328,9 +328,9 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   computeSpectrumFluxWithoutContinuum();
 
   if (isContinuumFittedToNull())
-    m_ElementsVector->setAllAbsLinesNotFittable();
+    m_ElementsVector->setAllAbsLinesNullContinuum();
   else
-    m_ElementsVector->setAllAbsLinesFittable();
+    m_ElementsVector->unsetAllAbsLinesNullContinuum();
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
