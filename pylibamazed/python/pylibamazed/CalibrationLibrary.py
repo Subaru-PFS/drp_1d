@@ -530,6 +530,10 @@ class CalibrationLibrary:
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df["restlambda"], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
 
+    def load_fct_with_cond(self, condition, fct):
+        if condition:
+            fct()
+
     @exception_decorator
     def load_all(self, calibs="all"):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters
@@ -541,11 +545,20 @@ class CalibrationLibrary:
         linecatalogs = calibs == "all" or "lineCatalogs" in calibs
         lineratios = calibs == "all" or "lineratios" in calibs
         reliability = calibs == "all" or "reliability" in calibs
+
+        load_lsf_cond = self.parameters.get_lsf_type() != "fromSpectrumData"
+        load_phot_band_cond = self.parameters.get_photometry_transmission_dir() is not None
+        load_root_fct_list = [
+            (meiksin, self.load_Meiksin),
+            (calzetti, self.load_calzetti),
+            (load_lsf_cond, self.load_lsf),
+            (load_phot_band_cond, self.load_photometric_bands),
+        ]
+
         try:
-            if meiksin:
-                self.load_Meiksin()
-            if calzetti:
-                self.load_calzetti()
+            for condition, fct in load_root_fct_list:
+                self.load_fct_with_cond(condition, fct)
+
             for object_type in self.parameters.get_spectrum_models():
                 if templates:
                     self.load_templates_catalog(object_type)
@@ -566,34 +579,28 @@ class CalibrationLibrary:
                         self.load_linecatalog(object_type, linemeas_method)
                 # Load the reliability model
                 if self.parameters.get_reliability_enabled(object_type) and reliability:
-                    for reliability_solver in self.parameters.get_reliability_methods(object_type):
-                        zlog.LogInfo(f"reliability:solver initialisation for {reliability_solver}")
-                        if reliability_solver == "deepLearningSolver":
-                            self.reliability["deep"] = dict()
-                            self.reliability["deep"][object_type] = dict()
-                            self.reliability["deep"][object_type]["models"] = list()
-                            model_path = os.path.join(
-                                self.calibration_dir, self.parameters.get_reliability_model(object_type)
-                            )
-                            mp = load_reliability_models(model_path, self.parameters, object_type)
-                            self.reliability["deep"][object_type]["models"] = mp["models"]
-                            self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
-                        if reliability_solver == "skLearnSolver":
-                            self.reliability["sklearn"] = dict()
-                            self.reliability["sklearn"][object_type] = dict()
-                            classifier = self.parameters.get_sk_learn_classifier(object_type)
-                            classifier_file = os.path.join(
-                                self.calibration_dir,
-                                self.parameters.get_sk_learn_classifier_file(object_type),
-                            )
-                            clf_dict = load_sklearn_classifier(classifier_file, classifier)
-                            self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
-                            self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
-            if self.parameters.get_lsf_type() != "fromSpectrumData":
-                self.load_lsf()
-
-            if self.parameters.get_photometry_transmission_dir() is not None:
-                self.load_photometric_bands()
+                    reliability_solver_list = self.parameters.get_reliability_methods(object_type)
+                    if "deepLearningSolver" in reliability_solver_list:
+                        self.reliability["deep"] = dict()
+                        self.reliability["deep"][object_type] = dict()
+                        self.reliability["deep"][object_type]["models"] = list()
+                        model_path = os.path.join(
+                            self.calibration_dir, self.parameters.get_reliability_model(object_type)
+                        )
+                        mp = load_reliability_models(model_path, self.parameters, object_type)
+                        self.reliability["deep"][object_type]["models"] = mp["models"]
+                        self.reliability["deep"][object_type]["parameters"] = mp["parameters"]
+                    if "skLearnSolver" in reliability_solver_list:
+                        self.reliability["sklearn"] = dict()
+                        self.reliability["sklearn"][object_type] = dict()
+                        classifier = self.parameters.get_sk_learn_classifier(object_type)
+                        classifier_file = os.path.join(
+                            self.calibration_dir,
+                            self.parameters.get_sk_learn_classifier_file(object_type),
+                        )
+                        clf_dict = load_sklearn_classifier(classifier_file, classifier)
+                        self.reliability["sklearn"][object_type]["classifier"] = clf_dict["classifier"]
+                        self.reliability["sklearn"][object_type]["classes"] = clf_dict["classes"]
         except FileNotFoundError as e:
             raise APIException(ErrorCode.INVALID_FILEPATH, str(e)) from None
 

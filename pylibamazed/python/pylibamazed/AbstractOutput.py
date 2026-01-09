@@ -98,15 +98,11 @@ class AbstractOutput(metaclass=ABCMeta):
         self.cache = False
 
     @abstractmethod
-    def get_attribute_from_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute, **kwargs):
         raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
-    def has_attribute_in_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute, **kwargs):
         raise NotImplementedError("Implement in derived class")
 
     @abstractmethod
@@ -285,7 +281,7 @@ class AbstractOutput(metaclass=ABCMeta):
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
-            return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank)
+            return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank=rank)
         if object_type:
             if rank is None:
                 output = self.object_results[object_type][dataset][attribute]
@@ -325,7 +321,7 @@ class AbstractOutput(metaclass=ABCMeta):
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
-            return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank)
+            return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank=rank)
         if not object_type:
             if dataset in self.root_results:
                 output = attribute in self.root_results[dataset]
@@ -595,21 +591,13 @@ class AbstractOutput(metaclass=ABCMeta):
                         candidates[rank][attr_name] = attr
         return candidates
 
-    def get_attribute_wrapper(
-        self, object_type, stage, method, ds, attr_name, rank=None, band_name=None, obs_id=None
-    ):
-        return self._get_attribute_wrapper(object_type, stage, method, ds, attr_name, rank, band_name, obs_id)
+    def get_attribute_wrapper(self, object_type, stage, method, ds, attr_name, **kwargs):
+        return self._get_attribute_wrapper(object_type, stage, method, ds, attr_name, **kwargs)
 
-    def _get_attribute_wrapper(
-        self, object_type, stage, method, ds, attr_name, rank=None, band_name=None, obs_id=None
-    ):
+    def _get_attribute_wrapper(self, object_type, stage, method, ds, attr_name, **kwargs):
         attr = None
-        if self.has_attribute_in_source(
-            object_type, stage, method, ds, attr_name, rank=rank, band_name=band_name, obs_id=obs_id
-        ):
-            attr = self.get_attribute_from_source(
-                object_type, stage, method, ds, attr_name, rank, band_name=band_name, obs_id=obs_id
-            )
+        if self.has_attribute_in_source(object_type, stage, method, ds, attr_name, **kwargs):
+            attr = self.get_attribute_from_source(object_type, stage, method, ds, attr_name, **kwargs)
         return attr
 
     def get_candidate_group_name(self, rank):
