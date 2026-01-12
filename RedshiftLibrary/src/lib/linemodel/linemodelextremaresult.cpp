@@ -141,20 +141,6 @@ void TLineModelResult::updateFromModel(
 
   Int32 const nddl = lmresult->LineModelSolutions[idx].nDDL;
   bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
-  // Float64 aic = m + 2*nddl; //AIC
-
-  // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
-  // //AICc, better when nsamples small
-
-  // compute continuum indexes
-  // TODO VB is this useful/necessary now ? if there is a computation it should
-  // be done before
-  // NB AA commented to avoid adding spectrum to getFromModel arguments
-  /*
-  CContinuumIndexes continuumIndexes;
-  ContinuumIndexes =
-    continuumIndexes.getIndexes(spectrum, z);
-  */
 
   // save the outsideLinesMask
   OutsideLinesMask = lmel->getOutsideLinesMask();

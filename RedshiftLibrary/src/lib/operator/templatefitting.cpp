@@ -475,7 +475,6 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFitting::Compute(
     zIdxRangeToCompute = TInt32Range(0, m_redshifts.size() - 1);
   for (auto zIdx : zIdxRangeToCompute) {
     Float64 redshift = templateFittingResult->Redshifts[zIdx];
-    // TODO move a condition up loop
     const CPriorHelper::TPriorEList &logp =
         hasLogPrior ? logprior[zIdx] : CPriorHelper::TPriorEList();
 

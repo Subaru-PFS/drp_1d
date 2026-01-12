@@ -359,7 +359,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
                                                   Float64 redshift,
                                                   Int32 lineIdx,
                                                   bool enableOffsetFitting) {
-
+  // NB dummy multiobs implementation (functional for one obs only)
   bool atLeastOneOffsetToFit =
       HasLineElementToOffset({eltIndex}, enableOffsetFitting);
   Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
@@ -383,8 +383,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      m_spectraIndex
-          .setAtBegining(); // TODO dummy implementation for hybridfitter
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -407,7 +406,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
 Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
-  Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
+  Float64 fit = 0.;
   Int32 istart = 0;
   Int32 iend = getElementsParams().size();
   if (eltIdx != undefIdx) {
@@ -431,7 +430,7 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
 
 TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                                const Int32 &idxLineLyaE) {
-
+  // NB dummy multiobs implementation (functional for one obs only)
   // 3. find the best width and asym coeff. parameters
   Float64 widthCoeffStep = m_opt_lya_fit_width_step;
   Float64 widthCoeffMin = m_opt_lya_fit_width_min;
@@ -472,8 +471,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
             m = getModelResidualRmsUnderElements({idxLyaE}, true);
 
           } else {
-            m_spectraIndex.setAtBegining(); // TODO dummy implementation, even
-                                            // if this line is disabled
+            m_spectraIndex.setAtBegining(); // temporary multiobs implementation
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {

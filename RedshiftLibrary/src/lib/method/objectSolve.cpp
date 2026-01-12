@@ -49,7 +49,6 @@ void CObjectSolve::InitRanges(const CInputContext &inputContext) {
   //  Warning for LineMeas :  we consider linemeas use the same redshiftsampling
   //  as the objectMethod if linemeas is called in standalone, redshiftsampling
   //  must be present in parameters
-  // TODO change here
   m_zLogSampling = inputContext.GetParameterStore()->GetScopedAt<std::string>(
                        "redshiftSampling", ScopeType::SPECTRUMMODEL) == "log";
 

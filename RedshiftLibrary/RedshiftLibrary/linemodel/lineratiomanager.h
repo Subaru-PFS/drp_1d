@@ -96,9 +96,7 @@ public:
   virtual bool isTplCorr() const { return false; };
   virtual bool isRatioToFree() const { return false; };
 
-  void SetLeastSquareFastEstimationEnabled(Int32 enabled) {
-  } // TODO, called in computeFirstPass in the general case but only active when
-    // line_ratio_type = tplratio -> should be reviewed
+  void SetLeastSquareFastEstimationEnabled(Int32 enabled) {}
 
   void setFitter(std::shared_ptr<CAbstractFitter> fitter) { m_fitter = fitter; }
   static std::shared_ptr<CLineRatioManager> makeLineRatioManager(

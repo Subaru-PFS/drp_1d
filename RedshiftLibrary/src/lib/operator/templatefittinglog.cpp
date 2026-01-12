@@ -746,8 +746,6 @@ void COperatorTemplateFittingLog::computeFitQuality(
 }
 
 /**
-  // TODO : many vectors allocated in this function. Check if the allocation
- time is significant, and eventually use preallocated member buffers...
  * @brief COperatorTemplateFittingLog::FitRangez
  * @param spectrumRebinedLambda
  * @param spectrumRebinedFluxRaw

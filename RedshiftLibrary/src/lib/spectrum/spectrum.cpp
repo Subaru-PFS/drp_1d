@@ -602,9 +602,8 @@ void CSpectrum::setRebinInterpMethod(const std::string &opt_interp) const {
 /// - opt_interp = 'lin' : linear interpolation is performed by default
 /// - opt_interp = 'preComputedFineGrid' : nearest grid point interpolation
 /// is performed using m_pfgFlux which is the precomputed fine grid
-/// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO -
-/// not tested)
-/// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not
+/// - opt_interp = 'spline' : GSL/spline interpolation is performed (not tested)
+/// - opt_interp = 'ngp' : nearest grid point is performed (not
 /// tested)
 /**
  * targetSpectralAxis should be expressed in same frame as source

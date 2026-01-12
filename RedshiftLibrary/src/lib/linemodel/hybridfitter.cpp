@@ -118,8 +118,9 @@ void CHybridFitter::doFit(Float64 redshift) {
  *already-fitted subelements.
  **/
 void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
+  // NB dummy multiobs implementation (functional for one obs only)
 
-  m_spectraIndex.setAtBegining(); // dummy implementation
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
   TInt32Set indexesFitted;

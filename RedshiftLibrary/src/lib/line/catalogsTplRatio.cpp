@@ -70,8 +70,6 @@ TFloat64List CLineCatalogsTplRatio::getCatalogsPriors() const {
 
 bool CLineCatalogsTplRatio::GetCatalogVelocities(Int32 idx, Float64 &elv,
                                                  Float64 &alv) const {
-  // TODO generic velocity groups : there should not be hardcoded values, this
-  // should return a map
   elv = m_lineRatioCatalogs[idx].getVelocity("em_vel");
   alv = m_lineRatioCatalogs[idx].getVelocity("abs_vel");
   return true;

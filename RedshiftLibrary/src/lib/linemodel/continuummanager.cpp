@@ -59,7 +59,7 @@ CContinuumManager::CContinuumManager(
       m_tplCategory(Context.GetCurrentCategory()), m_models(models),
       m_spectraIndex(spcGlobIndex), m_fitContinuum(continuumModelSolution) {
 
-  // NB: fitContinuum_option: this is the initialization (default value),
+  // NB fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
   // available
   m_fitContinuum_option = EFitType::interactiveFitting;
@@ -93,11 +93,6 @@ std::shared_ptr<CPriorHelper> CContinuumManager::SetFitContinuum_PriorHelper() {
 /**
  * \brief Generates a continuum from the fitting with a set of templates :
  * uses the templatefitting operator
- * TODO: LoadFitContinuum should be limited to reading continuum values from
- * the variable class, especially that we want that continuum fitting results
- * are saved in tplfitStore container outside CElementList and these stores
- * will be injected in the class whenever required !
- * TODO: study this possibility before doing the change
  */
 void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
   Log.LogDebug(Formatter() << "Elementlist, m_fitContinuum_option="

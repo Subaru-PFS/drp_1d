@@ -86,7 +86,6 @@ void CLineModelSolution::computeSigmaUncertainty(
     const std::string &lineWidthType) {
   if (lineWidthType == "instrumentDriven") {
     SigmasUncertainty = TFloat64List(size(), 0.);
-    // TODO handle the case where lsf uncertainty is available
   } else if (lineWidthType == "velocityDriven") {
     SigmasUncertainty = TFloat64List(size(), 1 / SPEED_OF_LIGHT_IN_VACCUM);
 

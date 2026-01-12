@@ -122,7 +122,6 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
   case COMBINED: // combination of the two
     break;
   default:
-    // TODO this should not happen here, but at parameter setting stage
     THROWG(ErrorCode::INTERNAL_ERROR, Formatter()
                                           << "Invalid LSF type "
                                           << m_ElementParam->m_LineWidthType);

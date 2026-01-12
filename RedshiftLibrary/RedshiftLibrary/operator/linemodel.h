@@ -103,7 +103,6 @@ public:
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when
              // deciding on rebinning
-  bool m_opt_tplfit_fftprocessing_secondpass = false; // true;
   bool m_opt_tplfit_use_photometry = false;
   bool m_opt_tplfit_dustFit = true;
   bool m_opt_tplfit_extinction = true;

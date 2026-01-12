@@ -754,7 +754,7 @@ TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   TList<Float64> spectrumFlux;
   TList<Float64> spectrumFluxError;
   // Concatenates all curves
-  // NB: at the end, lambda is not ordered anymore
+  // NB at the end, lambda is not ordered anymore
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
     TList<Float64> tmpLambda =
         m_spectra[spectrumIdx]

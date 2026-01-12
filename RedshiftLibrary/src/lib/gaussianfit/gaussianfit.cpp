@@ -109,23 +109,13 @@ TFloat64List CGaussianFit::ComputeFirstGuess(const CSpectrum &spectrum,
     v[i] = y[i] - y_median;
 
   Float64 max = gsl_stats_max(v.data(), 1, n);
-  Float64 min = gsl_stats_min(v.data(), 1, n);
 
   Int32 np = (3 + m_PolyOrder + 1);
   TFloat64List firstGuessData(np);
-  // if (fabs(max) > fabs(min)) // TODO, WARNING, Gaussian fit forced to
-  // positive amplitudes, aschmitt, 20150827
-  if (max > min) {
-    // Peak value
-    firstGuessData[0] = max;
-    // Peak position: mu
-    firstGuessData[1] = x[(Int32)gsl_stats_max_index(v.data(), 1, n)];
-  } else {
-    // Peak value
-    firstGuessData[0] = min;
-    // Peak position: mu
-    firstGuessData[1] = x[(Int32)gsl_stats_min_index(v.data(), 1, n)];
-  }
+  // Peak value
+  firstGuessData[0] = max;
+  // Peak position: mu
+  firstGuessData[1] = x[gsl_stats_max_index(v.data(), 1, n)];
 
   // Gaussian amplitude
   Float64 std = 0;

@@ -48,10 +48,6 @@ using namespace NSEpic;
  *
  * select the best redshift given a set of rules:
  * - the solution with the most strong lines
- * - (TODO) if no solution with strong lines, the missing strong lines' absence
- * should be excused by:
- *      * high noise in the theoretical position of the strong lines
- *      * lambda range not able to cover the strong lines
  * @return
  */
 bool CLineMatchingResult::GetBestRedshift(Float64 &Redshift,

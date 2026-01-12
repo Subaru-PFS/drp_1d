@@ -48,7 +48,6 @@
 
 namespace NSEpic {
 
-// TODO should be defined elsewhere
 enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 enum class ElementComposition {
@@ -114,10 +113,7 @@ struct TLineModelElementParam {
   void SetSumGauss(Float64 val) { m_sumGauss = val; }
 
   const std::string &getFittingGroupInfo() const { return m_fittingGroupInfo; }
-  // const Float64 &getSumGauss() const {return m_sumGauss;}
 
-  // TODO this is ugly, and maybe m_SignFactor should not exist, knowing
-  // m_type/m_isEmission should be enough
   Int32 getSignFactor(Int32 line_index) const;
   Float64 GetSignFactor(Int32 line_index) const;
 

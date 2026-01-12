@@ -321,10 +321,7 @@ TFloat64List CLineModelFitting::getTplratio_priors() const {
 }
 
 bool CLineModelFitting::initDtd() {
-  //  m_dTransposeDLambdaRange = TLambdaRange(*(m_lambdaRange));
-  m_spectraIndex.setAtBegining(); // we choose arbitrarily first obs to check if
-                                  // dtd is already initialized
-                                  // TODO check statement above
+  m_spectraIndex.setAtBegining();
   m_dTransposeDLambdaRange = getLambdaRange();
   if (isContinuumComponentFitter())
     m_dTransposeD = EstimateDTransposeD("raw");
@@ -443,7 +440,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   if (isContinuumComponentFitter()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
-      // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, redshift);
     }
   }
@@ -459,8 +455,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod,
                                          bool enableAmplitudeOffsets,
                                          bool enableLambdaOffsetsFit) {
+  // NB dummy multiobs implementation (functional for one obs only) for svdlc
+  // and svdlcp2
   m_fittingmethod = fitMethod;
-  m_spectraIndex.setAtBegining(); // dummy implementation for svdlc and svdlcp2
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   m_fitter = CAbstractFitter::makeFitter(
       fitMethod, m_ElementsVector, m_inputSpcs, m_lambdaRanges, m_models,
       m_RestLineList, m_continuumManager, m_spectraIndex,
@@ -486,7 +484,7 @@ void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
  *lines
  **/
 CMask CLineModelFitting::getOutsideLinesMask() const {
-  // TODO temp basic impl -> #8796
+  // NB temporary basic implementation
   m_spectraIndex.setAtBegining();
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
@@ -511,8 +509,8 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
  **/
 std::pair<Float64, Float64>
 CLineModelFitting::getOutsideLinesRMS(CMask const &_mask) const {
-  // TODO temp basic impl
-  m_spectraIndex.setAtBegining();
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
   const CSpectrumSpectralAxis &spectralAxis = getSpectrum().GetSpectralAxis();
   Float64 sum2_flux = 0.0;
@@ -607,8 +605,8 @@ Int32 CLineModelFitting::computeSpcNSamples() const {
  * 2. process each
  **/
 std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
-
-  m_spectraIndex.setAtBegining(); // TODO #8797
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   // Retrieve all the strone emission lines supports in a list of range
   TInt32RangeList supportList;
   TBoolList isStrongList;
@@ -738,7 +736,7 @@ void CLineModelFitting::LoadModelSolution(
   for (Int32 iRestLine = 0; iRestLine < ssize(m_RestLineList); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
-      continue; // TODO should throw exception here
+      continue;
     auto const &elt_param = getElementsParams()[eIdx];
     if (modelSolution.NotFitted[iRestLine]) {
       // set outsidelambdrarangeList
@@ -1155,7 +1153,6 @@ Float64 CLineModelFitting::GetVelocityAbsorption() const {
  *a given spcComponent
  *
  **/
-// TODO rename this ! not a simple getter
 Float64 CLineModelFitting::getDTransposeD() {
 
   m_spectraIndex.setAtBegining(); // we choose arbitrarily first obs to check if
@@ -1172,7 +1169,6 @@ Float64 CLineModelFitting::getDTransposeD() {
  *a given spcComponent
  *
  **/
-// TODO rename this ! not a simple getter
 Float64 CLineModelFitting::getLikelihood_cstLog() {
 
   m_spectraIndex.setAtBegining(); // we choose arbitrarily first obs to check if
@@ -1292,8 +1288,6 @@ CLineModelFitting::GetMeanContinuumUnderLine(Int32 eltIdx, Int32 line_index,
   auto const &polynomCoeffs =
       m_ElementsVector->getElementsParams()[eltIdx]->m_ampOffsetsCoeffs;
   for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
-    // TODO check this : it has been added because it caused Line position does
-    // not belong to LSF range with lsf variable width
     if (m_ElementsVector->getElementList()[eltIdx]->IsOutsideLambdaRangeLine(
             line_index))
       continue;
@@ -1332,8 +1326,6 @@ std::pair<Float64, Float64>
 CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
                                                Float64 redshift) const {
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
-    // TODO check this : it has been added because it caused Line position does
-    // not belong to LSF range with lsf variable width
     auto const &elt = *m_ElementsVector->getElementList()[eltIdx];
     if (elt.IsOutsideLambdaRangeLine(line_index))
       continue;
@@ -1376,7 +1368,8 @@ void CLineModelFitting::setChiSquareRatioResult(
 
 std::shared_ptr<const CLSF>
 CLineModelFitting::buildEquivConstantResolLSF() const {
-  getSpectraIndex().setAtBegining(); // TODO multiobs, get first spectrum lsf
+  // NB dummy multiobs implementation (functional for one obs only)
+  getSpectraIndex().setAtBegining(); // temporary multiobs implementation
 
   Float64 lambda = getLambdaRange().GetMidRange();
 
