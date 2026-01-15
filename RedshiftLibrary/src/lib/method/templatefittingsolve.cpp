@@ -103,9 +103,6 @@ void CTemplateFittingSolve::PopulateParameters(
   if (!isSinglePass()) {
     m_opt_maxCandidate =
         parameterStore->GetScoped<int>("firstPass.extremaCount");
-    m_secondPassContinuumFit = str2ContinuumFit.at(
-        parameterStore->GetScoped<std::string>("secondPass.continuumFit"));
-
     m_opt_secondpass_halfwindowsize =
         parameterStore->GetScoped<Float64>("secondPass.halfWindowSize");
   }

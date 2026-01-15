@@ -96,18 +96,37 @@
     "firstPass": {
       "type": "object",
       "required": [
-        "largeGridStepRatio"
+        "largeGridStepRatio",
+        "extremaCount"
       ],
+      "additionalProperties": false,
       "properties": {
         "largeGridStepRatio": {
           "type": "integer",
           "title": "Large grid step ratio",
           "description": "Multiplicative factor of the redshift step size for the first pass: firstpassz step = step * largeGridStepRatio. To use finegrid step, set largegridstep to 0 or 1"
+        },
+        "extremaCount": {
+          "type": "integer",
+          "title": "Maximum number of first pass candidate to retain",
+          "description": "Maximum number of first pass candidate to retain (has to be >= templateFittingSolve.extremaCount)"
         }
       }
     },
     "secondPass": {
-      "$ref": "second_pass.json"
+      "title": "Second pass",
+      "type": "object",
+      "required": [
+        "halfWindowSize"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "halfWindowSize": {
+          "type": "number",
+          "title": "Half window size",
+          "description": "Radius of the secondPass window centered around each firstPass extrema"
+        }
+      }
     }
   }
 }
