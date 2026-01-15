@@ -7,8 +7,9 @@
 ### Removed
 ### Fixed
 * [10114] : Fix SubClassifSolverError caused by ratioToFree. Enhance tplRatio first pass results filling.
-  [10207] : set the parameter `templateFittingSolve.firstPass.extremaCount` as required, and removed `templateFittingSolve.secondPass.continuumFit`
- 
+* [10207] : set the parameter `templateFittingSolve.firstPass.extremaCount` as required, and removed `templateFittingSolve.secondPass.continuumFit`
+* [10016] : Fix overlapping line support in hybrid fitter, with new parameter `nSigmaAmpOffset` to set the added line support margin for polynomials under lines.
+
 ## 1.16.0 (2025-11-20)
 ### Added
 * [10031] : Add a minimal number of samples to fit a continuum (one new parameter `nbSamplesMinForContinuumFit`) and provide the number of pixels effectively used for fitting (two new output results `ContinuumNPixelsUsedForFit` & `ContinuumNPixelsOfResiduals`)

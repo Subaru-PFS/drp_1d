@@ -406,7 +406,8 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     lbdaOffset_param_idx = param_idx++;
   }
 
-  TInt32List xInds = getElementList().getSupportIndexes(EltsIdx);
+  TInt32List xInds =
+      getElementList().getSupportIndexes(EltsIdx, m_enableAmplitudeOffsets);
   if (xInds.size() < 1)
     THROWG(ErrorCode::INTERNAL_ERROR,
            "no observed samples for the line Element to fit");

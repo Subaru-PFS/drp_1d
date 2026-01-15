@@ -399,7 +399,7 @@ public:
     return std::max(a.GetBegin(), b.GetBegin()) <=
            std::min(a.GetEnd(), b.GetEnd());
   }
-  bool HasIntersectionWith(const CRange<T> &r) {
+  bool HasIntersectionWith(const CRange<T> &r) const {
     return HasIntersection(*this, r);
   }
 

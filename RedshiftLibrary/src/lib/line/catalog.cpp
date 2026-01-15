@@ -88,21 +88,37 @@ CLineCatalogBase<TLine>::GetFilteredList(const std::string &typeFilter,
 }
 
 template <typename TLine>
-std::map<std::string, typename CLineCatalogBase<TLine>::TLineVector>
+TList<typename CLineCatalogBase<TLine>::TLineVector>
 CLineCatalogBase<TLine>::ConvertToGroupList(
     const CLineCatalogBase<TLine>::TLineMap &filteredList) {
 
-  std::map<std::string, TLineVector> fullList;
+  std::map<std::string, TLineVector> groupMap;
 
   for (const auto &[_, line] : filteredList) {
     auto group_name = line.GetGroupName();
     if (group_name == undefStr)
       // non grouped lines are added in dedicated maps (one element)
       group_name = "single_" + line.GetStrID();
-    fullList[group_name].push_back(line);
+    groupMap[group_name].push_back(line);
   }
 
-  return fullList;
+  // sort lines inside groups
+  TList<TLineVector> groupVector;
+  groupVector.reserve(groupMap.size());
+  for ([[maybe_unused]] auto &&[_, group] : std::move(groupMap)) {
+    std::sort(group.begin(), group.end(), [](TLine const &l, TLine const &r) {
+      return l.GetPosition() < r.GetPosition();
+    });
+    groupVector.push_back(std::move(group));
+  }
+
+  // sort groups by first line
+  std::sort(groupVector.begin(), groupVector.end(),
+            [](TLineVector const &l, TLineVector const &r) {
+              return l.front().GetPosition() < r.front().GetPosition();
+            });
+
+  return groupVector;
 }
 
 void CLineCatalog::AddLineFromParams(

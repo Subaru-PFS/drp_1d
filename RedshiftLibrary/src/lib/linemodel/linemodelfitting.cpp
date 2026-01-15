@@ -111,6 +111,8 @@ CLineModelFitting::CLineModelFitting(
   initParameters();
   // override ortho specific parameters
   m_fittingmethod = "hybrid";
+  m_enableAmplitudeOffsets = false;
+  m_enableLbdaOffsets = false;
 
   auto lineRatioType = CLineRatioManager::EType::rules;
   initMembers(continuumFittingOperator, lineRatioType,
@@ -125,8 +127,6 @@ CLineModelFitting::CLineModelFitting(
 void CLineModelFitting::initParameters() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingMethod");
-  m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
-  m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
 
   if (Context.GetCurrentMethod() == "lineModelSolve") {
     m_opt_firstpass_fittingmethod =
@@ -134,6 +134,14 @@ void CLineModelFitting::initParameters() {
     m_opt_secondpass_fittingmethod = m_fittingmethod;
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstPass.multipleContinuumFitDisable");
+  }
+
+  std::set<std::string> const lbdaOffsetFitters{"svd", "hybrid", "lbfgsb"};
+  if (lbdaOffsetFitters.find(m_fittingmethod) != lbdaOffsetFitters.end() ||
+      lbdaOffsetFitters.find(m_opt_firstpass_fittingmethod) !=
+          lbdaOffsetFitters.end()) {
+    m_enableAmplitudeOffsets = ps->GetScoped<bool>("ampOffsetFit");
+    m_enableLbdaOffsets = ps->GetScoped<bool>("lbdaOffsetFit");
   }
 
   TContinuumComponent continuumComponent(
@@ -205,7 +213,8 @@ void CLineModelFitting::setElementsVector(
   // Here must pass lineRatioType as arg because is used before
   // m_lineRatioManager initialization
   m_ElementsVector = std::make_shared<CLMEltListVector>(
-      m_spectraIndex, m_RestLineList, element_composition);
+      m_spectraIndex, m_RestLineList, element_composition,
+      m_enableAmplitudeOffsets);
 }
 
 void CLineModelFitting::logParameters() {
@@ -622,7 +631,7 @@ std::pair<Float64, Float64> CLineModelFitting::getCumulSNRStrongEL() const {
         continue;
       auto const &line = elt_param->GetLines()[index];
       isStrongList.push_back(line.IsStrong());
-      supportList.push_back(elt->getTheoreticalSupportSubElt(index));
+      supportList.push_back(elt->getSupportSubElt(index));
     }
   }
 
@@ -902,7 +911,7 @@ Int32 CLineModelFitting::computeNSamplesUnderLine(Int32 eIdx,
     const auto &elt = getElementList()[eIdx];
     if (elt->IsOutsideLambdaRangeLine(line_index))
       continue;
-    NSamples += elt->getTheoreticalSupportSubElt(line_index).GetLength() + 1;
+    NSamples += elt->getSupportSubElt(line_index).GetLength() + 1;
   }
   return NSamples;
 }

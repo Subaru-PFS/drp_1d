@@ -544,6 +544,7 @@ class TestLineModelSolve:
                     "lineModelSolve": {
                         "lineModel": {
                             "fittingMethod": "hybrid",
+                            "ampOffsetFit": False,
                             "lbdaOffsetFit": False,
                         }
                     }
@@ -556,10 +557,68 @@ class TestLineModelSolve:
         @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
         def test_error_if_lbdaOffsetFit_absent(self, fitting_method, zflag):
             param_dict = self._make_parameter_dict(
-                **{"lineModelSolve": {"lineModel": {"fittingMethod": fitting_method, "lbdaOffsetFit": None}}}
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "lbdaOffsetFit": None,
+                            "ampOffsetFit": False,
+                        }
+                    }
+                }
             )
             with pytest.raises(
                 APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "firstPass": {"fittingMethod": fitting_method},
+                            "lbdaOffsetFit": None,
+                            "ampOffsetFit": False,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_ampOffsetFit_absent(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "lbdaOffsetFit": False,
+                            "ampOffsetFit": None,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel ampOffsetFit"
+            ):
+                check_from_parameter_dict(param_dict)
+
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "firstPass": {"fittingMethod": fitting_method},
+                            "lbdaOffsetFit": False,
+                            "ampOffsetFit": None,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel ampOffsetFit"
             ):
                 check_from_parameter_dict(param_dict)
 
@@ -571,6 +630,7 @@ class TestLineModelSolve:
                     "lineModelSolve": {
                         "lineModel": {
                             "fittingMethod": fitting_method,
+                            "ampOffsetFit": False,
                             "lbdaOffsetFit": True,
                             "lbdaOffsetMax": 400,
                             "lbdaOffsetStep": lbda_offset_step,
@@ -615,6 +675,41 @@ class TestLineModelSolve:
             )
             with pytest.raises(
                 APIException, match=r"Missing parameter galaxy lineModelSolve lineModel lbdaOffsetStep"
+            ):
+                check_from_parameter_dict(param_dict)
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_Ok_if_ampOffsetFit_and_nsigmaAmpOffset_present(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "ampOffsetFit": True,
+                            "lbdaOffsetFit": False,
+                            "nSigmaAmpOffset": 6,
+                        }
+                    }
+                }
+            )
+            check_from_parameter_dict(param_dict)
+            assert not WarningUtils.has_any_warning()
+
+        @pytest.mark.parametrize("fitting_method", ["hybrid", "svd", "lbfgsb"])
+        def test_error_if_ampOffsetFit_and_nsigmaAmpOffset_absent(self, fitting_method, zflag):
+            param_dict = self._make_parameter_dict(
+                **{
+                    "lineModelSolve": {
+                        "lineModel": {
+                            "fittingMethod": fitting_method,
+                            "ampOffsetFit": True,
+                            "lbdaOffsetFit": False,
+                        }
+                    }
+                }
+            )
+            with pytest.raises(
+                APIException, match=r"Missing parameter galaxy lineModelSolve lineModel nSigmaAmpOffset"
             ):
                 check_from_parameter_dict(param_dict)
 

@@ -90,6 +90,7 @@ const std::string jsonString =
     "\"polynomialDegree\" : 2,"
     "\"velocityFit\" : false,"
     "\"ampOffsetFit\": \"true\","
+    "\"nSigmaAmpOffset\": 6,"
     "\"lbdaOffsetFit\": \"true\","
     "\"lbdaOffsetMax\": \"400\","
     "\"lbdaOffsetStep\": \"25\","
@@ -135,7 +136,7 @@ const std::string jsonString_lbfgsb =
     "\"continuumComponent\" : \"noContinuum\","
     "\"lineTypeFilter\" : \"E\","
     "\"lineForceFilter\" : \"no\","
-    "\"nSigmaSupport\" : 14,"
+    "\"nSigmaSupport\" : 8,"
     "\"maxDistanceToLine\" : \"1\","
     "\"nbSamplesMinForLineFit\": \"2\","
     "\"lineWidthType\" : \"combined\","
@@ -143,6 +144,7 @@ const std::string jsonString_lbfgsb =
     "\"polynomialDegree\" : 2,"
     "\"velocityFit\" : true,"
     "\"ampOffsetFit\": \"true\","
+    "\"nSigmaAmpOffset\": 6,"
     "\"lbdaOffsetFit\": \"true\","
     "\"lbdaOffsetMax\": \"400\","
     "\"emVelocityFitMin\" : 10,"
@@ -265,10 +267,10 @@ BOOST_FIXTURE_TEST_CASE(compute_test, fixture_LinemeasSolveTest) {
           "galaxy", "lineMeasSolver", "lineMeasSolve", "linemeas");
 
   Float64 snrOII = res->snrOII;
-  BOOST_CHECK_CLOSE(snrOII, 16.133673282026134, 1e-6);
+  BOOST_CHECK_CLOSE(snrOII, 16.827801345613782, 1e-6);
 
   Float64 lfOII = res->lfOII;
-  BOOST_CHECK_CLOSE(lfOII, -15.656149251090058, 1e-6);
+  BOOST_CHECK_CLOSE(lfOII, -15.676534337234134, 1e-6);
 
   ctx.reset();
 }

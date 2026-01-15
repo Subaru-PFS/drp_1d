@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/lineprofile.h"
+#include <cmath>
 
 namespace NSEpic {
 
@@ -62,7 +63,11 @@ enum class ElementComposition {
 struct TLineModelElementParam {
 
   TLineModelElementParam(CLineVector lines, Float64 velocity,
-                         const std::string &lineWidthType);
+                         const std::string &lineWidthType,
+                         Float64 maxDistanceToLine = NAN,
+                         Int32 minSamplesNumberForLineFit = -1,
+                         bool useAmpOffsetsCoeffs = false,
+                         Float64 nSigmaAmpOffsets = 0);
 
   CLineVector m_Lines;
   Float64 m_Velocity = NAN;
@@ -74,6 +79,10 @@ struct TLineModelElementParam {
   TFloat64List m_OffsetsStd;
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
+  Float64 m_maxDistanceToLine;
+  Int32 m_minSamplesNumberForLineFit;
+  bool m_useAmpOffsetsCoeffs = false;
+  Float64 m_nSigmaAmpOffsets = 0;
   CPolynomCoeffs m_ampOffsetsCoeffs;
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;

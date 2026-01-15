@@ -52,8 +52,7 @@ private:
 public:
   TInt32List GetElementsIndicesInsideLambdaRange() const;
   TInt32List getNonZeroElementIndices(CLine::EType lineTypeFilter) const;
-  TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
-                                    Float64 redshift,
+  TInt32List getOverlappingElements(TInt32List &indicesToFit, Float64 redshift,
                                     Float64 overlapThres) const;
 
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
@@ -63,7 +62,8 @@ public:
       Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
-  TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
+  TInt32List getSupportIndexes(const TInt32List &EltsIdx,
+                               bool polynomialMargin = false) const;
 
   void addToSpectrumAmplitudeOffset(
       const CSpectrumSpectralAxis &spectralAxis,
@@ -124,7 +124,8 @@ class CLMEltListVector {
 public:
   CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                    const CLineMap &restLineList,
-                   ElementComposition element_composition);
+                   ElementComposition element_composition,
+                   bool useAmpOffsetsCoeffs);
   CLMEltListVector() = delete;
 
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
@@ -185,12 +186,13 @@ private:
   // to invalid all absorption lines of all element
   bool m_allAbsLinesNoContinuum = false;
 
-  void AddElementParam(CLineVector lines);
+  void AddElementParam(CLineVector lines, bool useAmpOffsetsCoeffs);
   void fillElements();
-  void LoadCatalog();
-  void LoadCatalogOneLineByElement();
-  void LoadCatalogOneMultiline();
-  void LoadCatalogTwoMultilinesAE();
+  void LoadCatalog(bool useAmpOffsetsCoeffs);
+  void LoadCatalogOneLineByElement(bool useAmpOffsetsCoeffs);
+  void LoadCatalogOneMultiline(bool useAmpOffsetsCoeffs);
+  void LoadCatalogTwoMultilinesAE(bool useAmpOffsetsCoeffs);
+  void sortLinesByCenterWavelength(CLineVector &lineVector) const;
   bool computeOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index);
   bool computeOutsideLambdaRange(Int32 elt_index);
 };

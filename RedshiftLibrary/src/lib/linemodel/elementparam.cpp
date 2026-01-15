@@ -41,6 +41,7 @@
 #include <cfloat>
 #include <climits>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -48,14 +49,18 @@
 using namespace std;
 using namespace NSEpic;
 
-TLineModelElementParam::TLineModelElementParam(CLineVector lines,
-                                               Float64 velocity,
-                                               const std::string &lineWidthType)
+TLineModelElementParam::TLineModelElementParam(
+    CLineVector lines, Float64 velocity, const std::string &lineWidthType,
+    Float64 maxDistanceToLine, Int32 minSamplesNumberForLineFit,
+    bool useAmpOffsetsCoeffs, Float64 nSigmaAmpOffsets)
     : m_Lines(std::move(lines)), m_Velocity(velocity), m_VelocityStd(NAN),
       m_FittedAmplitudes(m_Lines.size(), NAN),
       m_FittedAmplitudesStd(m_Lines.size(), NAN),
       m_OffsetsStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
-      m_defaultVelocity(velocity),
+      m_maxDistanceToLine(maxDistanceToLine),
+      m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
+      m_useAmpOffsetsCoeffs(useAmpOffsetsCoeffs),
+      m_nSigmaAmpOffsets(nSigmaAmpOffsets), m_defaultVelocity(velocity),
       m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());

@@ -122,36 +122,34 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
-  TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
-  TInt32Set indexesFitted;
-  for (Int32 iElts : validEltsIdx) {
+  TInt32List indicesToFit = m_ElementsVector->getValidElementIndices();
+  std::sort(indicesToFit.begin(), indicesToFit.end(),
+            [&elts = getElementList()](Int32 l, Int32 r) {
+              return elts[l]->getLeftSampleIndex() <
+                     elts[r]->getLeftSampleIndex();
+            });
 
-    // skip if already fitted
-    if (std::find(indexesFitted.cbegin(), indexesFitted.cend(), iElts) !=
-        indexesFitted.cend())
-      continue;
-
-    TInt32List overlappingInds = getElementList().getOverlappingElements(
-        iElts, indexesFitted, redshift, OVERLAP_THRES_HYBRID_FIT);
+  while (!indicesToFit.empty()) {
+    auto iElt = indicesToFit.front();
+    auto const &overlappingInds = getElementList().getOverlappingElements(
+        indicesToFit, redshift, OVERLAP_THRES_HYBRID_FIT);
 
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
-      std::string fitGroupTag = boost::str(boost::format("hy%d") % iElts);
+      std::string fitGroupTag = boost::str(boost::format("hy%d") % iElt);
       m_ElementsVector->getElementsParams()[overlapping_iElt]
           ->SetFittingGroupInfo(fitGroupTag);
     }
 
-    Log.LogDebug(Formatter() << "    model: hybrid fit: #" << iElts
+    Log.LogDebug(Formatter() << "    model: hybrid fit: #" << iElt
                              << " - N overlapping=" << overlappingInds.size());
-    for (Int32 ifit = 0; ifit < ssize(overlappingInds); ifit++) {
-      Log.LogDebug(Formatter()
-                   << "    model: hybrid fit:     overlapping #" << ifit
-                   << " - eltIdx=" << overlappingInds[ifit]);
+    for (Int32 idx : overlappingInds) {
+      Log.LogDebug(Formatter() << "    model: hybrid fit: eltIdx=" << idx);
     }
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
-      fitAmplitudeAndLambdaOffset(iElts, redshift, undefIdx,
+      fitAmplitudeAndLambdaOffset(iElt, redshift, undefIdx,
                                   m_enableLambdaOffsetsFit);
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
@@ -162,11 +160,6 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       fitAmplitudesLinSolveAndLambdaOffset(overlappingInds,
                                            m_enableLambdaOffsetsFit, redshift);
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
-    }
-
-    // update the already fitted list
-    for (Int32 overlapping_iElt : overlappingInds) {
-      indexesFitted.insert(overlapping_iElt);
     }
   }
 
