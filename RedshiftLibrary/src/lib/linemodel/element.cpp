@@ -162,6 +162,14 @@ std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
   return std::make_pair(cont, contStd);
 }
 
+// Estimate the line index range inside the spectralaxis of the line wavelength
+// range. The wavelength range is computed as:
+//         mu +- [sigma * n_sigma_support/2 + max_offset]
+// where:
+//   mu: redshifted wavelength of line center
+//   sigma: line width (using LSF and velocity dispersion)
+//   max_offset: maximum possible offset of the line center in km/s
+// Then the index range is determined from the wavelength range.
 void CLineModelElement::EstimateSupport(
     Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
     Float64 redshift, const TFloat64Range &lambdaRange, Float64 max_offset) {
@@ -184,6 +192,9 @@ void CLineModelElement::EstimateSupport(
   EstimateLineVisbility(line_index, spectralAxis, mu, sigma,
                         max_offset_angstrom);
 
+  // if the amplitude offset (ie the polynomial under the line) is fitted, we
+  // extend the line support with a margin on both left and right sides.
+  // The added margin on each side is nSigmaAmpOffsets * sigma
   if (getElementParam()->m_useAmpOffsetsCoeffs &&
       !m_OutsideLambdaRangeList[line_index]) {
     winsize += getElementParam()->m_nSigmaAmpOffsets * sigma;

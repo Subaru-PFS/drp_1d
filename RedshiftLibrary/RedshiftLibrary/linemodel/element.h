@@ -195,9 +195,11 @@ protected:
 
   std::vector<TBoolList> m_LineIsActiveOnSupport;
 
-  TInt32RangeList m_rangeNoOverlap;
-  TInt32RangeList m_rangeNoOverlapMargin;
-  TInt32RangeList m_range;
+  TInt32RangeList m_range; // wavelength ranges of each lines in the element
+  TInt32RangeList m_rangeNoOverlap; // ranges of merged overlapping lines
+  TInt32RangeList
+      m_rangeNoOverlapMargin; // with two-side margins for polynomials
+
   TInt32List m_sortedLineIndices;
 
   TBoolList m_OutsideLambdaRangeList;
