@@ -198,8 +198,6 @@ void CLineModelFitting::reloadFor2ndPass(
     m_models->setModelsElements(m_ElementsVector->getElementList());
   }
 
-  // Updates fitting method to hybrid for line ratio
-  SetFittingMethod("hybrid", m_enableAmplitudeOffsets, m_enableLbdaOffsets);
   SetLSF();
   LogCatalogInfos();
   setLineRatioManager(lineRatioType);
