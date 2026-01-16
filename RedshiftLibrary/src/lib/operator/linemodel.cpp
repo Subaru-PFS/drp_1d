@@ -1149,13 +1149,9 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
                              "step="
                           << velfitStepA);
 
-  auto saved_fitter = std::move(m_fittingManager->m_fitter);
-
   // fit the emission and absorption width by minimizing the
-  // linemodel merit with linemodel "hybrid" fitting method
-  m_fittingManager->SetFittingMethod("hybrid");
+  // linemodel merit
   if (opt_lineRatioType == CLineRatioManager::EType::tplRatio) {
-    m_fittingManager->SetFittingMethod("individual");
     std::dynamic_pointer_cast<CTplratioManager>(
         m_fittingManager->m_lineRatioManager)
         ->SetForcedisableTplratioISMfit(
@@ -1292,7 +1288,6 @@ void COperatorLineModel::fitVelocity(Int32 Zidx, Int32 candidateIdx,
     }
   }
   // restore some params
-  m_fittingManager->m_fitter = std::move(saved_fitter);
   if (m_fittingManager->isLineRatioTplRatio())
     std::dynamic_pointer_cast<CTplratioManager>(
         m_fittingManager->m_lineRatioManager)
