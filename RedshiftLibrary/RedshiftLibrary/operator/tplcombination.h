@@ -48,6 +48,7 @@
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/operator/tplcombinationresult.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
@@ -130,6 +131,34 @@ private:
                         Int32 n);
   void applyIGMISM(const Int32 meiksinIdx, const Float64 ebmvCoef,
                    const Int32 nddl);
+  void CheckTemplateInitialization(const TTemplateConstRefList &tplList,
+                                   bool opt_extinction,
+                                   bool opt_dustFitting) const;
+
+  std::pair<TFloat64List, TFloat64List>
+  SortRedshifts(const TFloat64List &redshifts) const;
+
+  std::shared_ptr<CTplCombinationResult>
+  PrepareResult(const TFloat64List &sortedRedshifts,
+                const TIgmIsmIdxs &igmIsmIdxs, Int32 componentCount) const;
+
+  CMask CreateDefaultMaskIfNeeded(const CSpectrum &spectrum,
+                                  const std::vector<CMask> &additional_spcMasks,
+                                  const TFloat64List &sortedRedshifts,
+                                  const TFloat64List &sortedIndexes) const;
+
+  void ComputeBasicFits(
+      const CSpectrum &spectrum, const TTemplateConstRefList &tplList,
+      const TFloat64List &sortedRedshifts, const TFloat64List &sortedIndexes,
+      const TFloat64Range &clampedlambdaRange, Float64 overlapThreshold,
+      bool opt_extinction, bool opt_dustFitting,
+      const std::vector<CMask> &additional_spcMasks, const CMask &defaultMask,
+      const CPriorHelper::TPriorZEList &logpriorze,
+      const TIgmIsmIdxs &igmIsmIdxs, CTplCombinationResult &result);
+
+  void CheckOverlapWarnings(const CTplCombinationResult &result,
+                            const TFloat64List &sortedRedshifts,
+                            Float64 overlapThreshold) const;
 };
 
 } // namespace NSEpic
