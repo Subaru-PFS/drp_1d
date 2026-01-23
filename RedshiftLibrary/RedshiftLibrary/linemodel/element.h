@@ -112,6 +112,12 @@ public:
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
       bool enableAmplitudeOffsets = false) const;
 
+  std::pair<Float64, Float64>
+  GetContinuumAtCenterProfile(const CSpectrumSpectralAxis &spectralAxis,
+                              Float64 redshift,
+                              const CSpectrumFluxAxis &continuumfluxAxis,
+                              bool enableAmplitudeOffsets = false) const;
+
   Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                            Float64 continuumFlux,
                            Int32 line_index = undefIdx) const;

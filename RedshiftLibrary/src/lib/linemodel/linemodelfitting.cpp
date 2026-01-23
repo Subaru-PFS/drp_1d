@@ -1305,7 +1305,7 @@ CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
 
     auto &model = getSpectrumModel();
     auto const &spectralAxis = model.GetModelSpectrum().GetSpectralAxis();
-    auto const continuumFluxAxis = model.GetModelContinuum();
+    auto const &continuumFluxAxis = model.getContinuumFluxAxis();
     return elt.GetContinuumAtCenterProfile(line_index, spectralAxis, redshift,
                                            continuumFluxAxis,
                                            m_enableAmplitudeOffsets);

@@ -73,21 +73,6 @@ const CSpectrum &CSpectrumModel::GetModelSpectrum() const {
   return m_SpectrumModel;
 }
 
-/**
- * \brief Returns a pointer to the (re-)estimated continuum flux.
- **/
-CSpectrumFluxAxis CSpectrumModel::GetModelContinuum() const {
-  if (!m_enableAmplitudeOffsets)
-    return m_ContinuumFluxAxis;
-
-  auto const &continuumSamples = m_ContinuumFluxAxis.GetSamplesVector();
-  auto const &polySamples = m_PolynomialUnderLinesFluxAxis.GetSamplesVector();
-  TFloat64List newContinuumSamples(m_ContinuumFluxAxis.GetSamplesCount());
-  std::transform(continuumSamples.begin(), continuumSamples.end(),
-                 polySamples.begin(), newContinuumSamples.begin(), std::plus());
-  return CSpectrumFluxAxis(std::move(newContinuumSamples));
-}
-
 void CSpectrumModel::initModelWithContinuum() {
   m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   m_spcFluxAxisNoContinuum = m_SpcFluxAxis - m_ContinuumFluxAxis;
@@ -106,23 +91,25 @@ void CSpectrumModel::reinitModelUnderElements(const TInt32List &filterEltsIdx,
   m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
 }
 
-void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
-  reinitModel();
-  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
-  auto modelSamples = m_SpectrumModel.GetFluxAxis().GetSamplesVector();
-  Int32 const modelSize = modelSamples.size();
+void CSpectrumModel::refreshContinuumModel() {
+  reinitModel(); // set model to continnuum
+  m_PolynomialUnderLinesFluxAxis = m_SpectrumModel.GetFluxAxis();
+
   if (m_enableAmplitudeOffsets) {
     // add amplitude offsets
-    m_PolynomialUnderLinesFluxAxis = CSpectrumFluxAxis(modelSize, 0);
     m_Elements.addToSpectrumAmplitudeOffset(m_SpectrumModel.GetSpectralAxis(),
                                             m_PolynomialUnderLinesFluxAxis);
-    auto const &polySamples = m_PolynomialUnderLinesFluxAxis.GetSamplesVector();
-    std::transform(polySamples.cbegin(), polySamples.cend(),
-                   modelSamples.cbegin(), modelSamples.begin(), std::plus());
   }
-  CSpectrumFluxAxis modelFluxAxis(std::move(modelSamples));
+}
+
+void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
+  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+
+  refreshContinuumModel();
+  auto const &continuumFluxAxis = m_PolynomialUnderLinesFluxAxis;
 
   // create spectrum model
+  auto modelFluxAxis = continuumFluxAxis;
   Int32 nElements = m_Elements.size();
   for (Int32 iElts = 0; iElts < nElements; iElts++) {
     auto const lineType =
@@ -130,7 +117,7 @@ void CSpectrumModel::refreshModel(CLine::EType lineTypeFilter) {
     if (lineTypeFilter == CLine::EType::nType_All ||
         lineTypeFilter == lineType) {
       m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis,
-                                            m_ContinuumFluxAxis, m_Redshift);
+                                            continuumFluxAxis, m_Redshift);
     }
   }
 

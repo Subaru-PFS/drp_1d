@@ -170,6 +170,18 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   Log.LogDetail(Formatter() << "normFactor = '" << std::fixed
                             << std::setprecision(3) << normFactor << "'");
 
+  // handle continuum with ampOffset (polynomial under line) enabled
+  std::function getContinuum = [&continuumfluxAxis](Int32 idx) {
+    return continuumfluxAxis[idx];
+  };
+  if (m_enableAmplitudeOffsets) {
+    // in that case, we cannot perform a linear leastsquare on both the
+    // absorption amplitude and the polynomial coeffs. we thus assumes the
+    // continnum is constant under the line, and will correct for it after the
+    // fit
+    getContinuum = [](Int32 idx) { return 1; };
+  }
+
   // Prepare the fit data
   for (Int32 i = 0; i < n; i++) {
     double xi, yi, wi;
@@ -183,7 +195,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
     for (Int32 iddl = 0; iddl < ssize(EltsIdxToFit_ini); iddl++) {
       fval = getElementList()[EltsIdxToFit_ini[iddl]]->getModelAtLambda(
-          xi, redshift, continuumfluxAxis[idx]);
+          xi, redshift, getContinuum(idx));
       gsl_matrix_set(Xini, i, iddl, fval);
       Log.LogDebug(Formatter() << "fval = '" << fval << "'");
     }
@@ -259,34 +271,17 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   c = gsl_vector_alloc(nddl);
   cov = gsl_matrix_alloc(nddl, nddl);
 
+  // perform the fit
   {
     gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, nddl);
     gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
     gsl_multifit_linear_free(work);
   }
 
-  for (Int32 iddl = 0; iddl < nddl; iddl++) {
-    Float64 const a = gsl_vector_get(c, iddl) / normFactor;
-    Log.LogDetail(Formatter() << "# Found amplitude " << iddl << ": " << a);
-  }
-
-  bool allPositive = true;
-
   auto const eltSize = ssize(EltsIdxToFit);
-  ampsfitted.assign(EltsIdxToFit_ini.size(), NAN);
-  errorsfitted.assign(EltsIdxToFit_ini.size(), NAN);
-  for (Int32 iddl = 0; iddl < eltSize; iddl++) {
-    Float64 const a = gsl_vector_get(c, iddl) / normFactor;
-    if (a < 0)
-      allPositive = false;
 #define COV(i, j) (gsl_matrix_get(cov, i, j))
-    Float64 const var = COV(iddl, iddl);
-    Float64 const std = sqrt(var) / normFactor;
-    m_ElementsVector->SetElementAmplitude(EltsIdxToFit[iddl], a, std);
-    ampsfitted[valid_col_indices[iddl]] = a;
-    errorsfitted[valid_col_indices[iddl]] = std;
-  }
 
+  // get the continuum polynomials solution and push to the LineElements
   if (useAmpOffset) {
     Float64 x0 = gsl_vector_get(c, eltSize);
     Float64 x1 = 0.0;
@@ -306,6 +301,32 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     for (Int32 iddl = 0; iddl < ssize(EltsIdx); ++iddl)
       m_ElementsVector->getElementsParams()[EltsIdx[iddl]]->SetPolynomCoeffs(
           polyCoeffs * (1 / normFactor));
+  }
+
+  bool allPositive = true;
+
+  // get the amplitudes solution and push into the LineElements
+  ampsfitted.assign(EltsIdxToFit_ini.size(), NAN);
+  errorsfitted.assign(EltsIdxToFit_ini.size(), NAN);
+  for (Int32 iddl = 0; iddl < eltSize; iddl++) {
+    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Log.LogDetail(Formatter() << "# Found amplitude " << iddl << ": " << a);
+    Float64 const var = COV(iddl, iddl);
+    Float64 const std = sqrt(var) / normFactor;
+    auto const &elt = m_ElementsVector->getElementList()[EltsIdxToFit[iddl]];
+    auto const &elt_param =
+        m_ElementsVector->getElementsParams()[EltsIdxToFit[iddl]];
+    // rescale the absorption amplitudes to continuum + fitted polynomial
+    if (m_enableAmplitudeOffsets && elt_param->IsAbsorption()) {
+      auto const &[cont, _] = elt->GetContinuumAtCenterProfile(
+          spectralAxis, redshift, continuumfluxAxis);
+      a /= cont;
+    }
+    if (a < 0)
+      allPositive = false;
+    m_ElementsVector->SetElementAmplitude(EltsIdxToFit[iddl], a, std);
+    ampsfitted[valid_col_indices[iddl]] = a;
+    errorsfitted[valid_col_indices[iddl]] = std;
   }
 
   gsl_matrix_free(X);
