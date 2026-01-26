@@ -36,8 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-
-import os
+from abc import ABCMeta, abstractmethod
 
 import h5py
 import pandas as pd
@@ -59,7 +58,7 @@ def get_storage_from_name(storage_name):
     return READER_CLASSES[storage_name]
 
 
-class AbstractExternalStorage:
+class AbstractExternalStorage(metaclass=ABCMeta):
     """
     Class dedicated to opening spectrum files and return their data for the readers
     to load it into themselves.
@@ -68,53 +67,49 @@ class AbstractExternalStorage:
     constant `READER_CLASSES` in the same module as this class.
     """
 
-    def __init__(self, config, spectrum_id):
+    def __init__(self, config):
         if config.reader not in READER_CLASSES:
             raise Exception(f"Reader class must be one of the following: {READER_CLASSES}")
         self.config = config
-        self.spectrum_id = spectrum_id
         self.spectrum_infos = dict()
         self.global_infos = dict()
 
     #  to be used as context manager
     def __enter__(self):
-        obs_id, kwargs = self._read_param
-        self.resource = self.read(obs_id, **kwargs)
+        spectrum_id, path, obs_id = self._call_params
+        del self._call_params
+        self.resource = self.read(spectrum_id, path, obs_id)
         return self.resource
 
-    def __call__(self, obs_id="", **kwargs):
+    def __call__(self, spectrum_id, path: str = "", obs_id: str = ""):
         # store read parameters
-        self._read_param = (obs_id, kwargs)
+        self._call_params = (spectrum_id, path, obs_id)
+
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._read_param = None
         self.close(self.resource)
         self.resource = None
         return False
 
+    @abstractmethod
     @doc_method
-    def set_spectrum_id(self, spectrum_id):
-        self.spectrum_id = spectrum_id
-
-    @doc_method
-    def read(
-        self,
-        obs_id: str = "",
-        **kwargs,
-    ):
+    def read(self, spectrum_id: str, path: str, obs_id: str = ""):
         """
         Read a spectrum file and return its data.
 
-        :param obs_id: id of the observation
+        :param spectrun_id: id of the source
+        :type spectrum_id: str
+        :param path: path or anything else neded to acquire the resource
+        :type path: str
+        :param obs_id: id of the observation, for multiple observations of the same source
         :type obs_id: str
-        :param kwargs: additional keyword arguments
-        :type kwargs: dict
 
-        :return: HDUList or DataFrame
+        :return: resource
         """
         raise NotImplementedError("Implement in derived class")
 
+    @abstractmethod
     @doc_method
     def close(self, resource):
         """
@@ -176,23 +171,3 @@ class AbstractExternalStorage:
         """
         spectrum = h5py.File(filepath, "r")
         return spectrum
-
-    def _get_spectrum_path(self, obs_id=""):
-        if self.config.spectrum_path_col:
-            if obs_id:
-                s_filename = obs_id
-            else:
-                s_filename = self.spectrum_id.Path
-        elif obs_id:
-            s_filename = s_filename = (
-                self.config.spectrum_prefix
-                + self.spectrum_id.ProcessingID
-                + "_"
-                + obs_id
-                + self.config.spectrum_suffix
-            )
-        else:
-            s_filename = (
-                self.config.spectrum_prefix + self.spectrum_id.ProcessingID + self.config.spectrum_suffix
-            )
-        return os.path.join(self.config.spectrum_dir, s_filename)

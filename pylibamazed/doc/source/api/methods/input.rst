@@ -152,12 +152,6 @@ This abstract class needs to be implemented with the following methods:
     AbstractExternalStorage.read
     AbstractExternalStorage.close
 
-
-Its other public methods are:
-
-.. autosummary::
-    AbstractExternalStorage.set_spectrum_id
-
 You must then use the ``register_storage`` method to register your implementation of ``AbstractExternalStorage``.
 
 .. autosummary::
