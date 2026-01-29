@@ -4,6 +4,7 @@
 ### Added
 ### Changed
 * [10196] : Update of ExternalStorage : Remove spectrum_id argument from constructor. Add spectrum_id and spectrum_file_path arguments to read method
+* [10221] : Move spectrum_infos dictionary to the Spectrum class, this optional dictionary can provide additional information to external clients if needed
 
 ### Deprecated
 ### Removed
