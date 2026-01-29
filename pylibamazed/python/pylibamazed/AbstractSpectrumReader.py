@@ -110,6 +110,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         self.lsf_data = Container[np.ndarray]()
         self.photometric_data = []
         self.w_frame = "vacuum"
+        self.spectrum_infos = dict()
 
         # pandas dataframe to instanciate Spectrum
         self.spectra_dataframe = pd.DataFrame()
@@ -195,7 +196,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         pass  # implemenation not mandatory
 
     @doc_method
-    def load_all(self, resource, obs_id_list=[""]) -> None:
+    def load_all(self, resource, spectrum_infos=dict(), obs_id_list=[""]) -> None:
         """
         Load all components of the spectrum. Reimplement this if resources are different
 
@@ -214,13 +215,14 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
             self.load_error(resource, obs_id)
             self.load_others(resource, obs_id)
             self.load_lsf(resource, obs_id)
+        self.spectrum_infos = spectrum_infos
 
     @doc_method
-    def load_and_get_spectrum(self, resource, obs_id_list=[""]) -> Spectrum:
+    def load_and_get_spectrum(self, resource, spectrum_infos=dict(), obs_id_list=[""]) -> Spectrum:
         """
         Load all components of the spectrum, build and return Spectrum, then clean memory (re load necessary)
         """
-        self.load_all(resource, obs_id_list)
+        self.load_all(resource, spectrum_infos, obs_id_list)
         spectrum = self.get_spectrum()
         self.clean()
         return spectrum
@@ -256,6 +258,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
             self._get_lsf(),
             self.photometric_data,
             self.w_frame,
+            self.spectrum_infos,
         )
         #        self._check_wavelengths(spectrum)
 

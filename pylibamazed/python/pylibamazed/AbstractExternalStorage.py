@@ -79,7 +79,7 @@ class AbstractExternalStorage(metaclass=ABCMeta):
         spectrum_id, path, obs_id = self._call_params
         del self._call_params
         self.resource = self.read(spectrum_id, path, obs_id)
-        return self.resource
+        return self.resource, self.spectrum_infos
 
     def __call__(self, spectrum_id, path: str = "", obs_id: str = ""):
         # store read parameters
