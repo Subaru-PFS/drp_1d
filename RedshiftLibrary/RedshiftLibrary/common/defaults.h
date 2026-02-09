@@ -86,5 +86,8 @@ static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
 // For QSO power law calculation, lambda at which the power law coefs changes
 static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
 
+// For CContinuumIrregularSamplingMedian, number of smoothing cycles
+static const Float64 N_SAMPLING_SMOOTH_CYCLES = 5;
+
 } // namespace NSEpic
 #endif
