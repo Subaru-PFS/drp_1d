@@ -127,7 +127,7 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
     THROWG(ErrorCode::IE_DZ_NOT_COMPUTABLE,
            Formatter() << "impossible to compute sigma");
 
-  sigma = sqrt(1.0 / c0);
+  sigma = sqrt(1.0 / (2 * c0));
   return sigma;
 }
 
@@ -181,7 +181,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   double zcorr = x0 - C(1) / (2.0 * C(2));
   Float64 c2 = C(2);
   if (c2 > 0)
-    sigma = sqrt(1.0 / c2);
+    sigma = sqrt(1.0 / (2 * c2));
 
   // Float64 a = (Float64)(C(0));
   // Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
