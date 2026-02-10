@@ -863,26 +863,50 @@ void COperatorTemplateFittingLog::FitRangez(
   }
 
   // prepare best fit data buffer
-  TFloat64List bestChi2(nshifts, DBL_MAX);
-  std::vector<TFitQuality> bestFitQuality(nshifts);
-  TFloat64List bestFitAmp(nshifts, NAN);
-  TFloat64List bestFitAmpErr(nshifts, NAN);
-  TFloat64List bestFitAmpSigma(nshifts, NAN);
-  TFloat64List bestFitDtm(nshifts, NAN);
-  TFloat64List bestFitMtm(nshifts, NAN);
-  TFloat64List bestFitSNR(nshifts, NAN);
-  TFloat64List bestISMCoeff(nshifts, NAN);
-  TInt32List bestIGMIdx(nshifts, undefIdx);
+  auto &bestChi2 = result->ChiSquare;
+  bestChi2 = TFloat64List(nshifts, DBL_MAX);
+
+  auto &bestFitQuality = result->FitQuality;
+  bestFitQuality = std::vector<TFitQuality>(nshifts);
+
+  auto &bestFitAmp = result->FitAmplitude;
+  bestFitAmp = TFloat64List(nshifts, NAN);
+
+  auto &bestFitAmpErr = result->FitAmplitudeError;
+  bestFitAmpErr = TFloat64List(nshifts, NAN);
+
+  auto &bestFitAmpSigma = result->FitAmplitudeSigma;
+  bestFitAmpSigma = TFloat64List(nshifts, NAN);
+
+  auto &bestFitDtm = result->FitDtM;
+  bestFitDtm = TFloat64List(nshifts, NAN);
+
+  auto &bestFitMtm = result->FitMtM;
+  bestFitMtm = TFloat64List(nshifts, NAN);
+
+  auto &bestFitSNR = result->SNR;
+  bestFitSNR = TFloat64List(nshifts, NAN);
+
+  auto &bestISMCoeff = result->FitEbmvCoeff;
+  bestISMCoeff = TFloat64List(nshifts, NAN);
+
+  auto &bestIGMIdx = result->FitMeiksinIdx;
+  bestIGMIdx = TInt32List(nshifts, undefIdx);
 
   // prepare intermediate fit data buffer
   Int32 nIGMFinal = nIGM;
   if (overrideNIGMTobesaved > nIGM) {
     nIGMFinal = overrideNIGMTobesaved;
   }
-  TList<TList<TFloat64List>> intermediateChi2(
+  auto &intermediateChi2 = result->ChiSquareIntermediate;
+  intermediateChi2 = TList<TList<TFloat64List>>(
       nshifts, TList<TFloat64List>(nISM, TFloat64List(nIGMFinal, DBL_MAX)));
-  TList<TInt32List> intermediateIsmEbmvIdx(nshifts, EbmvList);
-  TList<TInt32List> intermediateIgmMeiksinIdx(
+
+  auto &intermediateIsmEbmvIdx = result->IsmEbmvIdxIntermediate;
+  intermediateIsmEbmvIdx = TList<TInt32List>(nshifts, EbmvList);
+
+  auto &intermediateIgmMeiksinIdx = result->IgmMeiksinIdxIntermediate;
+  intermediateIgmMeiksinIdx = TList<TInt32List>(
       nshifts, enableIGM ? MeiksinList : TInt32List(nIGMFinal, undefIdx));
 
   // precompute DtD and nValidSamples in case of lineMask
@@ -1050,23 +1074,10 @@ void COperatorTemplateFittingLog::FitRangez(
   std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
   std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
   std::reverse(intermediateChi2.begin(), intermediateChi2.end());
+  // no need to reverse intermediateIsmEbmvIdx and intermediateIgmMeiksinIdx:
+  // all values identical along z
   for (Int32 k = 0; k < ssize(result->Redshifts); k++)
     result->Overlap[k] = TFloat64List(1, 1.0);
-
-  result->ChiSquare = bestChi2;
-  result->FitQuality = bestFitQuality;
-  result->FitAmplitude = bestFitAmp;
-  result->FitAmplitudeError = bestFitAmpErr;
-  result->FitAmplitudeSigma = bestFitAmpSigma;
-  result->FitDtM = bestFitDtm;
-  result->FitMtM = bestFitMtm;
-  result->SNR = bestFitSNR;
-  result->FitEbmvCoeff = bestISMCoeff;
-  result->FitMeiksinIdx = bestIGMIdx;
-  result->ChiSquareIntermediate = intermediateChi2;
-  // no need to reverse the two next: all values identical along z
-  result->IsmEbmvIdxIntermediate = intermediateIsmEbmvIdx;
-  result->IgmMeiksinIdxIntermediate = intermediateIgmMeiksinIdx;
 }
 
 // find indexes in templateSpectra for which Z falls into the redshift range
