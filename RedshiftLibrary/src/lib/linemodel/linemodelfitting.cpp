@@ -719,7 +719,9 @@ void CLineModelFitting::LoadModelSolution(
   for (Int32 iRestLine = 0; iRestLine < ssize(m_RestLineList); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
-      continue;
+      THROWG(ErrorCode::INTERNAL_ERROR,
+             Formatter() << "Undefined element index, for rest line index "
+                         << iRestLine << " in model solution");
     auto const &elt_param = getElementsParams()[eIdx];
     if (modelSolution.NotFitted[iRestLine]) {
       // set outsidelambdrarangeList
