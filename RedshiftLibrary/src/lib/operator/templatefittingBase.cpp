@@ -122,7 +122,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
       m_lambdaRanges[spcIndex]->GetBegin() / onePlusRedshift,
       m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
 
-  // redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
+  // redshift in restframe the spcSpectralAxis, i.e., division by (1+Z)
   m_spcSpectralAxis_restframe[spcIndex] =
       Context.getSpectra()[spcIndex]->GetSpectralAxis().ShiftByWaveLength(
           onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);

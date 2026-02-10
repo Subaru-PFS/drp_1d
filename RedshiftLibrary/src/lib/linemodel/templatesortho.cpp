@@ -196,11 +196,10 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   if (!m_enableOrtho)
     return tplOrtho;
 
-  std::string opt_continuumcomponent = "fromSpectrum";
   tplOrtho->SetLSF(m_LSF);
 
   // double the template flux, and set the continuum as the initial template
-  // such that withoutContinuumFlux will be template, and continuum will be
+  // such that withoutContinuumFlux will be templaste, and continuum will be
   // template also
   {
     auto doubleFlux = tplOrtho->GetFluxAxis();
@@ -209,7 +208,9 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   }
   std::string saveContinuumEstimationMethod =
       tplOrtho->GetContinuumEstimationMethod();
-  tplOrtho->SetContinuumEstimationMethod(inputTemplate.GetFluxAxis());
+  tplOrtho->SetContinuumEstimationMethod(
+      inputTemplate.GetFluxAxis()); // Set continuum method to manual &
+                                    // continuum axis to input template flux
 
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();

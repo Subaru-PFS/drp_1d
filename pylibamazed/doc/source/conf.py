@@ -45,7 +45,10 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
     "sphinx_multiversion",
+    "sphinxcontrib.bibtex",  # bibliography
 ]
+
+latex_engine = "xelatex"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -99,6 +102,10 @@ always_document_param_types = True
 typehints_use_signature = True
 typehints_use_signature_return = True
 typehints_defaults = "comma"
+
+
+# For bibliography
+bibtex_bibfiles = ["refs.bib"]
 
 
 def skip_member(app, what, name, obj, skip, opts):

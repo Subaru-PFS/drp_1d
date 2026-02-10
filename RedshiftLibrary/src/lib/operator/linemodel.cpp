@@ -462,7 +462,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
         std::dynamic_pointer_cast<const CPowerLawResult>(
             chisquareResultsAllTpl[0]);
     // size 1
-    Float64 bestFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++) {
       Float64 redshift = redshiftsContinuumFit[i];
@@ -471,9 +470,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                 chisquareResult->FitMeiksinIdx[i], redshift,
                 chisquareResult->ChiSquare[i], chisquareResult->FitQuality[i],
                 chisquareResult->coefs[i], chisquareResult->SNR[i]);
-
-      if (chisquareResult->SNR[i] > bestFitSNR)
-        bestFitSNR = chisquareResult->SNR[i];
     }
   } else {
     Int32 nredshiftsTplFitResults = redshiftsContinuumFit.size();

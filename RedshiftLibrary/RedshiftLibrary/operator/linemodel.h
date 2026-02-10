@@ -116,7 +116,7 @@ public:
   TContinuumComponent m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
-  Float64 m_opt_continuum_bad_chi2_threshold = 100;
+  Float64 m_opt_continuum_bad_chi2_threshold = NAN;
 
   EContinuumFit m_continnuum_fit_option = EContinuumFit::retryAll;
 

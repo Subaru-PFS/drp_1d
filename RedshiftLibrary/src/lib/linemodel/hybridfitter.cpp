@@ -80,7 +80,7 @@ void CHybridFitter::doFit(Float64 redshift) {
     getModel().refreshModel();
     Float64 enhanceLines = 0;
     //*
-    if (nIt > 2 * it && nIt > 3.0 && it <= 3) {
+    if (nIt > 2 * it && nIt > 3 && it <= 3) {
       enhanceLines = 2.0 - ((Float64)it * 0.33);
     }
 
@@ -131,8 +131,8 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
 
   while (!indicesToFit.empty()) {
     auto iElt = indicesToFit.front();
-    auto const &overlappingInds = getElementList().getOverlappingElements(
-        indicesToFit, redshift, OVERLAP_THRES_HYBRID_FIT);
+    auto const &overlappingInds =
+        getElementList().getOverlappingElements(indicesToFit, redshift);
 
     // setting the fitting group info
     for (Int32 overlapping_iElt : overlappingInds) {
@@ -146,6 +146,8 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
     for (Int32 idx : overlappingInds) {
       Log.LogDebug(Formatter() << "    model: hybrid fit: eltIdx=" << idx);
     }
+    // If there is no overlap and no amplitude offsets, fit using the individual
+    // fitter
     if (isIndividualFitEnabled() && overlappingInds.size() < 2) {
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Log.LogDebug("    model: hybrid fit:     Individual fit");
@@ -153,7 +155,7 @@ void CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
                                   m_enableLambdaOffsetsFit);
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
-    } else {
+    } else {                          // Otherwise, use the svd fitter
       m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
       Log.LogDebug("    model: hybrid fit:     Joint fit");
@@ -186,8 +188,6 @@ std::vector<TStringList> CHybridFitter::initAdditionalTags() {
   return {linetagsNII, empty, empty, empty};
 }
 
-// return error: 1=can't find element index, 2=Abs_width not high enough
-// compared to Em_width
 void CHybridFitter::improveBalmerFit(Float64 redshift) {
   auto linetagsE = initEmissionBalmerTags();
   auto linetagsA = initAbsorptionBalmerTags();
