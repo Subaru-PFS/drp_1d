@@ -72,8 +72,8 @@ public:
                                  Int32 lineIdx = undefIdx);
 
   CSpectrumFluxAxis
-  getModel(const TInt32List &eIdx_list,
-           CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
+  computeModelFlux(const TInt32List &eIdx_list,
+                   CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
   void setContinuumToInputSpc();
   void setContinuumComponent(TContinuumComponent const &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
