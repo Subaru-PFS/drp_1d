@@ -81,8 +81,8 @@ public:
 
   bool initDtd();
   Float64 EstimateMTransposeM() const;
-  Float64 getDTransposeD();
-  Float64 getLikelihood_cstLog();
+  Float64 getOrInitDtD();
+  Float64 getOrInitLikelihoodCstLog();
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);

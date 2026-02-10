@@ -1138,7 +1138,7 @@ Float64 CLineModelFitting::GetVelocityAbsorption() const {
  *a given spcComponent
  *
  **/
-Float64 CLineModelFitting::getDTransposeD() {
+Float64 CLineModelFitting::getOrInitDtD() {
 
   m_spectraIndex.setAtBegining(); // we choose arbitrarily first obs to check if
                                   // dtd is already initialized
@@ -1154,7 +1154,7 @@ Float64 CLineModelFitting::getDTransposeD() {
  *a given spcComponent
  *
  **/
-Float64 CLineModelFitting::getLikelihood_cstLog() {
+Float64 CLineModelFitting::getOrInitLikelihoodCstLog() {
 
   m_spectraIndex.setAtBegining(); // we choose arbitrarily first obs to check if
                                   // dtd is already initialized

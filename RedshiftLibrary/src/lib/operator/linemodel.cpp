@@ -108,8 +108,8 @@ COperatorLineModel::ComputeFirstPass() {
   }
 
   m_result->nSpcSamples = m_fittingManager->computeSpcNSamples();
-  m_result->dTransposeD = m_fittingManager->getDTransposeD();
-  m_result->cstLog = m_fittingManager->getLikelihood_cstLog();
+  m_result->dTransposeD = m_fittingManager->getOrInitDtD();
+  m_result->cstLog = m_fittingManager->getOrInitLikelihoodCstLog();
 
   Int32 contreest_iterations =
       ps->GetScoped<std::string>("continuumReestimation") == "always" ? 1 : 0;
