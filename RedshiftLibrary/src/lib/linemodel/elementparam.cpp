@@ -93,8 +93,6 @@ void TLineModelElementParam::init(const std::string &widthType) {
            Formatter() << "Unknown LineWidthType" << widthType);
   }
 
-  Float64 sign = IsEmission() ? 1.0 : -1.0;
-  m_SignFactors.assign(size(), sign);
   for (Int32 index = 0; index != size(); ++index) {
     if (getLineProfile(index)->isAsym() || getLineProfile(index)->isSymIgm())
       m_asymLineIndices.push_back(index);
@@ -116,8 +114,9 @@ bool TLineModelElementParam::SetNominalAmplitude(Int32 line_index,
   return true;
 }
 
-Int32 TLineModelElementParam::getSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
+Float64 TLineModelElementParam::getLineTypeFlux(Float64 fluxval,
+                                                Float64 continuumFlux) const {
+  return IsAbsorption() ? -continuumFlux * fluxval : fluxval;
 }
 
 /**
@@ -219,14 +218,6 @@ void TLineModelElementParam::SetLineProfile(Int32 line_index,
  **/
 const std::string &TLineModelElementParam::GetLineName(Int32 line_index) const {
   return m_Lines[line_index].GetName();
-}
-
-/**
- * \brief Returns the content of the m_SignFactors with index equal to the
- *argument.
- **/
-Float64 TLineModelElementParam::GetSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
 }
 
 bool TLineModelElementParam::SetAbsLinesLimit(Float64 limit) {

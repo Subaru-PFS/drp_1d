@@ -90,7 +90,6 @@ struct TLineModelElementParam {
       0.0; // dtmFree is the non-positive-constrained version of sumCross
 
   TLineWidthType m_LineWidthType;
-  TFloat64List m_SignFactors;
 
   TInt32List m_asymLineIndices;
   Float64 m_absLinesLimit =
@@ -123,11 +122,10 @@ struct TLineModelElementParam {
 
   const std::string &getFittingGroupInfo() const { return m_fittingGroupInfo; }
 
-  Int32 getSignFactor(Int32 line_index) const;
-  Float64 GetSignFactor(Int32 line_index) const;
-
   Float64 getVelocity() const { return m_Velocity; }
   Float64 getVelocityStd() const { return m_VelocityStd; };
+
+  Float64 getLineTypeFlux(Float64 fluxval, Float64 continuumFlux) const;
 
   TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
@@ -178,7 +176,7 @@ struct TLineModelElementParam {
     auto &fastd = m_FittedAmplitudesStd;
     fa[index] = fittedAmp * nominalAmplitude;
     // limit the absorption to 0.0-1.0, so that it's never <0
-    if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
+    if (IsAbsorption() && m_absLinesLimit > 0.0 &&
         fa[index] > m_absLinesLimit) {
       fa[index] = m_absLinesLimit;
     }
