@@ -74,10 +74,6 @@ public:
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
 
-  CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
-                    const TLambdaRange &lambdaRange,
-                    const std::shared_ptr<COperatorContinuumFitting>
-                        &continuumFittingOperator);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
@@ -242,7 +238,8 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-private:
+protected:
+  CLineModelFitting(Int32 spectraIndex);
   void initParameters();
   void setElementsVector(CLineRatioManager::EType const &lineRatioType,
                          ElementComposition const &element_composition);

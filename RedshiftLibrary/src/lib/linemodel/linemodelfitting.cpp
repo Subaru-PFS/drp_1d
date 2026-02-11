@@ -74,6 +74,9 @@
 using namespace NSEpic;
 using namespace std;
 
+CLineModelFitting::CLineModelFitting(Int32 spectraIndex)
+    : m_RestLineList(Context.getCLineMap()), m_spectraIndex(spectraIndex) {}
+
 /**
  * \brief Prepares the state for Linemodel operation.
  * Loads the catalog.
@@ -83,8 +86,7 @@ using namespace std;
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
     ElementComposition element_composition)
-    : m_RestLineList(Context.getCLineMap()),
-      m_spectraIndex(Context.getSpectra().size()) {
+    : CLineModelFitting(Context.getSpectra().size()) {
   initParameters();
 
   m_inputSpcs = std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>(
@@ -96,32 +98,6 @@ CLineModelFitting::CLineModelFitting(
   setLineRatioManager(lineRatioType);
   if (isLineRatioRules())
     dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
-}
-
-CLineModelFitting::CLineModelFitting(
-    const std::shared_ptr<const CSpectrum> &template_,
-    const TLambdaRange &lambdaRange,
-    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator)
-    : m_RestLineList(Context.getCLineMap()), m_spectraIndex(1) {
-  m_inputSpcs =
-      std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>();
-
-  m_inputSpcs->push_back(template_);
-  m_lambdaRanges.push_back(std::make_shared<const TLambdaRange>(lambdaRange));
-  initParameters();
-  // override ortho specific parameters
-  m_fittingmethod = "hybrid";
-  m_enableAmplitudeOffsets = false;
-  m_enableLbdaOffsets = false;
-
-  auto lineRatioType = CLineRatioManager::EType::rules;
-  initMembers(continuumFittingOperator, lineRatioType,
-              ElementComposition::Default);
-  // temporary options override to be removed when full tpl ortho is implemented
-  setLineRatioManager(lineRatioType);
-
-  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
-  setContinuumComponent(TContinuumComponent("fromSpectrum"));
 }
 
 void CLineModelFitting::initParameters() {
