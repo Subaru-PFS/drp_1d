@@ -70,7 +70,7 @@ class TestReaderGettersSettersLoaders(TestSpectrumReaderUtils):
 
     def test_set_air(self):
         fsr = self.initialize_fsr_with_data()
-        fsr.set_air_or_vaccum(None)
+        fsr.set_air_or_vacuum(None)
 
     def test_load_all(self):
         fsr = self.initialize_fsr_with_data()
