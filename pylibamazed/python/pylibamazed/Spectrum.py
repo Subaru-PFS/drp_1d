@@ -390,7 +390,7 @@ class Spectrum:
     def init(self):
         """
         Does three things :
-         - Check if airvaccum conversion specified in parameters is legitimate
+         - Check if airvacuum conversion specified in parameters is legitimate
          - Apply filtering specified in parameters
          - Check if spectrum(s) wavelength(s) is/are correct:
             not empty, contains lambda range(s) specified in parameters

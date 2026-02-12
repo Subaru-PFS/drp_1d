@@ -190,7 +190,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
     @doc_method
     def set_air_or_vacuum(self, resource):
         """
-        Optional, set w_frame to "air" or "vaccum" (default is vacuum).
+        Optional, set w_frame to "air" or "vacuum" (default is vacuum).
         frame should be deduced from resource.
         """
         pass  # implemenation not mandatory

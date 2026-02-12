@@ -57,7 +57,7 @@ static const Int32 allIdx = -9;
 static const std::string undefStr = "undefined";
 
 static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
-static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
+static const Float64 SPEED_OF_LIGHT_IN_VACUUM =
     GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
 // static const Float64 INSTRUMENT_RESOLUTION_FACTOR =
