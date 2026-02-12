@@ -190,7 +190,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
-  m_fitter->m_ElementsVector->computeGlobalLineValidity(m_fitter->m_models);
+  m_fitter->computeGlobalLineValidity();
 
   // unpack amplitudes and set them
   // be carefull, since it depends on line validity
@@ -423,12 +423,15 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                  Formatter() << __func__ << " LBFGSB ill ranked:"
                              << " number of samples = " << n
                              << ", number of parameters to fit = " << nddl);
-    for (Int32 eltIndex : EltsIdx)
-      m_ElementsVector->SetElementAmplitude(eltIndex, 0., INFINITY);
+    for (Int32 eltIndex : EltsIdx) {
+      m_ElementsVector->SetElementAmplitude(eltIndex, NAN, NAN);
+      m_ElementsVector->getElementsParams()[eltIndex]->m_nullLineProfiles =
+          true;
+    }
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
         m_ElementsVector->getElementsParams()[eltIndex]->SetPolynomCoeffs(
-            {0., 0., 0.});
+            {NAN, NAN, NAN});
     }
     return;
   }
@@ -522,7 +525,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  m_ElementsVector->computeGlobalLineValidity(m_models);
+  computeGlobalLineValidity();
   auto const ValidEltsIdx = m_ElementsVector->getValidElementIndices(EltsIdx);
   if (ValidEltsIdx.empty())
     return;
@@ -740,7 +743,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  m_ElementsVector->computeGlobalLineValidity(m_models);
+  computeGlobalLineValidity();
 
   // store amplitudes
   for (Int32 i = 0; i < ssize(EltsIdx); ++i) {

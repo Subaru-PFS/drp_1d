@@ -315,7 +315,7 @@ struct TLineModelElementParam {
 
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
   void SetAllOffsetsEnabled(Float64 val);
-  bool SetAbsLinesLimit(Float64 limit);
+  void SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
   void setVelocity(Float64 vel);

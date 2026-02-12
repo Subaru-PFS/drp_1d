@@ -367,11 +367,12 @@ Float64 CSpectrumModel::getMaxContinuumUnderElement(Int32 eIdx) const {
   TInt32List xInds = m_Elements.getSupportIndexes({eIdx});
   if (xInds.empty())
     return -INFINITY;
-  return *std::max_element(xInds.begin(), xInds.end(),
-                           [&continuumFluxAxis](Float64 lhs, Float64 rhs) {
-                             return continuumFluxAxis[lhs] <
-                                    continuumFluxAxis[rhs];
-                           });
+  auto const &max_index = *std::max_element(
+      xInds.begin(), xInds.end(),
+      [&continuumFluxAxis](Float64 lhs, Float64 rhs) {
+        return continuumFluxAxis[lhs] < continuumFluxAxis[rhs];
+      });
+  return continuumFluxAxis[max_index];
 }
 
 /**

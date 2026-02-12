@@ -859,8 +859,7 @@ void CLineModelFitting::updateResidualsAndContinuum(
   }
 
   Float64 cont, cont_std;
-  if (m_fittingmethod == "svd" || m_fittingmethod == "hybrid" ||
-      m_fittingmethod == "lbfgsb")
+  if (m_enableAmplitudeOffsets)
     std::tie(cont, cont_std) =
         GetContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
   else

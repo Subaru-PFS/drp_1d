@@ -276,6 +276,11 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
   TInt32List mask(modelFluxAxis.GetSamplesCount(), 1);
   auto [modelFlux, modelError] =
       std::move(modelFluxAxis).GetSamplesAndErrorVector();
+  bool validError = true;
+  if (modelError.empty()) {
+    modelError = TAxisSampleList(modelFlux.size(), NAN);
+    validError = false;
+  }
   for (const auto &[_, group_eIdx_list] : ampOffsetGroups) {
     // filter out not fittable elements
     TInt32List valid_eIdx_list;
@@ -291,11 +296,18 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
                               ->GetPolynomCoeffs();
     for (Int32 s : samples) {
       modelFlux[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      auto const modelVar =
+          std::isnan(modelError[s]) ? 0 : modelError[s] * modelError[s];
+      auto const polynomVar = pCoeffs.getVariance(spectralAxis[s]);
+      if (std::isfinite(polynomVar)) {
+        validError = true;
+        modelError[s] = std::sqrt(modelVar + polynomVar);
+      }
       mask[s] = 0; // one sample can only be written once
     }
   }
   modelFluxAxis = CSpectrumFluxAxis(std::move(modelFlux));
-  if (!modelError.empty())
+  if (validError)
     modelFluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
 }
 
