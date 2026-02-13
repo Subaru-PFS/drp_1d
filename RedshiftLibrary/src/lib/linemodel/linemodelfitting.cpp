@@ -50,6 +50,7 @@
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_vector.h>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
@@ -521,7 +522,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
     const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
-    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+    const auto &Error = getSpectrum().GetErrorAxis();
 
     const CSpectrumFluxAxis &YCont = getSpectrumModel().getContinuumFluxAxis();
     Float64 diff = 0.0;
@@ -531,7 +532,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
 
     for (Int32 j = imin; j <= imax; j++) {
       diff = (Yspc[j] - YCont[j]);
-      fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+      fit += (diff * diff) / (Error[j] * Error[j]);
     }
   }
   if (isContinuumComponentFitter()) {
@@ -1175,7 +1176,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
     const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
     const CSpectrumFluxAxis &YspcNoContinuum =
         getSpectrumModel().getSpcFluxAxisNoContinuum();
-    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+    auto const &spcFluxAxis = getSpectrum().GetFluxAxis();
 
     auto const &[imin, imax] = getLambdaRange().getClosestInnerIndices(
         spcSpectralAxis.GetSamplesVector());
@@ -1186,7 +1187,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
       else
         flux = Yspc[j];
 
-      dtd += (flux * flux) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
+      dtd += flux * flux * spcFluxAxis.GetWeight(j);
     }
     Log.LogDebug(Formatter()
                  << "CLineModelFitting::EstimateDTransposeD val = " << dtd);
@@ -1197,9 +1198,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
 /**
  * \brief this function estimates the mtm value withing the wavelength range
  **/
-Float64 CLineModelFitting::EstimateMTransposeM()
-    const // duplicate with getMTranposeMCumulative, except for return values
-{
+Float64 CLineModelFitting::EstimateMTransposeM() const {
   Float64 mtm = 0.0;
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
@@ -1236,7 +1235,7 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+    auto const &flux_for_weight = getSpectrum().GetFluxAxis();
 
     Float64 sumLogNoise = 0.0;
 
@@ -1245,9 +1244,9 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
 
     Int32 numDevs = std::abs(imax - imin + 1);
     for (Int32 j = imin; j <= imax; j++)
-      sumLogNoise += log(ErrorNoContinuum[j]);
+      sumLogNoise += log(flux_for_weight.GetWeight(j));
 
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
   }
   return cstLog;
 }

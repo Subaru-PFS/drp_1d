@@ -36,63 +36,69 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <cinttypes>
 #include <cmath>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumFluxAxis::CSpectrumFluxAxis(Int32 n, Float64 value)
-    : CSpectrumAxis(n, value), m_StdError(n) {}
-
 CSpectrumFluxAxis::CSpectrumFluxAxis(CSpectrumAxis otherFlux,
                                      CSpectrumNoiseAxis otherError)
-    : CSpectrumAxis(std::move(otherFlux)), m_StdError(std::move(otherError)) {}
-
-CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis otherFlux)
-    : CSpectrumAxis(std::move(otherFlux)), m_StdError(GetSamplesCount()) {}
-
-CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n)
-    : CSpectrumAxis(samples, n), m_StdError(n) {}
-
-CSpectrumFluxAxis::CSpectrumFluxAxis(const TFloat64List &samples)
-    : CSpectrumAxis(samples), m_StdError(samples.size()) // default to 1
-{}
-
-CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List &&samples)
-    : CSpectrumAxis(std::move(samples)),
-      m_StdError(GetSamplesCount()) // default to 1
-{}
+    : CSpectrumAxis(std::move(otherFlux)), m_StdError(std::move(otherError)),
+      m_hasStdError(true) {
+  checkSizes();
+}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
                                      const Float64 *error, const Int32 m)
-    : CSpectrumAxis(samples, n), m_StdError(error, m) {
-  if (m != n) {
+    : CSpectrumAxis(samples, n), m_StdError(error, m), m_hasStdError(true) {
+  checkSizes();
+}
+
+void CSpectrumFluxAxis::checkSizes() const {
+  if (CSpectrumAxis::GetSamplesCount() != m_StdError.GetSamplesCount())
     THROWG(ErrorCode::INTERNAL_ERROR,
            "FluxAxis and NoiseAxis sizes do not match");
-  }
+}
+
+void CSpectrumFluxAxis::setSamplesVector(TAxisSampleList axisList) {
+  CSpectrumAxis::setSamplesVector(std::move(axisList));
+  if (m_hasStdError)
+    checkSizes();
 }
 
 void CSpectrumFluxAxis::setError(CSpectrumNoiseAxis otherError) {
-  if (otherError.GetSamplesCount() != m_StdError.GetSamplesCount())
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "FluxAxis and NoiseAxis sizes do not match");
   m_StdError = std::move(otherError);
+  checkSizes();
+  m_hasStdError = true;
 }
 
-void CSpectrumFluxAxis::SetSize(Int32 s) {
-  CSpectrumAxis::SetSize(s);
-  m_StdError.SetSize(s);
+void CSpectrumFluxAxis::resize(Int32 s, Float64 valueDef) {
+  CSpectrumAxis::resize(s, valueDef);
+  if (m_hasStdError)
+    m_StdError.resize(s, valueDef);
 }
+
 void CSpectrumFluxAxis::clear() {
   CSpectrumAxis::clear();
   m_StdError.clear();
+  m_hasStdError = false;
+}
+
+CSpectrumFluxAxis CSpectrumFluxAxis::MaskAxis(const TMaskList &mask) const {
+  CSpectrumFluxAxis masked_flux_axis(CSpectrumAxis::MaskAxis(mask));
+  if (m_hasStdError)
+    masked_flux_axis.setError(m_StdError.MaskAxis(mask));
+  return masked_flux_axis;
 }
 
 bool CSpectrumFluxAxis::ApplyMedianSmooth(Int32 kernelHalfWidth) {
@@ -280,14 +286,6 @@ bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {
   Int32 N = GetSamplesCount();
   for (Int32 i = 0; i < N; i++) {
     m_Samples[i] = m_Samples[i] - other[i];
-  }
-  return true;
-}
-
-bool CSpectrumFluxAxis::Invert() {
-  Int32 N = GetSamplesCount();
-  for (Int32 i = 0; i < N; i++) {
-    m_Samples[i] = -m_Samples[i];
   }
   return true;
 }

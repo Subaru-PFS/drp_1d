@@ -40,7 +40,10 @@
 #define _REDSHIFT_SPECTRUM_AXIS_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include <algorithm>
+#include <functional>
 
 namespace NSEpic {
 
@@ -62,19 +65,22 @@ public:
   virtual ~CSpectrumAxis() = default;
   CSpectrumAxis &operator=(const CSpectrumAxis &other) = default;
   CSpectrumAxis &operator=(CSpectrumAxis &&other) = default;
-  virtual CSpectrumAxis &operator*=(const Float64 op);
-  virtual CSpectrumAxis &operator/=(const Float64 op);
-  Float64 &operator[](const Int32 i);
-  const Float64 &operator[](const Int32 i) const;
+  virtual CSpectrumAxis &operator*=(Float64 op);
+  virtual CSpectrumAxis &operator/=(Float64 op);
+  Float64 &operator[](Int32 i);
+  const Float64 &operator[](Int32 i) const;
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
 
   const Float64 *GetSamples() const;
   const TAxisSampleList &GetSamplesVector() const;
   TAxisSampleList &GetSamplesVector();
-  void setSamplesVector(TAxisSampleList axisList);
+  virtual void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
-  virtual void SetSize(Int32 s);
-  void clear();
+  virtual void resize(Int32 s, Float64 valueDef = 0.0);
+  virtual void clear();
+  void Invert();
+  void Negate();
+
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
   friend CSpectrumAxis operator*(const CSpectrumAxis &axis, const Float64 op) {
@@ -92,13 +98,24 @@ protected:
   virtual void resetAxisProperties(){}; // by default it does nothing
 };
 
-inline Float64 &CSpectrumAxis::operator[](const Int32 i) {
+inline Float64 &CSpectrumAxis::operator[](Int32 i) {
   resetAxisProperties();
   return m_Samples[i];
 }
 
-inline const Float64 &CSpectrumAxis::operator[](const Int32 i) const {
+inline const Float64 &CSpectrumAxis::operator[](Int32 i) const {
   return m_Samples[i];
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator*=(Float64 op) {
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
+  return *this;
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator/=(Float64 op) {
+  operator*=(1 / op);
+  return *this;
 }
 
 inline Int32 CSpectrumAxis::GetSamplesCount() const { return m_Samples.size(); }
@@ -116,16 +133,46 @@ inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
   return m_Samples;
 }
 
+inline void CSpectrumAxis::resize(Int32 s, Float64 valueDef) {
+  m_Samples.resize(s, valueDef);
+}
+
+inline void CSpectrumAxis::clear() {
+  resetAxisProperties();
+  m_Samples.clear();
+}
+
 inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() { return m_Samples; }
 
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
+
+inline void CSpectrumAxis::Invert() {
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 [](Float64 val) { return 1 / val; });
+}
+
+inline void CSpectrumAxis::Negate() {
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 std::negate<Float64>());
+}
 
 inline CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx,
                                             Int32 endIdx) const {
   if (!m_Samples.size())
     return CSpectrumAxis();
+  if (startIdx < 0 || startIdx >= GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "startIdx out of bounds");
+  if (endIdx < 0 || endIdx >= GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "endIdx out of bounds");
   return CSpectrumAxis(TFloat64List(m_Samples.begin() + startIdx,
                                     m_Samples.begin() + endIdx + 1));
 }
+
+inline CSpectrumAxis
+CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
+{
+  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
+}
+
 } // namespace NSEpic
 #endif

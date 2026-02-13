@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cmath>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
@@ -48,11 +49,6 @@
 
 using namespace NSEpic;
 using namespace std;
-
-/**
- * Constructor, flags log scale when set.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n) : CSpectrumAxis(n) {}
 
 /**
  * Constructor, flags log scale when set.
@@ -86,9 +82,6 @@ void CSpectrumSpectralAxis::convertToVacuum(std::string const &AirVacuum) {
   }
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n, Float64 value)
-    : CSpectrumAxis(n, value) {}
-
 CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(const Float64 op) {
   CSpectrumAxis::operator*=(op);
   if (op < 0 && !indeterminate(m_isSorted))
@@ -115,9 +108,9 @@ CSpectrumSpectralAxis::MaskAxis(const TMaskList &mask) const {
   return spc_axis;
 }
 
-void CSpectrumSpectralAxis::SetSize(Int32 s) {
-  Float64 sample_size = GetSamplesCount();
-  CSpectrumAxis::SetSize(s);
+void CSpectrumSpectralAxis::resize(Int32 s, Float64 valueDef) {
+  Float64 const sample_size = GetSamplesCount();
+  CSpectrumAxis::resize(s, valueDef);
   if (s < 2)
     m_isSorted = true;
   else {

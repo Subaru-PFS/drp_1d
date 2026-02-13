@@ -190,12 +190,12 @@ BOOST_AUTO_TEST_CASE(SpectrumAxis_test) {
   BOOST_CHECK(n2Axis.GetSamplesCount() == 0);
 
   // test SetSize
-  n4Axis.SetSize(2);
+  n4Axis.resize(2);
   BOOST_CHECK(n4Axis.GetSamplesCount() == 2);
   BOOST_CHECK(n4Axis[0] == n4Array[0]);
   BOOST_CHECK(n4Axis[1] == n4Array[1]);
 
-  n4Axis.SetSize(4);
+  n4Axis.resize(4);
   BOOST_CHECK(n4Axis.GetSamplesCount() == 4);
   BOOST_CHECK(n4Axis[0] == n4Array[0]);
   BOOST_CHECK(n4Axis[1] == n4Array[1]);

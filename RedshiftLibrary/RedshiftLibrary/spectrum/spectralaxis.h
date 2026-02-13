@@ -66,13 +66,11 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 public:
   enum EShiftDirection { nShiftForward = 0, nShiftBackward };
 
-  CSpectrumSpectralAxis() = default;
+  using CSpectrumAxis::CSpectrumAxis;
   CSpectrumSpectralAxis(const CSpectrumAxis &other) : CSpectrumAxis(other){};
   CSpectrumSpectralAxis(CSpectrumAxis &&other)
       : CSpectrumAxis(std::move(other)){};
 
-  CSpectrumSpectralAxis(Int32 n);
-  CSpectrumSpectralAxis(Int32 n, Float64 value);
   CSpectrumSpectralAxis(const TFloat64List &samples,
                         std::string const &AirVacuum = "");
   CSpectrumSpectralAxis(TFloat64List &&samples,
@@ -81,6 +79,17 @@ public:
                         std::string const &AirVacuum = "");
   CSpectrumSpectralAxis &operator*=(const Float64 op) override;
   CSpectrumSpectralAxis &operator/=(const Float64 op) override;
+  friend CSpectrumSpectralAxis operator*(const CSpectrumSpectralAxis &axis,
+                                         const Float64 op) {
+    CSpectrumSpectralAxis multipliedAxis = axis;
+    multipliedAxis *= op;
+    return multipliedAxis;
+  }
+  friend CSpectrumSpectralAxis operator*(const Float64 op,
+                                         const CSpectrumSpectralAxis &axis) {
+    return axis * op;
+  }
+
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
   Float64 GetResolution(Float64 atWavelength = -1.0) const;
@@ -120,7 +129,10 @@ public:
   bool isSorted() const;
 
   CSpectrumSpectralAxis MaskAxis(const TMaskList &masks) const;
-  void SetSize(Int32 s) override;
+  void resize(Int32 s, Float64 valueDef = 0.0) override;
+  void Negate() = delete;
+  void Invert() = delete;
+
   CSpectrumSpectralAxis blueShift(Float64 z) const;
   CSpectrumSpectralAxis redShift(Float64 z) const;
   void blueShiftInplace(Float64 z);

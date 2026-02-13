@@ -39,6 +39,7 @@
 
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/common/curve3d.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
@@ -756,30 +757,31 @@ TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   // Concatenates all curves
   // NB at the end, lambda is not ordered anymore
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
+    auto const &spectral_axis = m_spectra[spectrumIdx]->GetSpectralAxis();
+    auto const &flux_axis = m_spectra[spectrumIdx]->GetFluxAxis();
+
     TList<Float64> tmpLambda =
-        m_spectra[spectrumIdx]
-            ->GetSpectralAxis()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+        spectral_axis.extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
             .GetSamplesVector();
     spectrumLambda.insert(spectrumLambda.end(),
                           std::make_move_iterator(tmpLambda.begin()),
                           std::make_move_iterator(tmpLambda.end()));
 
     TList<Float64> tmpFlux =
-        m_spectra[spectrumIdx]
-            ->GetFluxAxis()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+        flux_axis.extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
             .GetSamplesVector();
     spectrumFlux.insert(spectrumFlux.end(),
                         std::make_move_iterator(tmpFlux.begin()),
                         std::make_move_iterator(tmpFlux.end()));
 
     TList<Float64> tmpError =
-        m_spectra[spectrumIdx]
-            ->GetFluxAxis()
-            .GetError()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
-            .GetSamplesVector();
+        flux_axis.HasError()
+            ? flux_axis.GetError()
+                  .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+                  .GetSamplesVector()
+            : TList<Float64>(m_kEnd[spectrumIdx] - m_kStart[spectrumIdx] + 1,
+                             1.);
+
     spectrumFluxError.insert(spectrumFluxError.end(),
                              std::make_move_iterator(tmpError.begin()),
                              std::make_move_iterator(tmpError.end()));

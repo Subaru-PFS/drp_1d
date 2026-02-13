@@ -58,22 +58,23 @@ class CMask;
 class CSpectrumFluxAxis : public CSpectrumAxis {
 
 public:
-  CSpectrumFluxAxis() = default;
-  // value =0. is a default value for flux and not for error.
-  explicit CSpectrumFluxAxis(Int32 n, Float64 value = 0.0);
+  using CSpectrumAxis::CSpectrumAxis;
+
+  CSpectrumFluxAxis(CSpectrumAxis otherFlux) : CSpectrumAxis(std::move(otherFlux)) {}
+
   CSpectrumFluxAxis(CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError);
-  CSpectrumFluxAxis(CSpectrumAxis otherFlux);
-  CSpectrumFluxAxis(const Float64 *samples, Int32 n);
-  CSpectrumFluxAxis(const TFloat64List &samples);
-  CSpectrumFluxAxis(TFloat64List &&samples);
+
   CSpectrumFluxAxis(const Float64 *samples, Int32 n, const Float64 *error,
                     const Int32 m);
 
+  bool HasError() const;
   const CSpectrumNoiseAxis &GetError() const;
-
+  Float64 GetWeight(Int32 idx, Float64 normFactor = 1.0) const;
+  Float64 GetInverseWeight(Int32 Idx, Float64 normFactor = 1.0) const;
+  void setSamplesVector(TAxisSampleList axisList) override;
   void setError(CSpectrumNoiseAxis otherError);
-  void SetSize(Int32 s) override;
-  void clear();
+  void resize(Int32 s, Float64 valudDef = 0.0) override;
+  void clear() override;
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
   bool ApplyMedianSmooth(Int32 kernelHalfWidth);
   Float64 computeMaxAbsValue(Int32 imin, Int32 imax) const;
@@ -83,19 +84,56 @@ public:
   const TBoolList checkFlux() const;
   bool correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax, Float64 coeffCorr);
   bool Subtract(const CSpectrumFluxAxis &other);
-  bool Invert();
-  CSpectrumFluxAxis
-  extract(Int32 startIdx,
-          Int32 endIdx) const; // this is mainly applied on m_StdError
+  CSpectrumFluxAxis extract(Int32 startIdx, Int32 endIdx) const;
+  CSpectrumFluxAxis &operator*=(Float64 op) override;
+  CSpectrumFluxAxis &operator/=(Float64 op) override;
+  friend CSpectrumFluxAxis operator*(const CSpectrumFluxAxis &axis,
+                                     const Float64 op) {
+    CSpectrumFluxAxis multipliedAxis = axis;
+    multipliedAxis *= op;
+    return multipliedAxis;
+  }
+  friend CSpectrumFluxAxis operator*(const Float64 op,
+                                     const CSpectrumFluxAxis &axis) {
+    return axis * op;
+  }
+
+  CSpectrumFluxAxis MaskAxis(const TMaskList &) const;
+  void Invert() = delete;
 
 private:
   friend class FluxAxis_test::ComputeMeanAndSDev_test;
 
+  void checkSizes() const;
+
   CSpectrumNoiseAxis m_StdError; // STD
+  bool m_hasStdError = false;
 };
 
+inline bool CSpectrumFluxAxis::HasError() const { return m_hasStdError; }
+
 inline const CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() const {
+  if (!m_hasStdError)
+    THROWG(ErrorCode::INTERNAL_ERROR, "spectrum flux axis has no error vector");
   return m_StdError;
+}
+
+inline Float64 CSpectrumFluxAxis::GetWeight(Int32 idx,
+                                            Float64 normFactor) const {
+  if (m_hasStdError) {
+    auto const &err = m_StdError[idx] * normFactor;
+    return 1 / (err * err);
+  }
+  return 1;
+}
+
+inline Float64 CSpectrumFluxAxis::GetInverseWeight(Int32 idx,
+                                                   Float64 normFactor) const {
+  if (m_hasStdError) {
+    auto const &err = m_StdError[idx] * normFactor;
+    return err * err;
+  }
+  return 1;
 }
 
 inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
@@ -104,6 +142,17 @@ inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
                            m_StdError.extract(startIdx, endIdx));
 }
 
+inline CSpectrumFluxAxis &CSpectrumFluxAxis::operator*=(Float64 op) {
+  CSpectrumAxis::operator*=(op);
+  if (m_hasStdError)
+    m_StdError *= op;
+  return *this;
+}
+
+inline CSpectrumFluxAxis &CSpectrumFluxAxis::operator/=(Float64 op) {
+  operator*=(1 / op);
+  return *this;
+}
 } // namespace NSEpic
 
 #endif

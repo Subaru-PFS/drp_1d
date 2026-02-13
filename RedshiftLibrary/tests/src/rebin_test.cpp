@@ -155,9 +155,9 @@ BOOST_AUTO_TEST_CASE(rebinLinear_test) {
   for (Int32 i = 1; i < N - 1; i++) {
     BOOST_CHECK_CLOSE(rebinedFlux[i], 0.01 + (i - 1) * 5e-3, 1e-8);
   }
-  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
-  TFloat64List errorRef(7, 1.);
-  BOOST_CHECK(rebinedError[0] == errorRef[0]);
+  BOOST_CHECK(rebinedSpectrum.GetFluxAxis().HasError() == false);
+  BOOST_CHECK_THROW(rebinedSpectrum.GetErrorAxis().GetSamplesVector(),
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(rebinFineGrid_test) {
@@ -336,9 +336,9 @@ BOOST_AUTO_TEST_CASE(rebinNgp_test) {
     else
       BOOST_CHECK_CLOSE(rebinedFlux[i], 0.01 + (i - 1) * 5e-3, 1e-8);
   }
-  rebinedError = rebinedSpectrum.GetErrorAxis().GetSamplesVector();
-  TFloat64List errorRef(13, 1.);
-  BOOST_CHECK(rebinedError == errorRef);
+  BOOST_CHECK(rebinedSpectrum.GetFluxAxis().HasError() == false);
+  BOOST_CHECK_THROW(rebinedSpectrum.GetErrorAxis().GetSamplesVector(),
+                    AmzException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <boost/test/unit_test.hpp>
+#include <cmath>
 
 #include "RedshiftLibrary/spectrum/noiseaxis.h"
 
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
 
   CSpectrumNoiseAxis noiseAxis2(1);
   BOOST_CHECK(noiseAxis2.GetSamplesCount() == 1);
-  BOOST_CHECK(noiseAxis2[0] == 1.0);
+  BOOST_CHECK(noiseAxis2[0] == 0.0);
 
   Float64 n1Array[] = {0.5};
   CSpectrumNoiseAxis noiseAxis3 = CSpectrumNoiseAxis(n1Array, 1);
@@ -81,43 +82,42 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   // copy
   CSpectrumNoiseAxis noiseAxis2b(noiseAxis2);
   BOOST_CHECK(noiseAxis2b.GetSamplesCount() == 1);
-  BOOST_CHECK(noiseAxis2b[0] == 1.0);
+  BOOST_CHECK(noiseAxis2b[0] == 0.0);
 
   // move
   CSpectrumNoiseAxis noiseAxis2c = std::move(noiseAxis2);
   BOOST_CHECK(noiseAxis2c.GetSamplesCount() == 1);
-  BOOST_CHECK(noiseAxis2c[0] == 1.0);
+  BOOST_CHECK(noiseAxis2c[0] == 0.0);
 
   // SetSize
-  noiseAxis.SetSize(2);
+  noiseAxis.resize(2);
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 2);
-  BOOST_CHECK(noiseAxis[0] == 1.0);
-  BOOST_CHECK(noiseAxis[1] == 1.0);
 
-  noiseAxis.SetSize(3, 2);
+  noiseAxis.resize(3, 2);
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 3);
-  BOOST_CHECK(noiseAxis[0] == 2.0);
-  BOOST_CHECK(noiseAxis[1] == 2.0);
+  BOOST_CHECK(noiseAxis[0] == 0.0);
+  BOOST_CHECK(noiseAxis[1] == 0.0);
   BOOST_CHECK(noiseAxis[2] == 2.0);
 
   // Invert
   noiseAxis.Invert();
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 3);
-  BOOST_CHECK(noiseAxis[0] == 0.5);
-  BOOST_CHECK(noiseAxis[1] == 0.5);
+  BOOST_CHECK(noiseAxis[0] == INFINITY);
+  BOOST_CHECK(noiseAxis[1] == INFINITY);
   BOOST_CHECK(noiseAxis[2] == 0.5);
 
   // extract
   CSpectrumNoiseAxis noiseAxis2d = noiseAxis.extract(1, 2);
   BOOST_CHECK(noiseAxis2d.GetSamplesCount() == 2);
-  BOOST_CHECK(noiseAxis2d[0] == 0.5);
+  BOOST_CHECK(noiseAxis2d[0] == INFINITY);
   BOOST_CHECK(noiseAxis2d[1] == 0.5);
 
   // checkNoise
-  TBoolList isValid(3, true);
+  TBoolList isValid{false, false, true};
   BOOST_CHECK(noiseAxis.checkNoise() == isValid);
-  isValid[0] = false;
-  noiseAxis[0] = std::numeric_limits<double>::infinity();
+  isValid = {true, true, true};
+  noiseAxis[0] = 0.5;
+  noiseAxis[1] = 0.5;
   BOOST_CHECK(noiseAxis.checkNoise() == isValid);
 }
 

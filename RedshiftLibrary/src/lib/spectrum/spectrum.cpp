@@ -47,6 +47,8 @@
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/noiseaxis.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
@@ -70,30 +72,15 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TMaskList &mask)
       alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)),
       m_rebin(CRebin::create(other.m_rebin->getType(), *this)),
       m_photData(other.m_photData), m_obsId(other.m_obsId) {
-  const CSpectrumNoiseAxis &otherRawError = other.m_RawFluxAxis.GetError(),
-                           &otherContinuumError =
-                               other.m_ContinuumFluxAxis.GetError(),
-                           &otherWithoutContinuumError =
-                               other.m_WithoutContinuumFluxAxis.GetError();
 
   m_SpectralAxis = other.m_SpectralAxis.MaskAxis(mask);
   m_RawFluxAxis = other.m_RawFluxAxis.MaskAxis(mask);
-
-  if (!otherRawError.isEmpty())
-    m_RawFluxAxis.setError(otherRawError.MaskAxis(mask));
 
   if (other.alreadyRemoved) {
     m_ContinuumFluxAxis =
         CSpectrumFluxAxis(other.m_ContinuumFluxAxis.MaskAxis(mask));
     m_WithoutContinuumFluxAxis =
         CSpectrumFluxAxis(other.m_WithoutContinuumFluxAxis.MaskAxis(mask));
-
-    if (!otherContinuumError.isEmpty())
-      m_ContinuumFluxAxis.setError(otherContinuumError.MaskAxis(mask));
-
-    if (!otherWithoutContinuumError.isEmpty())
-      m_WithoutContinuumFluxAxis.setError(
-          otherWithoutContinuumError.MaskAxis(mask));
   }
 }
 
@@ -303,10 +290,7 @@ void CSpectrum::EstimateContinuum() const {
                               << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
     Int32 nbSamples = this->GetSampleCount();
-    m_WithoutContinuumFluxAxis.SetSize(nbSamples);
-    for (Int32 k = 0; k < nbSamples; k++) {
-      m_WithoutContinuumFluxAxis[k] = 0.0;
-    }
+    m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
   } else if (m_estimationMethod == "zero") {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
   } else if (m_estimationMethod == "manual") {
@@ -328,15 +312,14 @@ void CSpectrum::EstimateContinuum() const {
 }
 
 /**
- * Invert the flux axis
+ * Negate the flux axis
  */
-bool CSpectrum::InvertFlux() {
-  m_RawFluxAxis.Invert();
+void CSpectrum::NegateFlux() {
+  m_RawFluxAxis.Negate();
   if (alreadyRemoved) {
-    m_ContinuumFluxAxis.Invert();
-    m_WithoutContinuumFluxAxis.Invert();
+    m_ContinuumFluxAxis.Negate();
+    m_WithoutContinuumFluxAxis.Negate();
   }
-  return true;
 }
 
 Float64 CSpectrum::GetResolution() const {
@@ -384,7 +367,6 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
       wlRange.GetEnd() > m_SpectralAxis.GetLambdaRange().GetEnd())
     return false;
 
-  const CSpectrumNoiseAxis &error = GetErrorAxis();
   const CSpectrumFluxAxis &flux = GetFluxAxis();
 
   TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(wlRange);
@@ -396,7 +378,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
 
   for (Int32 k = 0; k < n; k++) {
     Int32 ik = k + iRange.GetBegin();
-    w[k] = 1.0 / (error[ik] * error[ik]);
+    w[k] = flux.GetWeight(ik);
     x[k] = m_SpectralAxis[ik];
     y[k] = flux[ik];
   }
@@ -480,6 +462,9 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 
 void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 nInvalid = 0;
+
+  if (!GetFluxAxis().HasError())
+    return;
 
   if (IsNoiseEmpty())
     THROWG(ErrorCode::INVALID_NOISE, "Invalid spectrum: empty noise.");
@@ -700,15 +685,18 @@ std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
     THROWG(ErrorCode::INTERNAL_ERROR,
            "spectral axis and flux axis have different samples number");
 
-  const auto &Error = fluxAxis.GetError();
+  const auto &Error =
+      fluxAxis.HasError() ? fluxAxis.GetError() : CSpectrumNoiseAxis{};
   for (auto &r : indexRangeList) {
     for (Int32 t = r.GetBegin(), e = r.GetEnd(); t < e; t++) {
       Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
       sumFlux += trapweight * (fluxAxis[t + 1] + fluxAxis[t]);
 
-      Float64 ea = Error[t] * Error[t];
-      Float64 eb = Error[t + 1] * Error[t + 1];
-      sumErr += trapweight * trapweight * (eb + ea);
+      if (!Error.isEmpty()) {
+        Float64 ea = Error[t] * Error[t];
+        Float64 eb = Error[t + 1] * Error[t + 1];
+        sumErr += trapweight * trapweight * (eb + ea);
+      }
     }
   }
   return std::make_pair(sumFlux, sumErr);

@@ -881,7 +881,6 @@ Int32 CLineModelElement::computeCrossProducts(
     const CSpectrumFluxAxis &noContinuumfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) {
 
-  const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
   auto &nominalAmplitudes = m_ElementParam->m_NominalAmplitudes;
   Float64 y = 0.0;
   Float64 x = 0.0;
@@ -918,7 +917,7 @@ Int32 CLineModelElement::computeCrossProducts(
         yg += amp * GetLineProfileAtRedshift(index2, redshift, x);
       }
       num++;
-      err2 = 1.0 / (error[i] * error[i]);
+      err2 = noContinuumfluxAxis.GetWeight(i);
       m_ElementParam->m_dtmFree += yg * y * err2;
       m_ElementParam->m_sumGauss += yg * yg * err2;
     }

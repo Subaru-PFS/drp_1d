@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   BOOST_ASSERT(indeterminate(spcAxis_2.m_isSorted));
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == true);
-  spcAxis_2.SetSize(3);
+  spcAxis_2.resize(3);
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == false);
 
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   sample_in = {1., 2., 3.};
   CSpectrumSpectralAxis spcAxis_4(sample_in);
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isSorted));
-  spcAxis_4.SetSize(1);
+  spcAxis_4.resize(1);
   BOOST_ASSERT(spcAxis_4.m_isSorted == true);
 
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isLogSampled));

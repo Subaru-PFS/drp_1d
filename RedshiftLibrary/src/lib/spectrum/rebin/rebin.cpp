@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/noiseaxis.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinearFull.h"
@@ -61,11 +63,14 @@ void CRebin::compute(const TFloat64Range &range,
                                       "included in spectral axis");
   }
 
+  bool const handle_error = handleError(opt_error_interp);
+
   CSpectrumFluxAxis rebinedFluxAxis(s);
+
   rebinedMask.SetSize(s);
 
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
-  TFloat64List error_tmp = rebinedFluxAxis.GetError().GetSamplesVector();
+  TFloat64List error_tmp = handle_error ? TFloat64List(s) : TFloat64List{};
 
   // Move cursors up to lambda range start
   Int32 cursor = 0;
@@ -73,7 +78,7 @@ void CRebin::compute(const TFloat64Range &range,
          Xtgt[cursor] < range.GetBegin()) {
     rebinedMask[cursor] = 0;
     rebinedFluxAxis[cursor] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
+    if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
@@ -85,12 +90,13 @@ void CRebin::compute(const TFloat64Range &range,
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
     rebinedFluxAxis[cursor] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
+    if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
 
-  rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
+  if (handle_error)
+    rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
   rebinedSpectrum.ResetContinuum();
   rebinedSpectrum.SetType(CSpectrum::EType::raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,

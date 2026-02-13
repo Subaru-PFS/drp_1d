@@ -74,7 +74,7 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(
   // Pre-Allocate the rebined template and mask with regard to the spectrum size
   m_templatesRebined_bf.resize(componentCount);
   m_masksRebined_bf.resize(componentCount);
-  m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
+  m_spcSpectralAxis_restframe.resize(spectrum.GetSampleCount());
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti =
@@ -103,7 +103,6 @@ void COperatorTplcombination::BasicFit(
 
   const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis = spectrum.GetFluxAxis();
-  const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount())
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -165,13 +164,13 @@ void COperatorTplcombination::BasicFit(
 
   // Prepare the fit data, once for all
   Float64 yi;
-  Float64 ei;
+  Float64 wi;
   for (Int32 i = 0; i < n; i++) {
     yi = spcFluxAxis[i + m_kStart[0]] / normFactor;
-    ei = spcError[i + m_kStart[0]] / normFactor;
+    wi = spcFluxAxis.GetWeight(i + m_kStart[0]) * normFactor * normFactor;
 
-    gsl_vector_set(y, i, yi);              // y[i] = yi
-    gsl_vector_set(w, i, 1.0 / (ei * ei)); // w[i] = 1/(ei*ei)
+    gsl_vector_set(y, i, yi); // y[i] = yi
+    gsl_vector_set(w, i, wi); // w[i] = 1/(ei*ei)
   }
   TFloat64List modelFluxWithAmp(spcFluxAxis.GetSamplesCount(), 0);
 
@@ -348,11 +347,15 @@ void COperatorTplcombination::BasicFit(
   }
 
   TFloat64List const &flux = spcFluxAxis.GetSamplesVector();
-  TFloat64List const &error = spcError.GetSamplesVector();
   TFloat64List fluxInRange(flux.cbegin() + m_kStart[0],
                            flux.cbegin() + m_kEnd[0] + 1);
-  TFloat64List errorInRange(error.cbegin() + m_kStart[0],
-                            error.cbegin() + m_kEnd[0] + 1);
+  TFloat64List errorInRange =
+      spcFluxAxis.HasError()
+          ? TFloat64List(spcFluxAxis.GetError().GetSamplesVector().cbegin() +
+                             m_kStart[0],
+                         spcFluxAxis.GetError().GetSamplesVector().cbegin() +
+                             m_kEnd[0] + 1)
+          : TFloat64List(m_kEnd[0] - m_kStart[0] + 1, 1.);
   TFloat64List modelInRange(
       std::move_iterator(modelFluxWithAmp.begin() + m_kStart[0]),
       std::move_iterator(modelFluxWithAmp.begin() + m_kEnd[0] + 1));
@@ -367,12 +370,14 @@ void COperatorTplcombination::RebinTemplate(
     Float64 redshift, const TFloat64Range &lambdaRange,
     TFloat64Range &currentRange, Float64 &overlapFraction,
     const Float64 overlapThreshold) {
-  Float64 onePlusRedshift = 1.0 + redshift;
+  Float64 const onePlusRedshift = 1.0 + redshift;
+  Float64 const oneOverOnePlusRedshift = 1. / onePlusRedshift;
 
   // shift lambdaRange backward to be in restframe
   TFloat64Range spcLambdaRange_restframe;
-  TFloat64Range lambdaRange_restframe(lambdaRange.GetBegin() / onePlusRedshift,
-                                      lambdaRange.GetEnd() / onePlusRedshift);
+  TFloat64Range lambdaRange_restframe(
+      lambdaRange.GetBegin() * oneOverOnePlusRedshift,
+      lambdaRange.GetEnd() * oneOverOnePlusRedshift);
 
   // redshift in restframe the tgtSpectralAxis,
   m_spcSpectralAxis_restframe = spectrum.GetSpectralAxis().ShiftByWaveLength(
@@ -697,8 +702,7 @@ CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
 Float64 COperatorTplcombination::EstimateLikelihoodCstLogForSpectrum(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange) {
   const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
-  const TFloat64List &error =
-      spectrum.GetFluxAxis().GetError().GetSamplesVector();
+  auto const &flux_for_weight = spectrum.GetFluxAxis();
 
   Int32 numDevs = 0;
   Float64 cstLog = 0.0;
@@ -709,10 +713,10 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLogForSpectrum(
 
   for (Int32 j = imin; j <= imax; j++) {
     numDevs++;
-    sumLogNoise += log(error[j]);
+    sumLogNoise += log(flux_for_weight.GetWeight(j));
   }
 
-  cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+  cstLog = -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
 
   return cstLog;
 }

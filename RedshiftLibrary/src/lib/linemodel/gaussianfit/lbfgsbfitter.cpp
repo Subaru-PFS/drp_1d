@@ -65,7 +65,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
       m_spectralAxis(&fitter.getSpectrum().GetSpectralAxis()),
       m_noContinuumFluxAxis(&fitter.getModel().getSpcFluxAxisNoContinuum()),
       m_continuumFluxAxis(&fitter.getModel().getContinuumFluxAxis()),
-      m_ErrorNoContinuum(&fitter.getSpectrum().GetErrorAxis()) {
+      m_fluxAxis_for_weight(&fitter.getSpectrum().GetFluxAxis()) {
 
   // init normalized polynomial
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -79,12 +79,11 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
   // precompute data sum square
   Float64 sumSquare = 0.;
   for (Int32 i = 0; i < ssize(*m_xInds); i++) {
-    Float64 yi, ei, ei2;
+    Float64 yi, wi;
     Int32 idx = (*m_xInds)[i];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    ei = (*m_ErrorNoContinuum)[idx] * m_normFactor;
-    ei2 = ei * ei;
-    sumSquare += yi * yi / ei2;
+    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
+    sumSquare += yi * yi * wi;
 
     m_sumSquareData = sumSquare;
   }
@@ -220,12 +219,11 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
   for (Int32 i = 0; i < ssize(*m_xInds); i++) {
-    Float64 xi, yi, ei, ei2;
+    Float64 xi, yi, wi;
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    ei = (*m_ErrorNoContinuum)[idx] * m_normFactor;
-    ei2 = ei * ei;
+    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
 
     // compute model value
     Float64 fval = 0.;
@@ -243,7 +241,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
       fval += pCoeffs.getValue(xi);
 
     // add squared diff
-    sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
+    sumSquare += (fval * fval - 2.0 * yi * fval) * wi;
   }
 
   return sumSquare;
@@ -256,12 +254,11 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
   // compute least square term
   Float64 sumSquare = m_sumSquareData;
   for (Int32 i = 0; i < ssize(*m_xInds); i++) {
-    Float64 xi, yi, ei, ei2;
+    Float64 xi, yi, wi;
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    ei = (*m_ErrorNoContinuum)[idx] * m_normFactor;
-    ei2 = ei * ei;
+    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
 
     // compute model value and gradient
     Float64 fval = 0.;
@@ -307,8 +304,8 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
     }
 
     // add squared diff
-    sumSquare += (fval * fval - 2.0 * yi * fval) / ei2;
-    Float64 residual = -2.0 * (yi - fval) / ei2;
+    sumSquare += (fval * fval - 2.0 * yi * fval) * wi;
+    Float64 residual = -2.0 * (yi - fval) * wi;
     for (Int32 eltIndex = 0; eltIndex < ssize(*m_EltsIdx); ++eltIndex) {
       // squared diff derivative wrt amplitudes
       grad[eltIndex] += residual * ampsGrad[eltIndex];

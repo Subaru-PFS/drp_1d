@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -58,8 +59,11 @@ CSpectrumModel::CSpectrumModel(
       m_SpectrumModel(*(spc)), m_Elements(elements),
       m_ContinuumFluxAxis(m_inputSpc->GetSampleCount()),
       m_SpcFluxAxis(m_inputSpc->GetSampleCount()),
-      m_spcFluxAxisNoContinuum(m_SpcFluxAxis,
-                               m_inputSpc->GetFluxAxis().GetError()),
+      m_spcFluxAxisNoContinuum(
+          m_inputSpc->GetFluxAxis().HasError()
+              ? CSpectrumFluxAxis(m_SpcFluxAxis,
+                                  m_inputSpc->GetFluxAxis().GetError())
+              : CSpectrumFluxAxis(m_SpcFluxAxis)),
       m_spcIndex(spcIndex) {}
 
 /**
@@ -75,7 +79,7 @@ const CSpectrum &CSpectrumModel::GetModelSpectrum() const {
 CSpectrumFluxAxis CSpectrumModel::GetModelContinuum() const {
   CSpectrumFluxAxis newContinuumFluxAxis;
   if (m_enableAmplitudeOffsets) {
-    newContinuumFluxAxis.SetSize(m_ContinuumFluxAxis.GetSamplesCount());
+    newContinuumFluxAxis.resize(m_ContinuumFluxAxis.GetSamplesCount());
     auto const &continuumSamples = m_ContinuumFluxAxis.GetSamplesVector();
     auto const &polySamples = m_PolynomialUnderLinesFluxAxis.GetSamplesVector();
     auto &newContinuumSamples = newContinuumFluxAxis.GetSamplesVector();
@@ -407,9 +411,9 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
   // and after to spectrumFluxAxis.GetError
-  const CSpectrumNoiseAxis &error = getSpcFluxAxis().GetError();
   const CSpectrumFluxAxis &fluxRef =
       with_continuum ? getSpcFluxAxis() : getSpcFluxAxisNoContinuum();
+  auto const &flux_for_weight = getSpcFluxAxis();
 
   if (EltsIdx.empty())
     return std::make_pair(NAN, NAN);
@@ -424,7 +428,7 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
   for (Int32 const j : xInds) {
     diff = (Yspc[j] - Ymodel[j]);
-    Float64 const w = with_weight ? 1.0 / (error[j] * error[j]) : 1.0;
+    Float64 const w = with_weight ? flux_for_weight.GetWeight(j) : 1.0;
     fit += (diff * diff) * w;
     sumErr += w;
   }

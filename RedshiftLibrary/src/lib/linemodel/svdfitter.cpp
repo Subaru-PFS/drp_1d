@@ -150,7 +150,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   for (auto const iElt : EltsIdxToFit_ini)
     m_ElementsVector->SetElementAmplitude(iElt, 1.0, 0.0);
 
-  const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
+  const auto &flux_for_weight = getSpectrum().GetFluxAxis();
 
   // Linear fit
   Float64 fval;
@@ -174,14 +174,14 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 
   // Prepare the fit data
   for (Int32 i = 0; i < n; i++) {
-    double xi, yi, ei;
+    double xi, yi, wi;
     Int32 idx = xInds[i];
     xi = spectralAxis[idx];
     yi = fluxAxis[idx] * normFactor;
-    ei = ErrorNoContinuum[idx] * normFactor;
+    wi = flux_for_weight.GetWeight(idx, normFactor);
 
     gsl_vector_set(y, i, yi);
-    gsl_vector_set(w, i, 1.0 / (ei * ei));
+    gsl_vector_set(w, i, wi);
 
     for (Int32 iddl = 0; iddl < ssize(EltsIdxToFit_ini); iddl++) {
       fval = getElementList()[EltsIdxToFit_ini[iddl]]->getModelAtLambda(

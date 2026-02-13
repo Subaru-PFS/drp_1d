@@ -43,6 +43,7 @@
 
 #include <boost/range/combine.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -478,23 +479,19 @@ void COperatorTemplateFittingLog::FitAllz(
   Int32 nzranges = izrangelist.size();
 
   // since dtd is cte, better compute it here
-  const TAxisSampleList &error =
-      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+  auto const &flux_axis = m_spectraFull[0]->GetFluxAxis();
 
   const Int32 nRedshifts = result->Redshifts.size();
-  const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const TAxisSampleList &spectrumRebinedFluxRaw = flux_axis.GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   auto const &mask = m_spectraFull[0]->getMask();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
-  TFloat64List inv_err(nSpcPixels);
   TFloat64List spcRebinedFluxOverErr2(nSpcPixels);
   TFloat64List spcRebinedFlux2OverErr2(nSpcPixels);
-  for (Int32 j = 0; j < ssize(error); j++) {
+  for (Int32 j = 0; j < flux_axis.GetSamplesCount(); j++) {
     if (mask[j]) {
-      inv_err[j] = 1.0 / error[j];
-      inv_err2[j] = inv_err[j] * inv_err[j];
+      inv_err2[j] = flux_axis.GetWeight(j);
       spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
       spcRebinedFlux2OverErr2[j] =
           spcRebinedFluxOverErr2[j] * spectrumRebinedFluxRaw[j];
@@ -690,12 +687,13 @@ void COperatorTemplateFittingLog::computeFitQuality(
     const std::shared_ptr<CTemplateFittingResult> &result, Int32 resultIdx,
     Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
 
-  const auto &spectrumRebinedFluxRaw =
-      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const auto &flux_axis = m_spectraFull[0]->GetFluxAxis();
+  const auto &spectrumRebinedFluxRaw = flux_axis.GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   auto const &mask = m_spectraFull[0]->getMask();
-  const auto &error =
-      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+  const auto &error = flux_axis.HasError()
+                          ? flux_axis.GetError().GetSamplesVector()
+                          : TFloat64List(flux_axis.GetSamplesCount(), 1.);
 
   for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
        ++isubz, ++fullResultIdx, ++firstTplIdx) {
@@ -1371,8 +1369,7 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
        boost::combine(m_spectraFull, m_lambdaRangesFull)) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         spectrum_ptr->GetSpectralAxis();
-    const TFloat64List &error =
-        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+    const auto &flux_for_weight = spectrum_ptr->GetFluxAxis();
     auto const &mask = spectrum_ptr->getMask();
 
     Int32 numDevs = 0;
@@ -1384,10 +1381,10 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
     for (Int32 j = imin; j <= imax; j++) {
       if (mask[j]) {
         numDevs++;
-        sumLogNoise += log(error[j]);
+        sumLogNoise += log(flux_for_weight.GetWeight(j));
       }
     }
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
   }
   return cstLog;
 }

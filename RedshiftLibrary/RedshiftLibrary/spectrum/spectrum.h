@@ -108,13 +108,14 @@ public:
   void setObsID(const std::string &obsID);
   EType GetType() const;
 
-  bool InvertFlux();
+  void NegateFlux();
 
   const CSpectrumSpectralAxis &GetSpectralAxis() const;
   const CSpectrumFluxAxis &GetFluxAxis() const;
   const CSpectrumFluxAxis &GetRawFluxAxis() const;
   const CSpectrumFluxAxis &GetContinuumFluxAxis() const;
   const CSpectrumFluxAxis &GetWithoutContinuumFluxAxis() const;
+  bool HasErrorAxis() const;
   const CSpectrumNoiseAxis &GetErrorAxis() const;
   const std::shared_ptr<const CLSF> GetLSF() const;
   const std::shared_ptr<const CPhotometricData> GetPhotData() const;
@@ -294,6 +295,8 @@ inline CSpectrumFluxAxis &CSpectrum::GetWithoutContinuumFluxAxis_() {
   }
   return m_WithoutContinuumFluxAxis;
 }
+
+inline bool CSpectrum::HasErrorAxis() const { return GetFluxAxis().HasError(); }
 
 inline const CSpectrumNoiseAxis &CSpectrum::GetErrorAxis() const {
   return GetFluxAxis().GetError();

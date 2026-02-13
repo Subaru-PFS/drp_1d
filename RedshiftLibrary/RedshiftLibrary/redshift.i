@@ -705,7 +705,7 @@ class CSpectrumAxis
   Float64* GetSamples();
   TAxisSampleList& GetSamplesVector();
   Int32 GetSamplesCount() const;
-  virtual void SetSize( Int32 s );
+  virtual void resize( Int32 s );
 };
 %clear (const Float64* samples, Int32 n);
 
@@ -736,7 +736,7 @@ class CSpectrumFluxAxis : public CSpectrumAxis
   CSpectrumFluxAxis( const Float64* samples, Int32 n );
   CSpectrumFluxAxis( const double* samples, Int32 n,
   		     const double* error, Int32 m );
-  void SetSize( Int32 s );
+  void resize( Int32 s );
 
 };
 

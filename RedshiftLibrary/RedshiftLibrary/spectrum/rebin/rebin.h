@@ -67,6 +67,7 @@ public:
 
   virtual void reset(){};
   virtual const std::string &getType() = 0;
+  bool handleError(std::string const opt_error_interp) const;
 
 protected:
   virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
@@ -82,5 +83,8 @@ protected:
   const CSpectrum &m_spectrum;
 };
 
+inline bool CRebin::handleError(std::string const opt_error_interp) const {
+  return m_spectrum.GetRawFluxAxis().HasError() && (opt_error_interp != "no");
+}
 } // namespace NSEpic
 #endif

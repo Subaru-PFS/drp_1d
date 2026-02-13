@@ -50,19 +50,11 @@ class CSpectrumNoiseAxis : public CSpectrumAxis {
 
 public:
   using CSpectrumAxis::CSpectrumAxis;
-  CSpectrumNoiseAxis() = default;
   CSpectrumNoiseAxis(const CSpectrumAxis &other) : CSpectrumAxis(other){};
   CSpectrumNoiseAxis(CSpectrumAxis &&other) : CSpectrumAxis(std::move(other)){};
 
-  explicit CSpectrumNoiseAxis(Int32 n);
-
-  void SetSize(Int32 s, Float64 valueDef);
-  void SetSize(Int32 s) { SetSize(s, 1.0); };
-  bool Invert();
   const TBoolList checkNoise() const;
   CSpectrumNoiseAxis extract(Int32 startIdx, Int32 endIdx) const;
-
-private:
 };
 
 inline CSpectrumNoiseAxis CSpectrumNoiseAxis::extract(Int32 startIdx,
