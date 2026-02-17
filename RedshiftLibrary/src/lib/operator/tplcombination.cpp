@@ -691,7 +691,7 @@ CModelSpectrumResult COperatorTplcombination::ComputeSpectrumModel(
   m_templatesRebined_bf.clear();
   m_masksRebined_bf.clear();
 
-  return CModelSpectrumResult(std::move(modelSpcAxis.GetSamplesVector()),
+  return CModelSpectrumResult(std::move(modelSpcAxis).GetSamplesVector(),
                               std::move(modelFlux), "");
 }
 

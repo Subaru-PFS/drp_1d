@@ -104,7 +104,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
   CSpectrumSpectralAxis modelwav =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
           (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+  CModelSpectrumResult model(std::move(modelwav).GetSamplesVector(),
                              modelflux.GetSamplesVector(),
                              m_spectra[spcIndex]->getObsID());
   return std::make_pair(std::move(model),

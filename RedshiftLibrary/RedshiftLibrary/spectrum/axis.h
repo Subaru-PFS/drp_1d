@@ -72,8 +72,8 @@ public:
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
 
   const Float64 *GetSamples() const;
-  const TAxisSampleList &GetSamplesVector() const;
-  TAxisSampleList &GetSamplesVector();
+  const TAxisSampleList &GetSamplesVector() const &;
+  TAxisSampleList &&GetSamplesVector() &&;
   virtual void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
   virtual void resize(Int32 s, Float64 valueDef = 0.0);
@@ -129,8 +129,12 @@ inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
   m_Samples = std::move(axisList);
 }
 
-inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
+inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const & {
   return m_Samples;
+}
+
+inline TAxisSampleList &&CSpectrumAxis::GetSamplesVector() && {
+  return std::move(m_Samples);
 }
 
 inline void CSpectrumAxis::resize(Int32 s, Float64 valueDef) {
@@ -141,8 +145,6 @@ inline void CSpectrumAxis::clear() {
   resetAxisProperties();
   m_Samples.clear();
 }
-
-inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() { return m_Samples; }
 
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
 

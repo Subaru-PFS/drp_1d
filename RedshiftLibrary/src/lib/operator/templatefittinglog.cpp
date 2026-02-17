@@ -1342,7 +1342,7 @@ COperatorTemplateFittingLog::ComputeSpectrumModel(
   const CSpectrumFluxAxis &modelflux = modelTpl.GetFluxAxis();
   CSpectrumSpectralAxis modelwav = modelTpl.GetSpectralAxis().ShiftByWaveLength(
       (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+  CModelSpectrumResult model(std::move(modelwav).GetSamplesVector(),
                              modelflux.GetSamplesVector(),
                              m_spectra[spcIndex]->getObsID());
   return std::make_pair(std::move(model),
