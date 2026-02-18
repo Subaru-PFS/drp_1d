@@ -127,6 +127,7 @@ Its public methods are:
     Spectrum.get_others
     Spectrum.get_lsf
     Spectrum.get_photometric_data
+    Spectrum.get_spectrum_infos 
     Spectrum.init
 
 
