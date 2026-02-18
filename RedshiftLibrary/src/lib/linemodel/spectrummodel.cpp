@@ -544,7 +544,7 @@ CSpectrumModel::getContinuumUnderLines(const TInt32RangeList &indexRangeList,
 
   CSpectrumFluxAxis absLinesModelFlux;
   if (substract_abslinesmodel)
-    absLinesModelFlux = getModel(
+    absLinesModelFlux = computeModelFlux(
         eIdx_list, CLine::EType::nType_Absorption); // contains the continuum
 
   CSpectrumFluxAxis ampOffsetModelFlux;
@@ -652,8 +652,9 @@ CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
   return str_above_cut;
 }
 
-CSpectrumFluxAxis CSpectrumModel::getModel(const TInt32List &eIdx_list,
-                                           CLine::EType lineTypeFilter) const {
+CSpectrumFluxAxis
+CSpectrumModel::computeModelFlux(const TInt32List &eIdx_list,
+                                 CLine::EType lineTypeFilter) const {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   CSpectrumFluxAxis modelfluxAxis(spectralAxis.GetSamplesCount());

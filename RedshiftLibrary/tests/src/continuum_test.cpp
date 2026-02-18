@@ -482,6 +482,13 @@ BOOST_AUTO_TEST_CASE(ProcessRemoveContinuum) {
   CContinuumIrregularSamplingMedian sample2;
   bool result;
 
+  Float64 width = 75;
+  sample.SetMeanKernelWidth(width);
+  sample.SetMedianKernelWidth(width);
+
+  sample2.SetMeanKernelWidth(width);
+  sample2.SetMedianKernelWidth(width);
+
   // Spectrum
   TAxisSampleList sAxis = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11.};
   TAxisSampleList fAxis = {-0.5, -0.5, -0.5, -0.5, -5., -0.5,

@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_CONTINUUM_IRREGULARSMAPLINGMEDIAN_
 #define _REDSHIFT_CONTINUUM_IRREGULARSMAPLINGMEDIAN_
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/continuum/continuum.h"
 
 namespace continuum_test { // boost_test_suite
@@ -62,8 +63,7 @@ class CContinuumIrregularSamplingMedian : public CContinuum {
 
 public:
   CContinuumIrregularSamplingMedian()
-      : m_MeanSmoothAmplitude(75.0),                            // Angstrom
-        m_MedianSmoothCycles(5), m_MedianSmoothAmplitude(75.0), // Angstrom
+      : m_MedianSmoothCycles(N_SAMPLING_SMOOTH_CYCLES),
         m_MedianEvenReflection(true) {}
 
   void SetMeanKernelWidth(Float32 width);

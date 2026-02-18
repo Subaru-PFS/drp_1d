@@ -841,6 +841,9 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   for (int i = nbmin; i < nbmax; ++i) {
     m_FluxAxis[i] = 2.0;
   }
+  Float64 width = 75;
+  remover2.SetMeanKernelWidth(width);
+  remover2.SetMedianKernelWidth(width);
   object_CSpectrum.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
 
   BOOST_CHECK(object_CSpectrum.RemoveContinuum(remover2) == true);

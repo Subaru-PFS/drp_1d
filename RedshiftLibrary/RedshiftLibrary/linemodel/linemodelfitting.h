@@ -74,10 +74,6 @@ public:
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
 
-  CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
-                    const TLambdaRange &lambdaRange,
-                    const std::shared_ptr<COperatorContinuumFitting>
-                        &continuumFittingOperator);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
@@ -85,8 +81,8 @@ public:
 
   bool initDtd();
   Float64 EstimateMTransposeM() const;
-  Float64 getDTransposeD();
-  Float64 getLikelihood_cstLog();
+  Float64 getOrInitDtD();
+  Float64 getOrInitLikelihoodCstLog();
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
@@ -242,7 +238,8 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-private:
+protected:
+  CLineModelFitting(Int32 spectraIndex);
   void initParameters();
   void setElementsVector(CLineRatioManager::EType const &lineRatioType,
                          ElementComposition const &element_composition);

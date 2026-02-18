@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/linemodel/linemodelfittingfortemplates.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
@@ -216,7 +216,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
   std::shared_ptr<COperatorTemplateFitting> continuumFittingOperator;
-  CLineModelFitting model(tplOrtho, lambdaRange, continuumFittingOperator);
+  CLineModelFittingForTemplates model(tplOrtho, lambdaRange,
+                                      continuumFittingOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;

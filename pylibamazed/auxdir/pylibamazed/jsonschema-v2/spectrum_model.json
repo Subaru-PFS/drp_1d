@@ -7,8 +7,7 @@
     "stages",
     "redshiftRange",
     "redshiftStep",
-    "redshiftSampling",
-    "templateDir"
+    "redshiftSampling"
   ],
   "additionalProperties": false,
   "properties": {

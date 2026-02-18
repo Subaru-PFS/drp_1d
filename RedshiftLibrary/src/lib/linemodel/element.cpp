@@ -614,14 +614,13 @@ void CLineModelElement::addToSpectrumModelDerivVel(
       auto const &[mu, sigma] =
           getObservedPositionAndLineWidth(redshift, index, false);
 
-      if (m_ElementParam->m_SignFactors[index] == -1)
-        modelfluxAxis[i] +=
-            m_ElementParam->m_SignFactors[index] * A * continuumfluxAxis[i] *
+      if (m_ElementParam->IsAbsorption())
+        modelfluxAxis[i] -=
+            A * continuumfluxAxis[i] *
             m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
       else
         modelfluxAxis[i] +=
-            m_ElementParam->m_SignFactors[index] * A *
-            m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
+            A * m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
     }
   }
   return;
@@ -653,10 +652,8 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     if (A <= 0.)
       continue;
 
-    Float64 fluxval = m_ElementParam->m_SignFactors[index] * A *
-                      GetLineProfileAtRedshift(index, redshift, x);
-    Yi += m_ElementParam->m_SignFactors[index] == -1 ? continuumFlux * fluxval
-                                                     : fluxval;
+    Float64 fluxval = A * GetLineProfileAtRedshift(index, redshift, x);
+    Yi += m_ElementParam->getLineTypeFlux(fluxval, continuumFlux);
 
     if (std::isnan(Yi))
       THROWG(ErrorCode::INTERNAL_ERROR,
@@ -683,11 +680,9 @@ Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(
       continue;
     if (m_ElementParam->m_NominalAmplitudes[index] == 0.0)
       continue;
-    Float64 fluxval = m_ElementParam->m_SignFactors[index] *
-                      m_ElementParam->m_NominalAmplitudes[index] *
+    Float64 fluxval = m_ElementParam->m_NominalAmplitudes[index] *
                       GetLineProfileAtRedshift(index, redshift, x);
-    Yi += m_ElementParam->m_SignFactors[index] == -1 ? continuumFlux * fluxval
-                                                     : fluxval;
+    Yi += m_ElementParam->getLineTypeFlux(fluxval, continuumFlux);
   }
   return Yi;
 }
@@ -716,11 +711,9 @@ CLineModelElement::GetModelDerivVelAtLambda(Float64 lambda, Float64 redshift,
 
     Float64 const lineprofile_derivVel =
         m_ElementParam->GetLineProfileDerivVel(index, lambda, mu, sigma);
-    Float64 const fluxval =
-        m_ElementParam->m_SignFactors[index] * A * lineprofile_derivVel;
+    Float64 const fluxval = A * lineprofile_derivVel;
 
-    Yi += m_ElementParam->m_SignFactors[index] == -1 ? continuumFlux * fluxval
-                                                     : fluxval;
+    Yi += m_ElementParam->getLineTypeFlux(fluxval, continuumFlux);
   }
   return Yi;
 }
@@ -739,7 +732,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     if (m_OutsideLambdaRangeList[index])
       continue;
 
-    if (m_ElementParam->m_SignFactors[index] == 1)
+    if (m_ElementParam->IsEmission())
       continue;
 
     Float64 A = m_ElementParam->m_FittedAmplitudes[index];
@@ -747,8 +740,9 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
       THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
     if (A <= 0.0)
       continue;
-    Yi += m_ElementParam->m_SignFactors[index] * continuumFluxUnscale * A *
-          GetLineProfileAtRedshift(index, redshift, x);
+
+    Yi -=
+        continuumFluxUnscale * A * GetLineProfileAtRedshift(index, redshift, x);
   }
   return Yi;
 }
@@ -783,11 +777,10 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     Float64 const profile_derivz_val =
         lambda_rest * profile->GetLineProfileDerivX0(lambda, mu, sigma);
 
-    Float64 const fluxval =
-        m_ElementParam->m_SignFactors[index] * A * profile_derivz_val;
+    Float64 const fluxval = A * profile_derivz_val;
 
-    Yi += m_ElementParam->m_SignFactors[index] == -1
-              ? continuumFlux * fluxval -
+    Yi += m_ElementParam->IsAbsorption()
+              ? -continuumFlux * fluxval -
                     A * continuumFluxDerivZ *
                         profile->GetLineProfileVal(lambda, mu, sigma)
               : fluxval;
@@ -870,7 +863,6 @@ void CLineModelElement::dumpElement(std::ostream &os) const {
 
   for (Int32 i = 0; i != GetSize(); ++i) {
     os << i << "\t " << m_OutsideLambdaRangeList[i] << "\t "
-       << m_ElementParam->m_SignFactors[i] << "\t "
        << m_ElementParam->m_FittedAmplitudes[i] << "\t"
        << m_ElementParam->m_FittedAmplitudesStd[i] << "\t"
        << m_ElementParam->m_NominalAmplitudes[i] << "\t"
@@ -918,9 +910,8 @@ Int32 CLineModelElement::computeCrossProducts(
         if (m_OutsideLambdaRangeList[index2] ||
             !m_LineIsActiveOnSupport[index][index2])
           continue;
-        Int32 sf = m_ElementParam->getSignFactor(index2);
         Float64 amp = nominalAmplitudes[index2];
-        if (sf == -1)
+        if (m_ElementParam->IsAbsorption())
           amp *= -c;
         if (amp == 0.0)
           continue;

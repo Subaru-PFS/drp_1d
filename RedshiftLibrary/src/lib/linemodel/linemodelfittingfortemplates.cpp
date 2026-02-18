@@ -37,57 +37,33 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#ifndef _DEFAULT_H
-#define _DEFAULT_H
+#include "RedshiftLibrary/linemodel/linemodelfittingfortemplates.h"
 
-#include <gsl/gsl_const_mksa.h>
+using namespace NSEpic;
+using namespace std;
 
-#include "RedshiftLibrary/common/datatypes.h"
+CLineModelFittingForTemplates::CLineModelFittingForTemplates(
+    const std::shared_ptr<const CTemplate> &template_,
+    const TLambdaRange &lambdaRange,
+    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator)
+    : CLineModelFitting(1) {
+  m_inputSpcs =
+      std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>();
 
-namespace NSEpic {
-static const Float64 N_SIGMA_SUPPORT = 8.;
-static const Float64 N_SIGMA_SUPPORT_DI = 6.;
+  m_inputSpcs->push_back(template_);
+  m_lambdaRanges.push_back(std::make_shared<const TLambdaRange>(lambdaRange));
+  initParameters();
+  // override ortho specific parameters
+  m_fittingmethod = "hybrid";
+  m_enableAmplitudeOffsets = false;
+  m_enableLbdaOffsets = false;
 
-static const Int32 NOT_OVERLAP_VALUE = 20;
-// for CExtremum
-static const Int32 PEAKS_MIN_THRESHOLD = 3;
-static const Int32 PEAKS_SMOOTH_LIMIT = 20;
-static const Int32 undefIdx = -1;
-static const Int32 allIdx = -9;
-static const std::string undefStr = "undefined";
+  auto lineRatioType = CLineRatioManager::EType::rules;
+  initMembers(continuumFittingOperator, lineRatioType,
+              ElementComposition::Default);
+  // temporary options override to be removed when full tpl ortho is implemented
+  setLineRatioManager(lineRatioType);
 
-static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
-static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
-    GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
-
-// static const Float64 INSTRUMENT_RESOLUTION_FACTOR =
-//     230.0 / 325.0 / 2.35; // empirical factor set by A Schmitt
-static const Float64 INSTRUMENT_RESOLUTION_FACTOR = 1.0 / 2.355;
-
-static const Float64 RESTLAMBDA_LYA = 1216.;
-static const Int32 IGM_OVERSAMPLING = 1;
-static const Float64 IGM_RAW_STEP =
-    0.05; //  wavelength step of input extinction curves (in Angstrom)
-
-static const Int32 MIN_GRID_COUNT = 10;
-
-static const Float64 LSF_MIN_LAMBDA = 200.0;
-static const Float64 LSF_MAX_LAMBDA = 30000.0;
-
-static const Float64 OVERLAP_THRESHOLD_PDF_INTEGRATION = 0.3;
-
-static const Int32 RMS_MIN_SAMPLE_NUMBER = 10;
-
-static const Float64 SNR_THRESHOLD_FOR_NLINESOVER = 3.0;
-
-static const Float64 MAX_LAMBDA_OFFSET = 400.0; // km/s
-static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
-
-// For QSO power law calculation, lambda at which the power law coefs changes
-static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
-
-// For CContinuumIrregularSamplingMedian, number of smoothing cycles
-static const Float64 N_SAMPLING_SMOOTH_CYCLES = 5;
-
-} // namespace NSEpic
-#endif
+  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
+  setContinuumComponent(TContinuumComponent("fromSpectrum"));
+}
