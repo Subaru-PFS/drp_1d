@@ -131,7 +131,7 @@ inline Float64 CSpectrumFluxAxis::GetWeight(Int32 idx,
     auto const &err = m_StdError[idx] * normFactor;
     return 1 / (err * err);
   }
-  return 1;
+  return 1 / (normFactor * normFactor);
 }
 
 inline Float64 CSpectrumFluxAxis::GetInverseWeight(Int32 idx,

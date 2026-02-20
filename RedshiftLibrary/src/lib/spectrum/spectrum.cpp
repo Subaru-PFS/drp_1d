@@ -266,10 +266,11 @@ void CSpectrum::ResetContinuum() const {
   m_WithoutContinuumFluxAxis.clear();
 }
 
-bool CSpectrum::RemoveContinuum(CContinuum &remover) const {
+void CSpectrum::computeContinuum(
+    CContinuumEstimator &continuumEstimator) const {
   ResetContinuum();
 
-  return remover.RemoveContinuum(*this, m_WithoutContinuumFluxAxis);
+  m_ContinuumFluxAxis = continuumEstimator.computeContinuum(*this);
 }
 
 /**
@@ -284,29 +285,28 @@ void CSpectrum::EstimateContinuum() const {
     continuum.SetMedianKernelWidth(m_medianWindowSize);
     continuum.SetMeanKernelWidth(m_medianWindowSize);
     continuum.SetMedianEvenReflection(m_medianEvenReflection);
-    if (!RemoveContinuum(continuum))
-      THROWG(ErrorCode::INTERNAL_ERROR, "Continuum removal failed");
+    computeContinuum(continuum);
     Log.LogDetail(Formatter() << "Continuum estimation - medianKernelWidth ="
                               << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
-    Int32 nbSamples = this->GetSampleCount();
-    m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
+    m_ContinuumFluxAxis = m_RawFluxAxis;
+    // m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
   } else if (m_estimationMethod == "zero") {
-    m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+    Int32 nbSamples = this->GetSampleCount();
+    m_ContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
+    ;
   } else if (m_estimationMethod == "manual") {
-    m_WithoutContinuumFluxAxis = m_RawFluxAxis;
-    m_WithoutContinuumFluxAxis -= m_ContinuumFluxAxis;
+    // nothing to do. m_ContinnumFluxAxis has been set by previous call to
+    // setContinuumEstimationMethod
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unknown continuum estimation method");
   }
 
   Log.LogDetail("===============================================");
 
-  // Fill m_ContinuumFluxAxis
-  if (m_estimationMethod != "manual") {
-    m_ContinuumFluxAxis = m_RawFluxAxis;
-    m_ContinuumFluxAxis -= m_WithoutContinuumFluxAxis;
-  }
+  // Fill m_WithoutContinuumFluxAxis
+  m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+  m_WithoutContinuumFluxAxis -= m_ContinuumFluxAxis;
 
   alreadyRemoved = true;
 }

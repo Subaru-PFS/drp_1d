@@ -1817,14 +1817,10 @@ void COperatorLineModel::addFitQualityToCandidate(
     auto const &fluxBegin = spc.GetFluxAxis().GetSamplesVector().cbegin();
     spcFlux.push_back(TFloat64List(fluxBegin + kStart, fluxBegin + kEnd + 1));
 
-    if (spc.GetFluxAxis().HasError()) {
-      auto const &errorBegin =
-          spc.GetFluxAxis().GetError().GetSamplesVector().cbegin();
-      spcFluxError.push_back(
-          TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
-    } else {
-      spcFluxError.push_back(TFloat64List(kEnd - kStart + 1, 1.));
-    }
+    auto const &errorBegin =
+        spc.GetRawFluxAxis().GetError().GetSamplesVector().cbegin();
+    spcFluxError.push_back(
+        TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
     auto const modelBegin =
         candidateModel->ModelFlux.at(spc.getObsID()).cbegin();
     modelFlux.push_back(

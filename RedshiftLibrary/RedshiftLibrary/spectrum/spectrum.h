@@ -147,7 +147,7 @@ public:
                                 Float64 &std) const;
   bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
 
-  bool RemoveContinuum(CContinuum &remover) const;
+  void computeContinuum(CContinuumEstimator &estimator) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
   virtual bool checkCorrectness(bool valid, Int32 index) const { return valid; }

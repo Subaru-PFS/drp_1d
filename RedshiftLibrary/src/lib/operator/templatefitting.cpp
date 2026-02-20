@@ -244,17 +244,16 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
   for (auto const &[spc, tpl, mask, kStart, kEnd] : boost::combine(
            m_spectra, m_templateRebined_bf, maskList, m_kStart, m_kEnd)) {
     auto const &flux_axis = spc->GetFluxAxis();
+    auto const &flux_axis_for_error = spc->GetRawFluxAxis();
+
     auto const &fluxBegin = flux_axis.GetSamplesVector().cbegin();
     spcFluxInRange.push_back(
         TFloat64List(fluxBegin + kStart, fluxBegin + kEnd + 1));
 
-    if (flux_axis.HasError()) {
-      auto const &errorBegin = flux_axis.GetError().GetSamplesVector().cbegin();
-      spcFluxErrorInRange.push_back(
-          TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
-    } else {
-      spcFluxErrorInRange.push_back(TFloat64List(kEnd - kStart + 1, 1.));
-    }
+    auto const &errorBegin =
+        flux_axis_for_error.GetError().GetSamplesVector().cbegin();
+    spcFluxErrorInRange.push_back(
+        TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
 
     auto const scaledTpl = tpl.GetFluxAxis() * result.ampl;
     auto const tplBegin =
@@ -290,6 +289,8 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
     Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
+  const CSpectrumFluxAxis &spcFluxAxis_for_weight =
+      m_spectra[spcIndex]->GetRawFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
       m_templateRebined_bf[spcIndex].GetFluxAxis().GetSamplesVector();
@@ -325,7 +326,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
 
     if (mask[j]) {
 
-      err2 = spcFluxAxis.GetWeight(j);
+      err2 = spcFluxAxis_for_weight.GetWeight(j);
 
       // Tonry&Davis formulation
       sumCross += Yspc[j] * Ytpl[j] * err2;

@@ -103,6 +103,7 @@ void COperatorTplcombination::BasicFit(
 
   const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis = spectrum.GetFluxAxis();
+  const CSpectrumFluxAxis &spcFluxAxis_for_weight = spectrum.GetRawFluxAxis();
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount())
     THROWG(ErrorCode::INTERNAL_ERROR,
@@ -150,7 +151,8 @@ void COperatorTplcombination::BasicFit(
   cov = gsl_matrix_alloc(nddl, nddl);
 
   // Normalizing factor
-  Float64 normFactor = GetNormFactor(spcFluxAxis, m_kStart[0], n);
+  Float64 const normFactor = GetNormFactor(spcFluxAxis, m_kStart[0], n);
+  Float64 const normFactorOverOne = 1. / normFactor;
 
   Log.LogDetail(Formatter() << " Linear fitting, found "
                                "normalization Factor="
@@ -166,8 +168,8 @@ void COperatorTplcombination::BasicFit(
   Float64 yi;
   Float64 wi;
   for (Int32 i = 0; i < n; i++) {
-    yi = spcFluxAxis[i + m_kStart[0]] / normFactor;
-    wi = spcFluxAxis.GetWeight(i + m_kStart[0]) * normFactor * normFactor;
+    yi = spcFluxAxis[i + m_kStart[0]] * normFactorOverOne;
+    wi = spcFluxAxis_for_weight.GetWeight(i + m_kStart[0], normFactorOverOne);
 
     gsl_vector_set(y, i, yi); // y[i] = yi
     gsl_vector_set(w, i, wi); // w[i] = 1/(ei*ei)

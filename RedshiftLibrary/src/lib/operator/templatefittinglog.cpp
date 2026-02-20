@@ -688,12 +688,11 @@ void COperatorTemplateFittingLog::computeFitQuality(
     Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
 
   const auto &flux_axis = m_spectraFull[0]->GetFluxAxis();
+  const auto &flux_axis_for_error = m_spectraFull[0]->GetRawFluxAxis();
   const auto &spectrumRebinedFluxRaw = flux_axis.GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   auto const &mask = m_spectraFull[0]->getMask();
-  const auto &error = flux_axis.HasError()
-                          ? flux_axis.GetError().GetSamplesVector()
-                          : TFloat64List(flux_axis.GetSamplesCount(), 1.);
+  const auto &error = flux_axis_for_error.GetError().GetSamplesVector();
 
   for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
        ++isubz, ++fullResultIdx, ++firstTplIdx) {

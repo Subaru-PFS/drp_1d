@@ -833,7 +833,7 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   //--------------------//
   // //test removeContinuum
 
-  CContinuumIrregularSamplingMedian remover2;
+  CContinuumIrregularSamplingMedian estimator2;
 
   for (int i = nbmin; i < nbmax; ++i) {
     m_FluxAxis[i] = 2.0;
@@ -843,9 +843,7 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   remover2.SetMedianKernelWidth(width);
   object_CSpectrum.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
 
-  BOOST_CHECK(object_CSpectrum.RemoveContinuum(remover2) == true);
-  BOOST_TEST_MESSAGE(
-      "test Remove:" << object_CSpectrum.RemoveContinuum(remover2));
+  BOOST_CHECK_NO_THROW(object_CSpectrum.computeContinuum(estimator2));
 }
 
 BOOST_AUTO_TEST_CASE(ExtractTest) {
