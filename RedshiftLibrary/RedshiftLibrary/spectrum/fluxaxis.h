@@ -59,11 +59,9 @@ class CSpectrumFluxAxis : public CSpectrumAxis {
 
 public:
   using CSpectrumAxis::CSpectrumAxis;
-
-  CSpectrumFluxAxis(CSpectrumAxis otherFlux) : CSpectrumAxis(std::move(otherFlux)) {}
-
+  explicit CSpectrumFluxAxis(CSpectrumAxis otherFlux)
+      : CSpectrumAxis(std::move(otherFlux)) {}
   CSpectrumFluxAxis(CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError);
-
   CSpectrumFluxAxis(const Float64 *samples, Int32 n, const Float64 *error,
                     const Int32 m);
 
@@ -83,21 +81,30 @@ public:
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);
   const TBoolList checkFlux() const;
   bool correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax, Float64 coeffCorr);
-  bool Subtract(const CSpectrumFluxAxis &other);
-  CSpectrumFluxAxis extract(Int32 startIdx, Int32 endIdx) const;
   CSpectrumFluxAxis &operator*=(Float64 op) override;
   CSpectrumFluxAxis &operator/=(Float64 op) override;
-  friend CSpectrumFluxAxis operator*(const CSpectrumFluxAxis &axis,
-                                     const Float64 op) {
-    CSpectrumFluxAxis multipliedAxis = axis;
-    multipliedAxis *= op;
-    return multipliedAxis;
-  }
-  friend CSpectrumFluxAxis operator*(const Float64 op,
-                                     const CSpectrumFluxAxis &axis) {
-    return axis * op;
-  }
+  using CSpectrumAxis::operator+=, CSpectrumAxis::operator-=;
+  CSpectrumFluxAxis &operator+=(CSpectrumFluxAxis const &other);
+  CSpectrumFluxAxis &operator-=(CSpectrumFluxAxis const &);
+  // Hidden friend symmetric operators (ie non-member, but here for ADL )
+  friend CSpectrumFluxAxis operator*(CSpectrumFluxAxis axis, Float64 op);
+  friend CSpectrumFluxAxis operator*(Float64 op, CSpectrumFluxAxis axis);
+  friend CSpectrumFluxAxis operator+(CSpectrumFluxAxis const &axis1,
+                                     CSpectrumFluxAxis const &axis2);
+  friend CSpectrumFluxAxis operator+(CSpectrumAxis const &axis1,
+                                     CSpectrumFluxAxis const &axis2);
+  friend CSpectrumFluxAxis operator+(CSpectrumFluxAxis const &axis1,
+                                     CSpectrumAxis const &axis2);
+  friend CSpectrumFluxAxis operator-(CSpectrumFluxAxis const &axis1,
+                                     CSpectrumFluxAxis const &axis2);
+  friend CSpectrumFluxAxis operator-(CSpectrumAxis const &axis1,
+                                     CSpectrumFluxAxis const &axis2);
+  friend CSpectrumFluxAxis operator-(CSpectrumFluxAxis const &axis1,
+                                     CSpectrumAxis const &axis2);
+  // member assymetric operator
+  CSpectrumFluxAxis operator/(Float64 op) const;
 
+  CSpectrumFluxAxis extract(Int32 startIdx, Int32 endIdx) const;
   CSpectrumFluxAxis MaskAxis(const TMaskList &) const;
   void Invert() = delete;
 
@@ -153,6 +160,61 @@ inline CSpectrumFluxAxis &CSpectrumFluxAxis::operator/=(Float64 op) {
   operator*=(1 / op);
   return *this;
 }
+
+inline CSpectrumFluxAxis operator*(CSpectrumFluxAxis axis, Float64 op) {
+  CSpectrumFluxAxis multipliedAxis(std::move(axis));
+  multipliedAxis *= op;
+  return multipliedAxis;
+}
+
+inline CSpectrumFluxAxis operator*(Float64 op, CSpectrumFluxAxis axis) {
+  return std::move(axis) * op;
+}
+
+inline CSpectrumFluxAxis operator+(CSpectrumFluxAxis const &axis1,
+                                   CSpectrumFluxAxis const &axis2) {
+  CSpectrumFluxAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumFluxAxis operator+(CSpectrumAxis const &axis1,
+                                   CSpectrumFluxAxis const &axis2) {
+  CSpectrumFluxAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumFluxAxis operator+(CSpectrumFluxAxis const &axis1,
+                                   CSpectrumAxis const &axis2) {
+  return axis2 + axis1;
+}
+
+inline CSpectrumFluxAxis operator-(CSpectrumFluxAxis const &axis1,
+                                   CSpectrumFluxAxis const &axis2) {
+  CSpectrumFluxAxis diffaxis(axis1);
+  diffaxis -= axis2;
+  return diffaxis;
+}
+
+inline CSpectrumFluxAxis operator-(CSpectrumAxis const &axis1,
+                                   CSpectrumFluxAxis const &axis2) {
+  CSpectrumFluxAxis diffaxis(axis1);
+  diffaxis -= axis2;
+  return diffaxis;
+}
+
+inline CSpectrumFluxAxis operator-(CSpectrumFluxAxis const &axis1,
+                                   CSpectrumAxis const &axis2) {
+  return axis2 - axis1;
+}
+
+inline CSpectrumFluxAxis CSpectrumFluxAxis::operator/(Float64 op) const {
+  CSpectrumFluxAxis dividedAxis(*this);
+  dividedAxis /= op;
+  return dividedAxis;
+}
+
 } // namespace NSEpic
 
 #endif

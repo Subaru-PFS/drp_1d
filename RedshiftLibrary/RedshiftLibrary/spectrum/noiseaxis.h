@@ -50,17 +50,102 @@ class CSpectrumNoiseAxis : public CSpectrumAxis {
 
 public:
   using CSpectrumAxis::CSpectrumAxis;
-  CSpectrumNoiseAxis(const CSpectrumAxis &other) : CSpectrumAxis(other){};
-  CSpectrumNoiseAxis(CSpectrumAxis &&other) : CSpectrumAxis(std::move(other)){};
+  // using CSpectrumAxis::operator+=, CSpectrumAxis::operator-=;
+  explicit CSpectrumNoiseAxis(const CSpectrumAxis &other)
+      : CSpectrumAxis(other){};
+  explicit CSpectrumNoiseAxis(CSpectrumAxis &&other)
+      : CSpectrumAxis(std::move(other)){};
+  CSpectrumNoiseAxis &operator+=(CSpectrumNoiseAxis const &other);
+  CSpectrumNoiseAxis &operator+=(CSpectrumAxis const &other) override;
+  CSpectrumNoiseAxis &operator-=(CSpectrumNoiseAxis const &other) {
+    return operator+=(other);
+  };
+  CSpectrumNoiseAxis &operator-=(CSpectrumAxis const &other) override {
+    return operator+=(other);
+  }
+  // CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis other) const;
+  // CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis other) const;
+  friend CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
+                                      CSpectrumNoiseAxis const &axis2);
+  friend CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
+                                      CSpectrumAxis const &axis2);
+  friend CSpectrumNoiseAxis operator+(CSpectrumAxis const &axis1,
+                                      CSpectrumNoiseAxis const &axis2);
+  friend CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis const &axis1,
+                                      CSpectrumNoiseAxis const &axis2);
+  friend CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis const &axis1,
+                                      CSpectrumAxis const &axis2);
+  friend CSpectrumNoiseAxis operator-(CSpectrumAxis const &axis1,
+                                      CSpectrumNoiseAxis const &axis2);
 
   const TBoolList checkNoise() const;
   CSpectrumNoiseAxis extract(Int32 startIdx, Int32 endIdx) const;
+
+  // CSpectrumAxis operator+(CSpectrumAxis other) const override {
+  //   THROWG(ErrorCode::INTERNAL_ERROR, "not implemented");
+  // }
+  // CSpectrumAxis operator-(CSpectrumAxis other) const override {
+  //       THROWG(ErrorCode::INTERNAL_ERROR, "not implemented");
+  // }
 };
+
+inline CSpectrumNoiseAxis &
+CSpectrumNoiseAxis::operator+=(CSpectrumAxis const &other) {
+  return operator+=(CSpectrumNoiseAxis(other));
+}
+
+inline CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
+                                    CSpectrumNoiseAxis const &axis2) {
+  CSpectrumNoiseAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumNoiseAxis operator+(CSpectrumAxis const &axis1,
+                                    CSpectrumNoiseAxis const &axis2) {
+  CSpectrumNoiseAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
+                                    CSpectrumAxis const &axis2) {
+
+  return axis2 + axis1;
+}
+
+inline CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis const &axis1,
+                                    CSpectrumNoiseAxis const &axis2) {
+  return axis1 + axis2;
+}
+
+inline CSpectrumNoiseAxis operator-(CSpectrumAxis const &axis1,
+                                    CSpectrumNoiseAxis const &axis2) {
+  return axis1 + axis2;
+}
+
+inline CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis const &axis1,
+                                    CSpectrumAxis const &axis2) {
+  return axis2 + axis1;
+}
+
+// inline CSpectrumNoiseAxis CSpectrumNoiseAxis::operator+(CSpectrumNoiseAxis
+// other) const {
+//     CSpectrumNoiseAxis sumaxis(std::move(other));
+//     sumaxis += *this;
+//     return sumaxis;
+//   }
+
+// inline CSpectrumNoiseAxis CSpectrumNoiseAxis::operator-(CSpectrumNoiseAxis
+// other) const {
+//   return *this + std::move(other);
+// }
 
 inline CSpectrumNoiseAxis CSpectrumNoiseAxis::extract(Int32 startIdx,
                                                       Int32 endIdx) const {
-  return CSpectrumAxis::extract(startIdx, endIdx);
+  return CSpectrumNoiseAxis(CSpectrumAxis::extract(startIdx, endIdx));
 }
+
 } // namespace NSEpic
 
 #endif

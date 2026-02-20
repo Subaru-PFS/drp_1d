@@ -56,3 +56,14 @@ const TBoolList CSpectrumNoiseAxis::checkNoise() const {
   }
   return isValid;
 }
+
+CSpectrumNoiseAxis &
+CSpectrumNoiseAxis::operator+=(CSpectrumNoiseAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Cannot sum noise axis of different sizes");
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(),
+                 [](Float64 a, Float64 b) { return std::sqrt(a * a + b * b); });
+  return *this;
+}

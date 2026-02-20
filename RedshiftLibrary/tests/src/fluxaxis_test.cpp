@@ -376,10 +376,7 @@ BOOST_AUTO_TEST_CASE(ComputeRMSDiff_test) {
   BOOST_CHECK_CLOSE(resultComputeRMSDiff, er, precision);
 }
 
-BOOST_AUTO_TEST_CASE(Subtract_test) {
-
-  //--------------------//
-  // test Subtract
+BOOST_AUTO_TEST_CASE(Add_test) {
 
   // size of sampleA != size of sampleB
 
@@ -389,17 +386,90 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   TFloat64List sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18.};
   CSpectrumFluxAxis object_FluxAxisB(sampleB);
 
-  BOOST_CHECK_THROW(object_FluxAxisA.Subtract(object_FluxAxisB), AmzException);
+  BOOST_CHECK_THROW(object_FluxAxisA += object_FluxAxisB, AmzException);
 
   // size of sampleA = size of sampleB
   sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
   object_FluxAxisB = CSpectrumFluxAxis(sampleB);
 
-  object_FluxAxisA.Subtract(object_FluxAxisB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+
+  TFloat64List sample_ref = {3., 6., 9., 12., 15., 18., 21., 24., 27., 30.};
+
+  BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+  BOOST_CHECK(object_FluxAxisA.HasError() == false);
+
+  object_FluxAxisA = CSpectrumFluxAxis(sampleA);
+  CSpectrumFluxAxis diff = object_FluxAxisA + object_FluxAxisB;
+  BOOST_CHECK(sample_ref == diff.GetSamplesVector());
+
+  TFloat64List noise_ref(10, 1.);
+  CSpectrumNoiseAxis noise(noise_ref);
+  CSpectrumAxis axisA(sampleA);
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noise);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.HasError());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+
+  noise_ref = TFloat64List(10, 5.);
+  CSpectrumNoiseAxis noiseA(TFloat64List(10, 3.));
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noiseA);
+  CSpectrumAxis axisB(sampleB);
+  CSpectrumNoiseAxis noiseB(TFloat64List(10, 4.));
+  object_FluxAxisB = CSpectrumFluxAxis(axisB, noiseB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.HasError());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+}
+
+BOOST_AUTO_TEST_CASE(Subtract_test) {
+
+  // size of sampleA != size of sampleB
+
+  TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+  CSpectrumFluxAxis object_FluxAxisA(sampleA);
+
+  TFloat64List sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18.};
+  CSpectrumFluxAxis object_FluxAxisB(sampleB);
+
+  BOOST_CHECK_THROW(object_FluxAxisA -= object_FluxAxisB, AmzException);
+
+  // size of sampleA = size of sampleB
+  sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
+  object_FluxAxisB = CSpectrumFluxAxis(sampleB);
+
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
 
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
   BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+  BOOST_CHECK(object_FluxAxisA.HasError() == false);
+
+  object_FluxAxisA = CSpectrumFluxAxis(sampleA);
+  CSpectrumFluxAxis diff = object_FluxAxisA - object_FluxAxisB;
+  BOOST_CHECK(sample_ref == diff.GetSamplesVector());
+
+  TFloat64List noise_ref(10, 1.);
+  CSpectrumNoiseAxis noise(noise_ref);
+  CSpectrumAxis axisA(sampleA);
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noise);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.HasError());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+
+  noise_ref = TFloat64List(10, 5.);
+  CSpectrumNoiseAxis noiseA(TFloat64List(10, 3.));
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noiseA);
+  CSpectrumAxis axisB(sampleB);
+  CSpectrumNoiseAxis noiseB(TFloat64List(10, 4.));
+  object_FluxAxisB = CSpectrumFluxAxis(axisB, noiseB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.HasError());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeMaxAbsValue) {

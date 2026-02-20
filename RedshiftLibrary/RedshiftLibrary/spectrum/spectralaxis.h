@@ -39,8 +39,6 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 #define _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 
-#include <vector>
-
 #include <boost/logic/tribool.hpp>
 
 #include "RedshiftLibrary/common/datatypes.h"
@@ -67,8 +65,9 @@ public:
   enum EShiftDirection { nShiftForward = 0, nShiftBackward };
 
   using CSpectrumAxis::CSpectrumAxis;
-  CSpectrumSpectralAxis(const CSpectrumAxis &other) : CSpectrumAxis(other){};
-  CSpectrumSpectralAxis(CSpectrumAxis &&other)
+  explicit CSpectrumSpectralAxis(const CSpectrumAxis &other)
+      : CSpectrumAxis(other){};
+  explicit CSpectrumSpectralAxis(CSpectrumAxis &&other)
       : CSpectrumAxis(std::move(other)){};
 
   CSpectrumSpectralAxis(const TFloat64List &samples,
@@ -77,18 +76,16 @@ public:
                         std::string const &AirVacuum = "");
   CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
                         std::string const &AirVacuum = "");
-  CSpectrumSpectralAxis &operator*=(const Float64 op) override;
-  CSpectrumSpectralAxis &operator/=(const Float64 op) override;
-  friend CSpectrumSpectralAxis operator*(const CSpectrumSpectralAxis &axis,
-                                         const Float64 op) {
-    CSpectrumSpectralAxis multipliedAxis = axis;
-    multipliedAxis *= op;
-    return multipliedAxis;
-  }
-  friend CSpectrumSpectralAxis operator*(const Float64 op,
-                                         const CSpectrumSpectralAxis &axis) {
-    return axis * op;
-  }
+  CSpectrumSpectralAxis &operator*=(Float64 op) override;
+  CSpectrumSpectralAxis &operator/=(Float64 op) override {
+    operator*=(1 / op);
+    return *this;
+  };
+  friend CSpectrumSpectralAxis operator*(CSpectrumSpectralAxis axis,
+                                         Float64 op);
+  friend CSpectrumSpectralAxis operator*(Float64 op,
+                                         CSpectrumSpectralAxis axis);
+  CSpectrumSpectralAxis operator/(Float64 op) const;
 
   CSpectrumSpectralAxis extract(Int32 startIdx, Int32 endIdx) const;
 
@@ -102,8 +99,6 @@ public:
                                           EShiftDirection direction) const;
   const CSpectrumSpectralAxis &
   ShiftByWaveLengthInPlace(Float64 wavelengthOffset, EShiftDirection direction);
-
-  void ApplyOffset(Float64 wavelengthOffset);
 
   Int32 GetIndexAtWaveLength(Float64 waveLength) const;
   TInt32Range
@@ -143,7 +138,11 @@ private:
   friend class spectralaxis_test::logSampling_test;
 
   void convertToVacuum(std::string const &AirVacuum);
-  void resetAxisProperties() override;
+  void resetAxisProperties() override {
+    // reset states when m_Samples is going to change
+    m_isSorted = indeterminate;
+    m_isLogSampled = indeterminate;
+  }
 
   mutable Float64 m_regularLogSamplingStep =
       NAN; // sampling log step with which sampling was validated in
@@ -153,9 +152,26 @@ private:
   mutable tribool m_isLogSampled = indeterminate;
 };
 
+inline CSpectrumSpectralAxis operator*(CSpectrumSpectralAxis axis, Float64 op) {
+  CSpectrumSpectralAxis multipliedAxis(std::move(axis));
+  multipliedAxis *= op;
+  return multipliedAxis;
+}
+
+inline CSpectrumSpectralAxis operator*(Float64 op, CSpectrumSpectralAxis axis) {
+  return std::move(axis) * op;
+}
+
+inline CSpectrumSpectralAxis
+CSpectrumSpectralAxis::operator/(Float64 op) const {
+  CSpectrumSpectralAxis dividedAxis = *this;
+  dividedAxis /= op;
+  return dividedAxis;
+}
+
 inline CSpectrumSpectralAxis
 CSpectrumSpectralAxis::extract(Int32 startIdx, Int32 endIdx) const {
-  CSpectrumSpectralAxis spcaxis = CSpectrumAxis::extract(startIdx, endIdx);
+  CSpectrumSpectralAxis spcaxis(CSpectrumAxis::extract(startIdx, endIdx));
   spcaxis.m_isSorted = m_isSorted;
   spcaxis.m_isLogSampled = m_isLogSampled;
   spcaxis.m_regularLogSamplingStep = m_regularLogSamplingStep;

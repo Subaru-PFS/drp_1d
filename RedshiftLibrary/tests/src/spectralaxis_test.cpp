@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   // operator *=
   //------------
 
-  spcAxis *= 2;
+  spcAxis = 2 * spcAxis;
   BOOST_CHECK(spcAxis[0] == sample_in[0] * 2);
   BOOST_CHECK(spcAxis[1] == sample_in[1] * 2);
 
@@ -190,6 +190,11 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   BOOST_CHECK(spcAxis[0] == sample_in[0] * -4);
   BOOST_CHECK(spcAxis[1] == sample_in[1] * -4);
 
+  // operator /=
+  spcAxis = spcAxis / 2.;
+  BOOST_CHECK(spcAxis[0] == sample_in[0] * -2);
+  BOOST_CHECK(spcAxis[1] == sample_in[1] * -2);
+
   //
   sample_in.pop_back();
   CSpectrumSpectralAxis spcAxis_2(sample_in);
@@ -199,6 +204,8 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   spcAxis_2.resize(3);
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == false);
+
+  spcAxis += spcAxis;
 
   // SetSize
   //--------
@@ -242,22 +249,6 @@ BOOST_AUTO_TEST_CASE(MaskAxis_test) {
   CSpectrumSpectralAxis spcAxisMasked = spcAxis.MaskAxis(mask);
   BOOST_CHECK(spcAxisMasked.GetSamplesCount() == 1);
   BOOST_CHECK(spcAxisMasked[0] == sample_in[2]);
-}
-
-BOOST_AUTO_TEST_CASE(ApplyOffset) {
-  const TFloat64List array{1., 2., 3.};
-  CSpectrumSpectralAxis axis(array);
-  axis.ApplyOffset(1.);
-
-  const CSpectrumSpectralAxis &const_Axis = axis;
-  BOOST_CHECK_CLOSE(const_Axis[0], 2., 1.e-12);
-  BOOST_CHECK_CLOSE(const_Axis[1], 3., 1.e-12);
-  BOOST_CHECK_CLOSE(const_Axis[2], 4., 1.e-12);
-
-  axis.ApplyOffset(0.);
-  BOOST_CHECK_CLOSE(axis[0], 2., 1.e-12);
-  BOOST_CHECK_CLOSE(axis[1], 3., 1.e-12);
-  BOOST_CHECK_CLOSE(axis[2], 4., 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(Operator) {

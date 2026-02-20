@@ -82,25 +82,19 @@ void CSpectrumSpectralAxis::convertToVacuum(std::string const &AirVacuum) {
   }
 }
 
-CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(const Float64 op) {
-  CSpectrumAxis::operator*=(op);
+CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(Float64 op) {
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
   if (op < 0 && !indeterminate(m_isSorted))
     m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
   if (!op)
     m_isSorted = (GetSamplesCount() < 2);
   return *this;
 }
-CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator/=(const Float64 op) {
-  CSpectrumAxis::operator/=(op);
-  if (op < 0 && !indeterminate(m_isSorted))
-    m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
-  if (!op)
-    m_isSorted = (GetSamplesCount() < 2);
-  return *this;
-}
+
 CSpectrumSpectralAxis
 CSpectrumSpectralAxis::MaskAxis(const TMaskList &mask) const {
-  CSpectrumSpectralAxis spc_axis = CSpectrumAxis::MaskAxis(mask);
+  CSpectrumSpectralAxis spc_axis(CSpectrumAxis::MaskAxis(mask));
   spc_axis.m_isSorted = m_isSorted;
   if (spc_axis.GetSamplesCount() < 2)
     spc_axis.m_isSorted = true;
@@ -143,15 +137,6 @@ CSpectrumSpectralAxis::ShiftByWaveLengthInPlace(Float64 wavelengthOffset,
     }
   }
   return *this;
-}
-
-void CSpectrumSpectralAxis::ApplyOffset(Float64 wavelengthOffset) {
-  Int32 nSamples = m_Samples.size();
-  for (Int32 i = 0; i < nSamples; i++) {
-    m_Samples[i] += wavelengthOffset;
-  }
-  if (!wavelengthOffset)
-    m_isLogSampled = false;
 }
 
 /**
@@ -490,11 +475,6 @@ bool CSpectrumSpectralAxis::isSorted() const {
       m_isSorted = true;
   }
   return bool(m_isSorted);
-}
-void CSpectrumSpectralAxis::resetAxisProperties() {
-  // reset states since m_Samples is going to change
-  m_isSorted = indeterminate;
-  m_isLogSampled = indeterminate;
 }
 
 CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {

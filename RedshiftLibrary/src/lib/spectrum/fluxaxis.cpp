@@ -97,7 +97,7 @@ void CSpectrumFluxAxis::clear() {
 CSpectrumFluxAxis CSpectrumFluxAxis::MaskAxis(const TMaskList &mask) const {
   CSpectrumFluxAxis masked_flux_axis(CSpectrumAxis::MaskAxis(mask));
   if (m_hasStdError)
-    masked_flux_axis.setError(m_StdError.MaskAxis(mask));
+    masked_flux_axis.setError(CSpectrumNoiseAxis(m_StdError.MaskAxis(mask)));
   return masked_flux_axis;
 }
 
@@ -278,14 +278,26 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
   return corrected;
 }
 
-bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {
-  if (other.GetSamplesCount() != GetSamplesCount())
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "other.GetSamplesCount() != GetSamplesCount()");
-
-  Int32 N = GetSamplesCount();
-  for (Int32 i = 0; i < N; i++) {
-    m_Samples[i] = m_Samples[i] - other[i];
+CSpectrumFluxAxis &
+CSpectrumFluxAxis::operator+=(CSpectrumFluxAxis const &other) {
+  CSpectrumAxis::operator+=(other);
+  if (other.HasError()) {
+    if (HasError())
+      m_StdError += other.GetError();
+    else
+      setError(other.GetError());
   }
-  return true;
+  return *this;
+}
+
+CSpectrumFluxAxis &
+CSpectrumFluxAxis::operator-=(CSpectrumFluxAxis const &other) {
+  CSpectrumAxis::operator-=(other);
+  if (other.HasError()) {
+    if (HasError())
+      m_StdError += other.GetError();
+    else
+      setError(other.GetError());
+  }
+  return *this;
 }

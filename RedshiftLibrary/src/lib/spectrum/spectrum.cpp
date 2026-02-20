@@ -295,7 +295,7 @@ void CSpectrum::EstimateContinuum() const {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
   } else if (m_estimationMethod == "manual") {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
-    m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
+    m_WithoutContinuumFluxAxis -= m_ContinuumFluxAxis;
   } else {
     THROWG(ErrorCode::INTERNAL_ERROR, "Unknown continuum estimation method");
   }
@@ -305,7 +305,7 @@ void CSpectrum::EstimateContinuum() const {
   // Fill m_ContinuumFluxAxis
   if (m_estimationMethod != "manual") {
     m_ContinuumFluxAxis = m_RawFluxAxis;
-    m_ContinuumFluxAxis.Subtract(m_WithoutContinuumFluxAxis);
+    m_ContinuumFluxAxis -= m_WithoutContinuumFluxAxis;
   }
 
   alreadyRemoved = true;

@@ -46,10 +46,6 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(noiseaxis_test)
 
 BOOST_AUTO_TEST_CASE(constructor_test) {
-  {
-    CSpectrumNoiseAxis noiseAxis;
-    BOOST_CHECK(noiseAxis.GetSamplesCount() == 0);
-  }
 
   CSpectrumNoiseAxis noiseAxis;
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 0);
@@ -89,6 +85,14 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(noiseAxis2c.GetSamplesCount() == 1);
   BOOST_CHECK(noiseAxis2c[0] == 0.0);
 
+  // construct from base CSpectrumAxis
+  CSpectrumAxis axis;
+  CSpectrumNoiseAxis noiseAxis2d(axis);
+  BOOST_CHECK(noiseAxis2d.GetSamplesCount() == 0);
+
+  CSpectrumNoiseAxis noiseAxis2e(std::move(axis));
+  BOOST_CHECK(noiseAxis2e.GetSamplesCount() == 0);
+
   // SetSize
   noiseAxis.resize(2);
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 2);
@@ -106,11 +110,51 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(noiseAxis[1] == INFINITY);
   BOOST_CHECK(noiseAxis[2] == 0.5);
 
+  // sum
+  BOOST_CHECK_THROW(noiseAxis2 + noiseAxis4, AmzException);
+  CSpectrumNoiseAxis noiseAxis7(TFloat64List{
+      0.,
+      3,
+  });
+  CSpectrumNoiseAxis sumAxis2(TFloat64List{2., 4.});
+  sumAxis2 += noiseAxis7;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
+  sumAxis2 = CSpectrumNoiseAxis(TFloat64List{2., 4.});
+  sumAxis2 = sumAxis2 + noiseAxis7;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
+  //////////// DEBUGING //////////////////
+  CSpectrumAxis axis7(noiseAxis7);
+  CSpectrumNoiseAxis noiseAxis8(TFloat64List{2., 4.});
+  sumAxis2 = axis7 + noiseAxis8;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
+  CSpectrumAxis &axis7_ref(noiseAxis7);
+  sumAxis2 = axis7_ref + noiseAxis8;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
+  // diff
+  BOOST_CHECK_THROW(noiseAxis2 - noiseAxis4, AmzException);
+  sumAxis2 = CSpectrumNoiseAxis(TFloat64List{2., 4.});
+  sumAxis2 -= noiseAxis7;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
+  sumAxis2 = CSpectrumNoiseAxis(TFloat64List{2., 4.});
+  sumAxis2 = sumAxis2 - noiseAxis7;
+  BOOST_CHECK(sumAxis2[0] == 2.);
+  BOOST_CHECK(sumAxis2[1] == 5.);
+
   // extract
-  CSpectrumNoiseAxis noiseAxis2d = noiseAxis.extract(1, 2);
-  BOOST_CHECK(noiseAxis2d.GetSamplesCount() == 2);
-  BOOST_CHECK(noiseAxis2d[0] == INFINITY);
-  BOOST_CHECK(noiseAxis2d[1] == 0.5);
+  CSpectrumNoiseAxis noiseAxis2f = noiseAxis.extract(1, 2);
+  BOOST_CHECK(noiseAxis2f.GetSamplesCount() == 2);
+  BOOST_CHECK(noiseAxis2f[0] == INFINITY);
+  BOOST_CHECK(noiseAxis2f[1] == 0.5);
 
   // checkNoise
   TBoolList isValid{false, false, true};

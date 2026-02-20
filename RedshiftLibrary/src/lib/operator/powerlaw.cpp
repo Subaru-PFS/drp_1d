@@ -825,7 +825,7 @@ T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
           std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), NAN)));
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
-      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
+      CSpectrumFluxAxis(TFloat64List(spectrumLambdaRest.GetSamplesCount(), 1)));
   templateForCoefs.InitIsmIgmConfig(redshift);
   for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
     if (opt_extinction) { // igm
@@ -849,7 +849,7 @@ TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
   // at 1, and apply ism/igm on it
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
-      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
+      CSpectrumFluxAxis(TFloat64List(spectrumLambdaRest.GetSamplesCount(), 1)));
   templateForCoefs.InitIsmIgmConfig(redshift);
 
   TList<Float64> correctionCoefs(spectrumLambdaRest.GetSamplesCount(), NAN);

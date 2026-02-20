@@ -59,17 +59,31 @@ public:
   explicit CSpectrumAxis(Int32 n, Float64 value = 0.0) : m_Samples(n, value){};
   CSpectrumAxis(const Float64 *samples, Int32 n)
       : m_Samples(samples, samples + n){};
-  CSpectrumAxis(const TFloat64List &samples) : m_Samples(samples){};
-  CSpectrumAxis(TFloat64List &&samples) : m_Samples(std::move(samples)){};
+  explicit CSpectrumAxis(const TFloat64List &samples) : m_Samples(samples){};
+  explicit CSpectrumAxis(TFloat64List &&samples)
+      : m_Samples(std::move(samples)){};
 
   virtual ~CSpectrumAxis() = default;
   CSpectrumAxis &operator=(const CSpectrumAxis &other) = default;
   CSpectrumAxis &operator=(CSpectrumAxis &&other) = default;
   virtual CSpectrumAxis &operator*=(Float64 op);
   virtual CSpectrumAxis &operator/=(Float64 op);
+  virtual CSpectrumAxis &operator+=(CSpectrumAxis const &other);
+  virtual CSpectrumAxis &operator-=(CSpectrumAxis const &other);
   Float64 &operator[](Int32 i);
   const Float64 &operator[](Int32 i) const;
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
+  // virtual CSpectrumAxis operator+(CSpectrumAxis other) const;
+  // virtual CSpectrumAxis operator-(CSpectrumAxis other) const;
+  // Hidden friend symmetric operators (ie non-member, but here for ADL )
+  friend CSpectrumAxis operator*(CSpectrumAxis axis, Float64 op);
+  friend CSpectrumAxis operator*(Float64 op, CSpectrumAxis axis);
+  friend CSpectrumAxis operator+(CSpectrumAxis const &axis1,
+                                 CSpectrumAxis const &axis2);
+  friend CSpectrumAxis operator-(CSpectrumAxis const &axis1,
+                                 CSpectrumAxis const &axis2);
+  // member assymetric operator
+  CSpectrumAxis operator/(Float64 op) const;
 
   const Float64 *GetSamples() const;
   const TAxisSampleList &GetSamplesVector() const &;
@@ -83,15 +97,6 @@ public:
 
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
-  friend CSpectrumAxis operator*(const CSpectrumAxis &axis, const Float64 op) {
-    CSpectrumAxis multipliedAxis = axis;
-    multipliedAxis *= op;
-    return multipliedAxis;
-  }
-
-  friend CSpectrumAxis operator*(const Float64 op, const CSpectrumAxis &axis) {
-    return axis * op;
-  }
 
 protected:
   TAxisSampleList m_Samples;
@@ -108,6 +113,7 @@ inline const Float64 &CSpectrumAxis::operator[](Int32 i) const {
 }
 
 inline CSpectrumAxis &CSpectrumAxis::operator*=(Float64 op) {
+  resetAxisProperties();
   std::transform(m_Samples.cbegin(), m_Samples.cend(), m_Samples.begin(),
                  [op](Float64 sample) { return sample * op; });
   return *this;
@@ -116,6 +122,67 @@ inline CSpectrumAxis &CSpectrumAxis::operator*=(Float64 op) {
 inline CSpectrumAxis &CSpectrumAxis::operator/=(Float64 op) {
   operator*=(1 / op);
   return *this;
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator+=(CSpectrumAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot sum axis of different sizes");
+  resetAxisProperties();
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(), std::plus<>());
+  return *this;
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator-=(CSpectrumAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Cannot subtract axis of different sizes");
+  resetAxisProperties();
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(), std::minus<>());
+  return *this;
+}
+
+inline CSpectrumAxis operator*(CSpectrumAxis axis, Float64 op) {
+  CSpectrumAxis multipliedAxis(std::move(axis));
+  multipliedAxis *= op;
+  return multipliedAxis;
+}
+
+inline CSpectrumAxis operator*(Float64 op, CSpectrumAxis axis) {
+  return std::move(axis) * op;
+}
+
+inline CSpectrumAxis operator+(CSpectrumAxis const &axis1,
+                               CSpectrumAxis const &axis2) {
+  CSpectrumAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumAxis operator-(CSpectrumAxis const &axis1,
+                               CSpectrumAxis const &axis2) {
+  CSpectrumAxis diffaxis(axis1);
+  diffaxis -= axis2;
+  return diffaxis;
+}
+
+// inline CSpectrumAxis CSpectrumAxis::operator+(CSpectrumAxis other) const {
+//   CSpectrumAxis sumaxis(std::move(other));
+//   sumaxis += *this;
+//   return sumaxis;
+// }
+
+// inline CSpectrumAxis CSpectrumAxis::operator-(CSpectrumAxis other) const {
+//   CSpectrumAxis diffaxis(std::move(other));
+//   diffaxis -= *this;
+//   return diffaxis;
+// }
+
+inline CSpectrumAxis CSpectrumAxis::operator/(Float64 op) const {
+  CSpectrumAxis dividedAxis = *this;
+  dividedAxis /= op;
+  return dividedAxis;
 }
 
 inline Int32 CSpectrumAxis::GetSamplesCount() const { return m_Samples.size(); }

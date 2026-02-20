@@ -307,7 +307,8 @@ BOOST_AUTO_TEST_CASE(continuum_test) {
   // InitSpectrum
   TFloat64List spectralList_2 = {0, 1, 2};
   TFloat64List fluxList_2 = {1, 2, 1};
-  CSpectrum spc_2(spectralList_2, fluxList_2);
+  CSpectrum spc_2{CSpectrumSpectralAxis(spectralList_2),
+                  CSpectrumFluxAxis(fluxList_2)};
   TAxisSampleList rawFlux2 = spc_2.GetRawFluxAxis_().GetSamplesVector();
   rawFlux2.pop_back();
   spc_2.GetRawFluxAxis_().setSamplesVector(rawFlux2);
