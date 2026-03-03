@@ -107,6 +107,15 @@ class TestFilterItem:
         with pytest.raises(APIException, match=r"INTERNAL_ERROR"):
             filter.apply()
 
+        df2 = pd.DataFrame({"col1": [0, 1, 2, 3]})
+        filter.key = "col1"
+        filter.instruction = "include"
+        filter.value = [1, 2]
+        assert filter.apply(df2).equals(pd.Series([False, True, True, False]))
+
+        filter.instruction = "exclude"
+        assert filter.apply(df2).equals(pd.Series([True, False, False, True]))
+
     def test_repr(self):
         filter = FilterItem("col1", "<", 2)
         assert filter.__repr__() == "Filter {'key': 'col1', 'instruction': '<', 'value': 2}"
