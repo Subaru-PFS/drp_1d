@@ -582,14 +582,6 @@ void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                         bool enableSetVelocity) {
   SetNominalAmplitudes(itplratio);
 
-  /* Reactivate this if once called with enableSetVelocity=true . ->
-  velocities must be imported from linemodelfitting if (enableSetVelocity) {
-    // Set the velocities from templates: todo auto switch when velfit is ON
-    m_CatalogTplRatio.GetCatalogVelocities(itplratio, m_velocityEmission,
-                                           m_velocityAbsorption);
-  }
-
-  */
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:

@@ -49,15 +49,5 @@ CLineRatioCatalog::CLineRatioCatalog(const std::string &name,
   }
 }
 
-void CLineRatioCatalog::addVelocity(const std::string &name, Float64 value) {
-  if (!m_Velocities.emplace(name, value).second)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           Formatter() << "Velocity for group " << name << " already exists");
-}
-
 void CLineRatioCatalog::setPrior(Float64 prior) { m_Prior = prior; }
 void CLineRatioCatalog::setIsmIndex(Float64 ismIndex) { m_IsmIndex = ismIndex; }
-
-Float64 CLineRatioCatalog::getVelocity(const std::string &velGroup) const {
-  return m_Velocities.at(velGroup);
-}

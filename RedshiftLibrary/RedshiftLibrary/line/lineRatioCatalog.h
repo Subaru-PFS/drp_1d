@@ -56,19 +56,16 @@ class CLineRatioCatalog : public CLineCatalog {
 public:
   CLineRatioCatalog(const std::string &name, const CLineCatalog &lineCatalog);
 
-  void addVelocity(const std::string &name, Float64 value);
   void setPrior(Float64 prior);
   void setIsmIndex(Float64 ismIndex);
 
   Float64 getPrior() const { return m_Prior; }
   const std::string &getName() const { return m_Name; }
   Int32 getIsmIndex() const { return m_IsmIndex; }
-  Float64 getVelocity(const std::string &group) const;
 
 private:
   //    CLineCatalog m_LineCatalog;
   std::string m_Name;
-  std::map<std::string, Float64> m_Velocities;
   Float64 m_Prior = 1;
   Int32 m_IsmIndex = 0;
 };

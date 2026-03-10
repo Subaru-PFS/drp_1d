@@ -117,8 +117,6 @@ BOOST_AUTO_TEST_CASE(BuilLineRatioCatalog) {
                                      "Hdelta_4101.7_E");
 
   CLineRatioCatalog lrCatalog("H", restFrameCatalog);
-  lrCatalog.addVelocity("velA", 200);
-  lrCatalog.addVelocity("velE", 100);
   lrCatalog.setPrior(0.2);
   lrCatalog.setIsmIndex(2);
 }

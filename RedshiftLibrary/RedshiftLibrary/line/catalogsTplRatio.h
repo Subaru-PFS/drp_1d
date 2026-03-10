@@ -78,7 +78,6 @@ public:
     return m_lineRatioCatalogs.at(idx).getIsmIndex();
   }
 
-  bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
   std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
       const std::vector<TLineModelElementParam_ptr> &LineModelElementList,
       Int32 enableISMCalzetti,
