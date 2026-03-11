@@ -426,6 +426,10 @@ public:
   }
   bool unionWith(const CRange<T> &r) { return getUnion(*this, r, *this); }
 
+  bool Include(const CRange<T> &range) const {
+    return (range.GetBegin() >= GetBegin() && range.GetEnd() <= GetEnd());
+  }
+
   static std::vector<CRange<T>>
   joinIntersections(std::vector<CRange<T>> ranges) {
 

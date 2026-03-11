@@ -104,10 +104,10 @@ public:
   TInt32Range
   GetIndexRangeAtWaveLengthRange(const TFloat64Range &waveLengthRange) const;
 
-  TLambdaRange GetLambdaRange() const;
+  TLambdaRange GetLambdaRange() const { return TLambdaRange(m_Samples); };
   void ClampLambdaRange(const TFloat64Range &range,
                         TFloat64Range &clampedRange) const;
-  void GetMask(const TFloat64Range &range, CMask &mask) const;
+  CMask GetMask(const TFloat64Range &range) const;
   Float64
   IntersectMaskAndComputeOverlapFraction(const TFloat64Range &lambdaRange,
                                          const CMask &omask) const;

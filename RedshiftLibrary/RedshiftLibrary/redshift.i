@@ -663,7 +663,6 @@ class CSpectrum
   void setObsID(const std::string& obsID);
 
   void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
 class CFullSpectrum: public CSpectrum
@@ -688,7 +687,6 @@ class CFullSpectrum: public CSpectrum
   void setObsID(const std::string& obsID);
 
   void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();

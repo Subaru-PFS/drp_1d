@@ -75,8 +75,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
   BOOST_CHECK(object_FluxAxis2.HasError() == false);
   BOOST_CHECK_THROW(object_FluxAxis2.GetError(), AmzException);
-  BOOST_CHECK(object_FluxAxis.GetWeight(0) == 1);
-  BOOST_CHECK(object_FluxAxis.GetInverseWeight(0) == 1);
+  BOOST_CHECK(object_FluxAxis2.GetInverseWeight(0) == 0);
 
   CSpectrumAxis spectrumAxis(n);
   CSpectrumNoiseAxis spectrumNoiseAxis(n);
@@ -300,33 +299,31 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
 
   Float64 mean;
   Float64 sdev;
-  bool result;
 
   //--------------------//
   // test ComputeMeanAndSDev
 
   // 1st case : size of mask != size of sample
   CMask mask(5);
-  BOOST_CHECK_THROW(
-      object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev),
-      AmzException);
+  BOOST_CHECK_THROW(object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask),
+                    AmzException);
 
   // 2nd case : mask = 0
   mask.SetSize(10);
   for (Int32 i = 0; i < mask.GetMasksCount(); i++) {
     mask[i] = 0;
   }
-  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
-  BOOST_CHECK(result == false);
-  BOOST_CHECK(mean != mean);
-  BOOST_CHECK(sdev != sdev);
+  BOOST_CHECK_NO_THROW(std::tie(mean, sdev) =
+                           object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask));
+  BOOST_CHECK(std::isnan(mean));
+  BOOST_CHECK(std::isnan(sdev));
 
   // 3rd case : mask = 1 for i=2 & i=3
   mask[2] = 1;
   mask[3] = 1;
   error_ref = TFloat64List(10, 0.5); // weight = 4
   object_CSpectrumFluxAxis.setError(CSpectrumNoiseAxis(error_ref));
-  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
+  std::tie(mean, sdev) = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask);
   Float64 sdev_ref = sqrt(
       (4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) / (8 - 32 / 8));
   BOOST_CHECK_CLOSE(mean, 35, precision);

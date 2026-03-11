@@ -458,38 +458,31 @@ BOOST_AUTO_TEST_CASE(Calcul) {
   Float64 mean = 0.0;
   Float64 std = 0.0;
 
-  bool result = spc.GetMeanAndStdFluxInRange(range1, mean, std);
-  BOOST_CHECK(result == true);
+  BOOST_CHECK_NO_THROW(std::tie(mean, std) =
+                           spc.GetMeanAndStdFluxInRange(range1));
   Float64 mean_out, std_out;
-  CMask mask;
   CSpectrumSpectralAxis spectralAxis = spc.GetSpectralAxis();
-  spectralAxis.GetMask(range1, mask);
+  CMask mask = spectralAxis.GetMask(range1);
   CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
-  result = fluxAxis.ComputeMeanAndSDev(mask, mean_out, std_out);
+  std::tie(mean_out, std_out) = fluxAxis.ComputeMeanAndSDev(mask);
   BOOST_CHECK_CLOSE(mean, mean_out, 1e-12);
   BOOST_CHECK_CLOSE(std, std_out, 1e-12);
 
-  result = spc.GetMeanAndStdFluxInRange(range2, mean, std);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.GetMeanAndStdFluxInRange(range2), AmzException);
 
-  result = spc.GetMeanAndStdFluxInRange(range3, mean, std);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.GetMeanAndStdFluxInRange(range3), AmzException);
 
   // GetLinearRegInRange
   TFloat64Range range4(spectralList[0], spectralList[1]);
-  Float64 a, b;
-  result = spc.GetLinearRegInRange(range4, a, b);
-  BOOST_CHECK(result == true);
+  auto [a, b] = spc.GetLinearRegInRange(range4);
   BOOST_CHECK_CLOSE(
       a, (fluxAxis[1] - fluxAxis[0]) / (spectralAxis[1] - spectralAxis[0]),
       1e-12);
   BOOST_CHECK_CLOSE(b, fluxAxis[1] - a * spectralAxis[1], 1e-12);
 
-  result = spc.GetLinearRegInRange(range2, a, b);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.GetLinearRegInRange(range2), AmzException);
 
-  result = spc.GetLinearRegInRange(range3, a, b);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(spc.GetLinearRegInRange(range3), AmzException);
 
   //-----------
   CSpectrum object_CSpectrum;

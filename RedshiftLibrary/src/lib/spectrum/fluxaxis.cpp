@@ -166,30 +166,42 @@ Float64 CSpectrumFluxAxis::computeMaxAbsValue(Int32 imin, Int32 imax) const {
   return maxabsval;
 }
 
-bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
-                                           Float64 &sdev) const {
-  if (mask.GetMasksCount() != GetSamplesCount())
+std::pair<Float64, Float64>
+CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask,
+                                      bool withWeight) const {
+  if (!mask.isEmpty() && mask.GetMasksCount() != GetSamplesCount())
     THROWG(ErrorCode::INTERNAL_ERROR,
            "mask.GetMasksCount() != GetSamplesCount()");
 
-  const CSpectrumNoiseAxis &error = GetError();
+  std::function getWeight = [](Int32 j) { return 1.; };
+  if (withWeight && HasError())
+    getWeight = [this](Int32 j) { return this->GetWeight(j); };
 
-  Int32 j;
+  std::function getmask = [&mask](Int32 j) { return mask[j]; };
+  if (mask.isEmpty())
+    getmask = [](Int32 j) { return Mask(1); };
 
-  Float64 sum = 0.0, sum2 = 0.0, weigthSum = 0.0, weigthSum2 = 0.0, weight;
+  Float64 mean = 0;
+  Float64 sdev = 0;
+  Float64 sum = 0.0;
+  Float64 sum2 = 0.0;
+  Float64 weigthSum = 0.0;
+  Float64 weigthSum2 = 0.0;
 
-  for (j = 0; j < GetSamplesCount(); j++) {
+  for (Int32 j = 0; j < GetSamplesCount(); j++) {
 #ifdef DEBUG_BUILD
-    if (!(mask[j] == 1 || mask[j] == 0))
+    if (!(getmask(j) == 1 || getmask(j) == 0))
       THROWG(ErrorCode::INTERNAL_ERROR, "bad mask");
 #endif
 
-    weight = 1.0 / (error[j] * error[j]);
+    auto weight_j = getWeight(j);
+    auto mask_j = getmask(j);
+    auto sample_j = m_Samples[j];
 
-    sum += mask[j] * m_Samples[j] * weight;
-    sum2 += mask[j] * m_Samples[j] * m_Samples[j] * weight;
-    weigthSum += mask[j] * weight;
-    weigthSum2 += mask[j] * weight * weight;
+    sum += mask_j * sample_j * weight_j;
+    sum2 += mask_j * sample_j * sample_j * weight_j;
+    weigthSum += mask_j * weight_j;
+    weigthSum2 += mask_j * weight_j * weight_j;
   }
 
   if (weigthSum > 0.0) {
@@ -197,12 +209,10 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
     sdev = sqrt((sum2 - mean * mean * weigthSum) /
                 (weigthSum - weigthSum2 / weigthSum));
   } else {
-    mean = NAN;
-    sdev = NAN;
-    return false;
+    return {NAN, NAN};
   }
 
-  return true;
+  return {mean, sdev};
 }
 
 Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {

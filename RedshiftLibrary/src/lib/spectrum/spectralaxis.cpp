@@ -186,29 +186,18 @@ CSpectrumSpectralAxis::GetMeanResolution(TInt32Range const &index_range) const {
 /**
  *
  */
-TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const {
-  if (m_Samples.size() < 2)
-    return TLambdaRange(0.0, 0.0);
-  return TLambdaRange(m_Samples[0], m_Samples[m_Samples.size() - 1]);
-}
-
-/**
- *
- */
-void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
-                                    CMask &mask) const {
-  TFloat64Range range = lambdaRange;
-
-  mask.SetSize(m_Samples.size());
+CMask CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange) const {
+  CMask mask(m_Samples.size());
 
   // weight = Spectrum over lambdarange flag
   for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    mask[i] = Mask(0);
     // If this sample is somewhere in a valid lambdaRange, tag weight with 1
-    if (m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd()) {
+    if (m_Samples[i] >= lambdaRange.GetBegin() &&
+        m_Samples[i] <= lambdaRange.GetEnd()) {
       mask[i] = Mask(1);
     }
   }
+  return mask;
 }
 
 /**

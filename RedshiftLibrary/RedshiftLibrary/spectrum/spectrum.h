@@ -143,9 +143,9 @@ public:
   Float64 GetMeanResolution() const;
   TLambdaRange GetLambdaRange() const;
 
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64 &mean,
-                                Float64 &std) const;
-  bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
+  std::pair<Float64, Float64>
+  GetMeanAndStdFluxInRange(TFloat64Range wlRange) const;
+  std::pair<Float64, Float64> GetLinearRegInRange(TFloat64Range wlRange) const;
 
   void computeContinuum(CContinuumEstimator &estimator) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;

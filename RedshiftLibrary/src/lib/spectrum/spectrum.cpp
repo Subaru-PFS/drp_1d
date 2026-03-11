@@ -339,34 +339,24 @@ TLambdaRange CSpectrum::GetLambdaRange() const {
   return m_SpectralAxis.GetLambdaRange();
 }
 
-bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64 &mean,
-                                         Float64 &std) const {
+std::pair<Float64, Float64>
+CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange) const {
+
   // wlrange should be totally included in the spectrum lambdarange
-  if (wlRange.GetBegin() < m_SpectralAxis.GetLambdaRange().GetBegin()) {
-    return false;
-  }
-  if (wlRange.GetEnd() > m_SpectralAxis.GetLambdaRange().GetEnd()) {
-    return false;
+  if (!m_SpectralAxis.GetLambdaRange().Include(wlRange)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "wlRange is not inside spectrum range");
   }
 
-  CMask mask;
-  m_SpectralAxis.GetMask(wlRange, mask);
-  Float64 _Mean = 0.0;
-  Float64 _SDev = 0.0;
-  GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev);
-
-  mean = _Mean;
-  std = _SDev;
-  return true;
+  CMask mask = m_SpectralAxis.GetMask(wlRange);
+  return GetFluxAxis().ComputeMeanAndSDev(mask);
 }
 
-bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
-                                    Float64 &b) const {
+std::pair<Float64, Float64>
+CSpectrum::GetLinearRegInRange(TFloat64Range wlRange) const {
   // wlrange should be totally included in the spectrum lambdarange
-  if (wlRange.GetBegin() < m_SpectralAxis.GetLambdaRange().GetBegin() ||
-      wlRange.GetEnd() > m_SpectralAxis.GetLambdaRange().GetEnd())
-    return false;
-
+  if (!m_SpectralAxis.GetLambdaRange().Include(wlRange)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "wlRange is not inside spectrum range");
+  }
   const CSpectrumFluxAxis &flux = GetFluxAxis();
 
   TInt32Range iRange = m_SpectralAxis.GetIndexRangeAtWaveLengthRange(wlRange);
@@ -387,9 +377,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a,
   gsl_fit_wlinear(x.data(), 1, w.data(), 1, y.data(), 1, n, &c0, &c1, &cov00,
                   &cov01, &cov11, &chisq);
 
-  a = c1;
-  b = c0;
-  return true;
+  return {c1, c0};
 }
 
 const std::string &CSpectrum::GetName() const { return m_Name; }

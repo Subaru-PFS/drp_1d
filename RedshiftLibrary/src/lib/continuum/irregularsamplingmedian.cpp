@@ -193,15 +193,12 @@ Float64 CContinuumIrregularSamplingMedian::FitBorder(const CSpectrum &s,
                                                      Int32 kstart, Int32 kend,
                                                      bool isRightBorder) const {
   const CSpectrumSpectralAxis &spectralAxis = s.GetSpectralAxis();
-  const CSpectrumFluxAxis &fluxAxis = s.GetRawFluxAxis();
 
   TFloat64Range range = TFloat64Range(spectralAxis[kstart], spectralAxis[kend]);
 
-  Float64 a;
-  Float64 b;
-  bool ret = s.GetLinearRegInRange(range, a, b);
+  auto [a, b] = s.GetLinearRegInRange(range);
   Int32 k = isRightBorder ? kend : kstart;
-  Float64 fitValue = ret ? spectralAxis[k] * a + b : fluxAxis[k];
+  Float64 fitValue = spectralAxis[k] * a + b;
 
   return fitValue;
 }

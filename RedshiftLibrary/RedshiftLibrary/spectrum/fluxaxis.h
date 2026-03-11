@@ -40,7 +40,7 @@
 #define _REDSHIFT_SPECTRUM_FLUXAXIS_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/noiseaxis.h"
 
@@ -68,17 +68,20 @@ public:
   bool HasError() const;
   const CSpectrumNoiseAxis &GetError() const;
   Float64 GetWeight(Int32 idx, Float64 normFactor = 1.0) const;
+  std::pair<Float64, Float64> GetMeanAndStd() const;
+  Float64 GetStd() const;
   Float64 GetInverseWeight(Int32 Idx, Float64 normFactor = 1.0) const;
   std::pair<TAxisSampleList, TAxisSampleList> GetSamplesAndErrorVector() &&;
   void setSamplesVector(TAxisSampleList axisList) override;
   void setError(CSpectrumNoiseAxis otherError);
   void resize(Int32 s, Float64 valudDef = 0.0) override;
   void clear() override;
+  void resetAxisProperties() override { m_meanAndStdevComputed = false; };
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
   bool ApplyMedianSmooth(Int32 kernelHalfWidth);
   Float64 computeMaxAbsValue(Int32 imin, Int32 imax) const;
-  bool ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
-                          Float64 &sdev) const;
+  std::pair<Float64, Float64> ComputeMeanAndSDev(const CMask &mask = {},
+                                                 bool withWeight = true) const;
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);
   const TBoolList checkFlux() const;
   bool correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax, Float64 coeffCorr);
@@ -116,6 +119,9 @@ private:
 
   CSpectrumNoiseAxis m_StdError; // STD
   bool m_hasStdError = false;
+  Float64 mutable m_mean = NAN;
+  Float64 mutable m_stdev = NAN;
+  bool mutable m_meanAndStdevComputed = false;
 };
 
 inline bool CSpectrumFluxAxis::HasError() const { return m_hasStdError; }
@@ -128,20 +134,26 @@ inline const CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() const {
 
 inline Float64 CSpectrumFluxAxis::GetWeight(Int32 idx,
                                             Float64 normFactor) const {
-  if (m_hasStdError) {
-    auto const &err = m_StdError[idx] * normFactor;
-    return 1 / (err * err);
-  }
-  return 1 / (normFactor * normFactor);
+  return 1 / GetInverseWeight(idx, normFactor);
 }
 
 inline Float64 CSpectrumFluxAxis::GetInverseWeight(Int32 idx,
                                                    Float64 normFactor) const {
-  if (m_hasStdError) {
-    auto const &err = m_StdError[idx] * normFactor;
-    return err * err;
+  auto err = m_hasStdError ? m_StdError[idx] : GetStd();
+  err *= normFactor;
+  return err * err;
+}
+
+inline std::pair<Float64, Float64> CSpectrumFluxAxis::GetMeanAndStd() const {
+  if (!m_meanAndStdevComputed) {
+    std::tie(m_mean, m_stdev) = ComputeMeanAndSDev({}, false);
+    m_meanAndStdevComputed = true;
   }
-  return 1;
+  return {m_mean, m_stdev};
+}
+
+inline Float64 CSpectrumFluxAxis::GetStd() const {
+  return GetMeanAndStd().second;
 }
 
 inline std::pair<TAxisSampleList, TAxisSampleList>
