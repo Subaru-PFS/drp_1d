@@ -44,7 +44,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinLinear::rebin(TAxisSampleList &rebinedFlux,
                          const TFloat64Range &range,
                          const CSpectrumSpectralAxis &targetSpectralAxis,
                          CMask &rebinedMask, const std::string opt_error_interp,
@@ -70,7 +70,7 @@ void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
       Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
-      rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+      rebinedFlux[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
       rebinedMask[cursor] = 1;
       if (handle_error) {
         if (opt_error_interp == "rebin")

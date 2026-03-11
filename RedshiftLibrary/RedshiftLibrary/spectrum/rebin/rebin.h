@@ -70,8 +70,7 @@ public:
   bool handleError(std::string const opt_error_interp) const;
 
 protected:
-  virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                     const TFloat64Range &range,
+  virtual void rebin(TAxisSampleList &rebinedFlux, const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CMask &rebinedMask, const std::string opt_error_interp,
                      const TAxisSampleList &Xtgt, TFloat64List &error_tmp,

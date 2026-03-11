@@ -299,7 +299,7 @@ CSpectrumFluxAxis CContinuumIrregularSamplingMedian::ProcessEstimateContinuum(
 
   medianSmoothAmplitude = max(meanSmoothAmplitude, medianSmoothAmplitude);
 
-  CSpectrumFluxAxis continuumFluxAxis(norig, 0.);
+  TAxisSampleList continuumFluxAxis(norig, 0.);
 
   auto [k0, k1] = FindEffectiveSpectrumBorder(fluxAxis);
 
@@ -364,5 +364,5 @@ CSpectrumFluxAxis CContinuumIrregularSamplingMedian::ProcessEstimateContinuum(
     continuumFluxAxis[j] = ysmoobig[j - k0 + nreflex];
   }
 
-  return continuumFluxAxis;
+  return CSpectrumFluxAxis(std::move(continuumFluxAxis));
 }

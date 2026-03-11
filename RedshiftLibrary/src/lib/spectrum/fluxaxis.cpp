@@ -36,11 +36,11 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <cinttypes>
 #include <cmath>
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
@@ -86,6 +86,7 @@ void CSpectrumFluxAxis::resize(Int32 s, Float64 valueDef) {
   CSpectrumAxis::resize(s, valueDef);
   if (m_hasStdError)
     m_StdError.resize(s, valueDef);
+  resetAxisProperties();
 }
 
 void CSpectrumFluxAxis::clear() {
@@ -107,6 +108,8 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth(Int32 kernelHalfWidth) {
 
   if (GetSamplesCount() < (kernelHalfWidth) + 1)
     return false;
+
+  resetAxisProperties();
 
   TAxisSampleList tmp(m_Samples.size());
 
@@ -132,6 +135,8 @@ bool CSpectrumFluxAxis::ApplyMeanSmooth(Int32 kernelHalfWidth) {
 
   if (GetSamplesCount() < (kernelHalfWidth) + 1)
     return false;
+
+  resetAxisProperties();
 
   TAxisSampleList tmp(m_Samples.size());
 
@@ -232,7 +237,7 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
                                                 Float64 coeffCorr) {
   bool corrected = false;
   Int32 nCorrected = 0;
-  CSpectrumNoiseAxis error = GetError();
+  auto const &error = GetError();
   Float64 maxNoise = -DBL_MAX;
   Float64 minFlux = DBL_MAX;
 
@@ -255,13 +260,17 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
     THROWG(ErrorCode::SPECTRUM_CORRECTION_ERROR,
            "Unable to find a max noise value");
 
+  TAxisSampleList newError;
   for (Int32 i = iMin; i <= iMax; i++) {
     // check noise & flux
     bool validSample = isNoiseValid[i] && isFluxValid[i];
 
     if (validSample)
       continue;
-    error[i] = maxNoise * coeffCorr;
+
+    if (!corrected)
+      newError = std::move(m_StdError).GetSamplesVector();
+    newError[i] = maxNoise * coeffCorr;
     m_Samples[i] = minFlux / coeffCorr;
     corrected = true;
     nCorrected++;
@@ -272,7 +281,8 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
                 << "    CSpectrumFluxAxis::" << __func__ << "- Corrected "
                 << nCorrected << " invalid samples with coeff (=" << coeffCorr
                 << "), minFlux=" << minFlux << ", maxNoise=" << maxNoise);
-    setError(std::move(error));
+    setError(CSpectrumNoiseAxis(std::move(newError)));
+    resetAxisProperties();
   }
 
   return corrected;

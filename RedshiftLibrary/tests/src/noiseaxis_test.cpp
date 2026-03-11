@@ -160,8 +160,7 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   TBoolList isValid{false, false, true};
   BOOST_CHECK(noiseAxis.checkNoise() == isValid);
   isValid = {true, true, true};
-  noiseAxis[0] = 0.5;
-  noiseAxis[1] = 0.5;
+  noiseAxis = CSpectrumNoiseAxis({0.5, 0.5, 0.5});
   BOOST_CHECK(noiseAxis.checkNoise() == isValid);
 }
 

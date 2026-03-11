@@ -521,7 +521,9 @@ BOOST_AUTO_TEST_CASE(CorrectFluxAndNoiseAxis_test) {
   BOOST_CHECK(fluxAxis.GetError()[0] == 1.0); // max valid noise * coeff
 
   // 1st value of flux is not valid
-  fluxAxis[0] = std::numeric_limits<double>::infinity();
+  auto flux = std::move(fluxAxis).GetSamplesVector();
+  flux[0] = std::numeric_limits<double>::infinity();
+  fluxAxis.setSamplesVector(std::move(flux));
   // short test on checkFlux
   TBoolList isValid(10, true);
   isValid[0] = false;

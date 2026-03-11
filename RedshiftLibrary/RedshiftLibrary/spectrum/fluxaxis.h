@@ -69,6 +69,7 @@ public:
   const CSpectrumNoiseAxis &GetError() const;
   Float64 GetWeight(Int32 idx, Float64 normFactor = 1.0) const;
   Float64 GetInverseWeight(Int32 Idx, Float64 normFactor = 1.0) const;
+  std::pair<TAxisSampleList, TAxisSampleList> GetSamplesAndErrorVector() &&;
   void setSamplesVector(TAxisSampleList axisList) override;
   void setError(CSpectrumNoiseAxis otherError);
   void resize(Int32 s, Float64 valudDef = 0.0) override;
@@ -143,10 +144,18 @@ inline Float64 CSpectrumFluxAxis::GetInverseWeight(Int32 idx,
   return 1;
 }
 
+inline std::pair<TAxisSampleList, TAxisSampleList>
+CSpectrumFluxAxis::GetSamplesAndErrorVector() && {
+  return {std::move(m_Samples), std::move(m_StdError).GetSamplesVector()};
+}
+
 inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
                                                     Int32 endIdx) const {
-  return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
-                           m_StdError.extract(startIdx, endIdx));
+  if (HasError())
+    return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
+                             m_StdError.extract(startIdx, endIdx));
+  else
+    return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx));
 }
 
 inline CSpectrumFluxAxis &CSpectrumFluxAxis::operator*=(Float64 op) {

@@ -93,15 +93,11 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
                                                 0.5, 0.6, 0.7, 0.8, 0.9, true);
   CSpectrum spc = CSpectrum();
-  CSpectrumSpectralAxis spectralAxis(10, false);
-  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
-  for (Int32 k = 0; k < spectralAxis.GetSamplesCount(); k++) {
-    spcAxis[k] = k;
-  }
-  spectralAxis.setSamplesVector(spcAxis);
+  TAxisSampleList wavelength(10);
+  std::iota(wavelength.begin(), wavelength.end(), 0);
+  CSpectrumSpectralAxis spectralAxis(std::move(wavelength));
 
-  CSpectrumFluxAxis modelfluxAxis(10);
-  TAxisSampleList modelSamples = modelfluxAxis.GetSamplesVector();
+  TAxisSampleList modelSamples(10);
   modelSamples[0] = 1.;
   modelSamples[1] = 1.;
   modelSamples[2] = 2.;
@@ -112,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   modelSamples[7] = 1.;
   modelSamples[8] = 1.;
   modelSamples[9] = 1.;
-  modelfluxAxis.setSamplesVector(modelSamples);
+  CSpectrumFluxAxis modelfluxAxis(modelSamples);
 
   spc.SetSpectralAndFluxAxes(std::move(spectralAxis), modelfluxAxis);
   Float64 winsize = 10000.;
@@ -137,10 +133,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes) {
   BOOST_CHECK_CLOSE(maxFluxnoContinuum, 2.0, 1e-12);
 
   winsize = 10000.;
-  mask.resize(10);
-  for (Int32 k = 0; k < 10; k++) {
-    mask[k] = 1.;
-  }
+  mask = TFloat64List(10, 1.);
   mask[4] = 0.;
   mask[5] = 0.;
 
@@ -198,23 +191,16 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
                                                 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
-  for (Int32 k = 0; k < n; k++) {
-    spcAxis[k] = k;
-  }
-  spectralAxis.setSamplesVector(spcAxis);
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
-  for (Int32 k = 0; k < n; k++) {
-    modelfluxAxis[k] = k;
-  }
+  TAxisSampleList spcAxis(n);
+  std::iota(spcAxis.begin(), spcAxis.end(), 0);
+  CSpectrumSpectralAxis spectralAxis(spcAxis);
 
   Float64 sigma1 = 0.3;
   Float64 mu1 = 20.;
   Float64 A1 = 1.2;
   for (Int32 k = mu1 - 10; k <= mu1 + 10; k++) {
-    modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
-                        exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
+    spcAxis[k] += A1 / (sigma1 * 2.506597694086548) *
+                  exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
@@ -226,14 +212,15 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra) {
   Float64 mu2 = 70.;
   Float64 A2 = 2.2;
   for (Int32 k = mu2 - 10; k <= mu2 + 10; k++) {
-    modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
-                        exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
+    spcAxis[k] += A1 / (sigma1 * 2.506597694086548) *
+                  exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
   auto const line2 = CLineDetected(
       "Line2", mu2, CLine::EType::nType_Emission, profilesym->Clone(),
       CLine::EForce::nForce_Strong, A2, sigma2, 5.8);
 
-  CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
+  CSpectrum spc =
+      CSpectrum(std::move(spectralAxis), CSpectrumFluxAxis(std::move(spcAxis)));
 
   CLineDetectionResult lineDetectionResult;
   CLineDetectedMap strongLines;
@@ -288,22 +275,16 @@ BOOST_AUTO_TEST_CASE(Retest) {
   CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission,
                                                 0.5, 0.6, 0.7, 0.8, 0.9, true);
   Int32 n = 200;
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
-  for (Int32 k = 0; k < n; k++) {
-    spcAxis[k] = k;
-  }
-  spectralAxis.setSamplesVector(spcAxis);
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
-  for (Int32 k = 0; k < n; k++) {
-    modelfluxAxis[k] = k;
-  }
+  TAxisSampleList spcAxis(n);
+  std::iota(spcAxis.begin(), spcAxis.end(), 0);
+  CSpectrumSpectralAxis spectralAxis(spcAxis);
+
   Float64 sigma1 = 0.3;
   Float64 mu1 = 20.;
   Float64 A1 = 1.2;
   for (Int32 k = mu1 - 10; k <= mu1 + 10; k++) {
-    modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
-                        exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
+    spcAxis[k] += A1 / (sigma1 * 2.506597694086548) *
+                  exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
@@ -315,14 +296,15 @@ BOOST_AUTO_TEST_CASE(Retest) {
   Float64 mu2 = 70.;
   Float64 A2 = 2.2;
   for (Int32 k = mu2 - 10; k <= mu2 + 10; k++) {
-    modelfluxAxis[k] += A2 / (sigma2 * 2.506597694086548) *
-                        exp(-(k - mu2) * (k - mu2) / (2 * sigma2 * sigma2));
+    spcAxis[k] += A2 / (sigma2 * 2.506597694086548) *
+                  exp(-(k - mu2) * (k - mu2) / (2 * sigma2 * sigma2));
   }
   auto const line2 = CLineDetected(
       "Line2", mu2, CLine::EType::nType_Emission, profilesym->Clone(),
       CLine::EForce::nForce_Strong, A2, sigma2, 5.8);
 
-  CSpectrum spc = CSpectrum(std::move(spectralAxis), std::move(modelfluxAxis));
+  CSpectrum spc =
+      CSpectrum(std::move(spectralAxis), CSpectrumFluxAxis(std::move(spcAxis)));
 
   CLineDetectionResult lineDetectionResult;
   CLineDetectedMap strongLines;
@@ -375,19 +357,20 @@ BOOST_AUTO_TEST_CASE(Retest) {
   TInt32RangeList retestPeaks2;
   retestPeaks2.push_back(TInt32Range(5, 35));
 
-  modelfluxAxis = CSpectrumFluxAxis(spc.GetSampleCount());
+  spcAxis = TAxisSampleList(n);
+  std::iota(spcAxis.begin(), spcAxis.end(), 0);
   for (Int32 k = 0; k < spc.GetSampleCount(); k++) {
-    modelfluxAxis[k] = k;
+    spcAxis[k] = k;
   }
   for (Int32 k = mu1 - 10; k <= mu1 + 10; k++) {
-    modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
-                        exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
+    spcAxis[k] += A1 / (sigma1 * 2.506597694086548) *
+                  exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
   for (Int32 k = mu2 - 10; k <= mu2 + 10; k++) {
-    modelfluxAxis[k] += A1 / (sigma1 * 2.506597694086548) *
-                        exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
+    spcAxis[k] += A1 / (sigma1 * 2.506597694086548) *
+                  exp(-(k - mu1) * (k - mu1) / (2 * sigma1 * sigma1));
   }
-  spc.SetFluxAxis(std::move(modelfluxAxis));
+  spc.SetFluxAxis(CSpectrumFluxAxis(std::move(spcAxis)));
 
   CLineDetectionResult lineDetectionResult2;
   lineDetection.Retest(lineDetectionResult2, spc, retestPeaks2,
@@ -411,12 +394,10 @@ BOOST_AUTO_TEST_CASE(Retest) {
 
 BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
   Int32 n = 250;
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  TAxisSampleList fluxAxis = spectralAxis.GetSamplesVector();
-  for (Int32 k = 0; k < n; k++) {
-    fluxAxis[k] = k;
-  }
-  spectralAxis.setSamplesVector(fluxAxis);
+
+  TAxisSampleList wavelength(n);
+  std::iota(wavelength.begin(), wavelength.end(), 0);
+  CSpectrumSpectralAxis spectralAxis(std::move(wavelength));
 
   TInt32RangeList peak;
   peak.push_back(TInt32Range(-5, 35));
@@ -451,31 +432,24 @@ BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop) {
 
 void addLine(CSpectrumFluxAxis &spectrumFluxAxis, Float64 sigma, Float64 mu,
              Float64 A) {
+  auto fluxVector = std::move(spectrumFluxAxis).GetSamplesVector();
   for (Int32 k = mu - sigma * 5; k <= mu + sigma * 5; k++) {
-    spectrumFluxAxis[k] += A * exp(-(k - mu) * (k - mu) / (2 * sigma * sigma));
+    fluxVector[k] += A * exp(-(k - mu) * (k - mu) / (2 * sigma * sigma));
   }
+  spectrumFluxAxis.setSamplesVector(std::move(fluxVector));
 }
 
 BOOST_AUTO_TEST_CASE(Compute) {
   CLineDetection lineDetection = CLineDetection(CLine::EType::nType_Emission);
 
   Int32 n = 2000;
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  TAxisSampleList spcAxis = spectralAxis.GetSamplesVector();
-  for (Int32 k = 0; k < n; k++) {
-    spcAxis[k] = k;
-  }
-  spectralAxis.setSamplesVector(spcAxis);
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
-  for (Int32 k = 0; k < n; k++) {
-    modelfluxAxis[k] = k * 0.0001;
-  }
-  TFloat64List error;
-  error.resize(n);
-  for (Int32 k = 0; k < n; k++) {
-    error[k] = k * 0.0001;
-  }
-  modelfluxAxis.setError(CSpectrumNoiseAxis(error));
+  TAxisSampleList incVector(n);
+  std::iota(incVector.begin(), incVector.end(), 0);
+  CSpectrumSpectralAxis spectralAxis(incVector);
+
+  CSpectrumFluxAxis modelfluxAxis(std::move(incVector));
+  modelfluxAxis *= 0.0001;
+  modelfluxAxis.setError(CSpectrumNoiseAxis(modelfluxAxis));
   TInt32RangeList resPeaks;
 
   addLine(modelfluxAxis, 4., 40., 1.5);

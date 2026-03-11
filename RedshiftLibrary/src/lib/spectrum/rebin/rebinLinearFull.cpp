@@ -43,7 +43,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinLinearFull::rebin(TAxisSampleList &rebinedFlux,
                              const TFloat64Range &range,
                              const CSpectrumSpectralAxis &targetSpectralAxis,
                              CMask &rebinedMask,
@@ -73,11 +73,11 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // If both samples arround subsample are valid, compute flux, otherwise,
       // set mask & flux to 0
       if (origin.getMask()[k] && origin.getMask()[k + 1]) {
-        rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+        rebinedFlux[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
         rebinedMask[cursor] = 1;
       } else {
         rebinedMask[cursor] = 0;
-        rebinedFluxAxis[cursor] = 0;
+        rebinedFlux[cursor] = 0;
       }
 
       // Same for error

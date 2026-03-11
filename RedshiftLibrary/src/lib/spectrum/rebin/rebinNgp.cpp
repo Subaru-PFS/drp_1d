@@ -45,8 +45,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                      const TFloat64Range &range,
+void CRebinNgp::rebin(TAxisSampleList &rebinedFlux, const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CMask &rebinedMask, const std::string opt_error_interp,
                       const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
@@ -75,7 +74,7 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       xSrcStep = Xsrc[k + 1] - Xsrc[k];
 
     // closest value
-    rebinedFluxAxis[cursor] = Ysrc[k];
+    rebinedFlux[cursor] = Ysrc[k];
 
     if (handle_error) {
 

@@ -237,10 +237,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
 
   const CSpectrumFluxAxis &modelFluxAxis = modelSpc.GetFluxAxis();
-  CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
-  for (Int32 i = 0; i < continuumOrthoFluxAxis.GetSamplesCount(); i++) {
-    continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
-  }
+  CSpectrumFluxAxis continuumOrthoFluxAxis =
+      tplOrtho->GetFluxAxis() - modelFluxAxis;
   tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));
 
   return tplOrtho;

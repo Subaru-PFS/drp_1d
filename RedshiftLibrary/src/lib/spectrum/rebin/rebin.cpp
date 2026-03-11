@@ -65,7 +65,7 @@ void CRebin::compute(const TFloat64Range &range,
 
   bool const handle_error = handleError(opt_error_interp);
 
-  CSpectrumFluxAxis rebinedFluxAxis(s);
+  TAxisSampleList rebinedFlux(s);
 
   rebinedMask.SetSize(s);
 
@@ -77,26 +77,26 @@ void CRebin::compute(const TFloat64Range &range,
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] < range.GetBegin()) {
     rebinedMask[cursor] = 0;
-    rebinedFluxAxis[cursor] = 0.0;
+    rebinedFlux[cursor] = 0.0;
     if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
 
-  rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedMask,
-        opt_error_interp, Xtgt, error_tmp, cursor);
+  rebin(rebinedFlux, range, targetSpectralAxis, rebinedMask, opt_error_interp,
+        Xtgt, error_tmp, cursor);
 
   // For every sample "after" the end of targetSpectralAxis set mask to 0 etc
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
-    rebinedFluxAxis[cursor] = 0.0;
+    rebinedFlux[cursor] = 0.0;
     if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
-
+  CSpectrumFluxAxis rebinedFluxAxis(std::move(rebinedFlux));
   if (handle_error)
-    rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
+    rebinedFluxAxis.setError(CSpectrumNoiseAxis(std::move(error_tmp)));
   rebinedSpectrum.ResetContinuum();
   rebinedSpectrum.SetType(CSpectrum::EType::raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,

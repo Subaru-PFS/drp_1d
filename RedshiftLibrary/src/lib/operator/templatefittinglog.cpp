@@ -1350,7 +1350,7 @@ COperatorTemplateFittingLog::ComputeSpectrumModel(
 
 CMask COperatorTemplateFittingLog::maskTemplate() {
   auto const &spectralAxis = m_templateRebined_bf[0].GetSpectralAxis();
-  auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis();
+  auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector();
 
   auto const range = spectralAxis.GetLambdaRange();
   auto const mask = m_maskBuilder->getMask(spectralAxis, range, 0.0, 0);
@@ -1358,7 +1358,7 @@ CMask COperatorTemplateFittingLog::maskTemplate() {
     if (!mask[i])
       fluxAxis[i] = 0.0;
   }
-  m_templateRebined_bf[0].SetFluxAxis(std::move(fluxAxis));
+  m_templateRebined_bf[0].SetFluxAxis(CSpectrumFluxAxis(std::move(fluxAxis)));
   return mask;
 }
 

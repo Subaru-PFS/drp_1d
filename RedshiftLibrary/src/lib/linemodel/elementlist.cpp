@@ -260,7 +260,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx,
 }
 
 void CLineModelElementList::addToSpectrumAmplitudeOffset(
-    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelfluxAxis,
+    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelFluxAxis,
     const TInt32List &eIdx_list, CLine::EType lineTypeFilter) const {
 
   const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
@@ -273,7 +273,9 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
   // big fraction. It can lead to shared pixels
   // between elements considered not overlapped. In this case we should not add
   // the overlapped polynomes, but choose one of them.
-  TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
+  TInt32List mask(modelFluxAxis.GetSamplesCount(), 1);
+  auto [modelFlux, modelError] =
+      std::move(modelFluxAxis).GetSamplesAndErrorVector();
   for (const auto &[_, group_eIdx_list] : ampOffsetGroups) {
     // filter out not fittable elements
     TInt32List valid_eIdx_list;
@@ -288,10 +290,13 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
                               ->getElementParam()
                               ->GetPolynomCoeffs();
     for (Int32 s : samples) {
-      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      modelFlux[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
       mask[s] = 0; // one sample can only be written once
     }
   }
+  modelFluxAxis = CSpectrumFluxAxis(std::move(modelFlux));
+  if (!modelError.empty())
+    modelFluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
 }
 
 /**

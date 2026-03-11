@@ -70,8 +70,7 @@ public:
   virtual CSpectrumAxis &operator/=(Float64 op);
   virtual CSpectrumAxis &operator+=(CSpectrumAxis const &other);
   virtual CSpectrumAxis &operator-=(CSpectrumAxis const &other);
-  Float64 &operator[](Int32 i);
-  const Float64 &operator[](Int32 i) const;
+  Float64 operator[](Int32 i) const;
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
   // virtual CSpectrumAxis operator+(CSpectrumAxis other) const;
   // virtual CSpectrumAxis operator-(CSpectrumAxis other) const;
@@ -103,14 +102,7 @@ protected:
   virtual void resetAxisProperties(){}; // by default it does nothing
 };
 
-inline Float64 &CSpectrumAxis::operator[](Int32 i) {
-  resetAxisProperties();
-  return m_Samples[i];
-}
-
-inline const Float64 &CSpectrumAxis::operator[](Int32 i) const {
-  return m_Samples[i];
-}
+inline Float64 CSpectrumAxis::operator[](Int32 i) const { return m_Samples[i]; }
 
 inline CSpectrumAxis &CSpectrumAxis::operator*=(Float64 op) {
   resetAxisProperties();

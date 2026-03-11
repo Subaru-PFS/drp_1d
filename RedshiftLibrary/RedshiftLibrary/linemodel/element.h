@@ -129,11 +129,6 @@ public:
                           CSpectrumFluxAxis &modelfluxAxis,
                           const CSpectrumFluxAxis &continuumfluxAxis,
                           Float64 redshift, Int32 line_index = undefIdx) const;
-  void
-  addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
-                             CSpectrumFluxAxis &modelfluxAxis,
-                             const CSpectrumFluxAxis &continuumFluxAxis,
-                             Float64 redshift, bool emissionLine) const;
 
   void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                          const CSpectrumFluxAxis &continuumfluxAxis,
