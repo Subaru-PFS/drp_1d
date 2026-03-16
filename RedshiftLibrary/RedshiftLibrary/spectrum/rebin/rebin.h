@@ -83,7 +83,7 @@ protected:
 };
 
 inline bool CRebin::handleError(std::string const opt_error_interp) const {
-  return m_spectrum.GetRawFluxAxis().HasError() && (opt_error_interp != "no");
+  return m_spectrum.GetFluxAxis().HasError() && (opt_error_interp != "no");
 }
 } // namespace NSEpic
 #endif

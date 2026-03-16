@@ -289,8 +289,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
     Int32 kM, Int32 kEbmv_, Float64 redshift, CMask const &mask,
     Int32 spcIndex) {
   const CSpectrumFluxAxis &spcFluxAxis = m_spectra[spcIndex]->GetFluxAxis();
-  const CSpectrumFluxAxis &spcFluxAxis_for_weight =
-      m_spectra[spcIndex]->GetRawFluxAxis();
   const TAxisSampleList &Yspc = spcFluxAxis.GetSamplesVector();
   const TAxisSampleList &Ytpl =
       m_templateRebined_bf[spcIndex].GetFluxAxis().GetSamplesVector();
@@ -326,7 +324,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
 
     if (mask[j]) {
 
-      err2 = spcFluxAxis_for_weight.GetWeight(j);
+      err2 = spcFluxAxis.GetWeight(j);
 
       // Tonry&Davis formulation
       sumCross += Yspc[j] * Ytpl[j] * err2;

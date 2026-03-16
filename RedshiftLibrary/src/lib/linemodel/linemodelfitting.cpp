@@ -298,16 +298,12 @@ TFloat64List CLineModelFitting::getTplratio_priors() const {
   return m_lineRatioManager->getTplratio_priors();
 }
 
-bool CLineModelFitting::initDtd() {
+void CLineModelFitting::initDtd() {
   m_spectraIndex.setAtBegining();
   m_dTransposeDLambdaRange = getLambdaRange();
-  if (isContinuumComponentFitter())
-    m_dTransposeD = EstimateDTransposeD("raw");
-  else
-    m_dTransposeD = EstimateDTransposeD("noContinuum");
-
-  m_likelihood_cstLog = EstimateLikelihoodCstLog();
-  return true;
+  auto const &component = isContinuumComponentFitter() ? "raw" : "noContinuum";
+  m_dTransposeD = EstimateDTransposeD(component);
+  m_likelihood_cstLog = EstimateLikelihoodCstLog(component);
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
@@ -1168,27 +1164,20 @@ Float64
 CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
 
   Float64 dtd = 0.0;
-  Float64 flux = 0.0;
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    const CSpectrumFluxAxis &Yspc = getSpectrumModel().getSpcFluxAxis();
-    const CSpectrumFluxAxis &YspcNoContinuum =
-        getSpectrumModel().getSpcFluxAxisNoContinuum();
-    auto const &spcFluxAxis = getSpectrum().GetFluxAxis();
+    const CSpectrumFluxAxis &Yspc =
+        (spcComponent == "noContinuum")
+            ? getSpectrumModel().getSpcFluxAxisNoContinuum()
+            : getSpectrumModel().getSpcFluxAxis();
 
-    auto const &[imin, imax] = getLambdaRange().getClosestInnerIndices(
-        spcSpectralAxis.GetSamplesVector());
-
-    for (Int32 j = imin; j <= imax; j++) {
-      if (spcComponent == "noContinuum")
-        flux = YspcNoContinuum[j];
-      else
-        flux = Yspc[j];
-
-      dtd += flux * flux * spcFluxAxis.GetWeight(j);
-    }
+    auto const &iRange = TInt32Range(getLambdaRange().getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector()));
+    dtd += std::transform_reduce(
+        iRange.begin(), iRange.end(), 0., std::plus(),
+        [&Yspc](Int32 j) { return Yspc[j] * Yspc[j] * Yspc.GetWeight(j); });
     Log.LogDebug(Formatter()
                  << "CLineModelFitting::EstimateDTransposeD val = " << dtd);
   }
@@ -1228,23 +1217,29 @@ void CLineModelFitting::setContinuumComponent(TContinuumComponent component) {
  * \brief this function estimates the likelihood_cstLog term withing the
  *wavelength range
  **/
-Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
+Float64 CLineModelFitting::EstimateLikelihoodCstLog(
+    const std::string &spcComponent) const {
 
   Float64 cstLog = 0.0;
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    auto const &flux_for_weight = getSpectrum().GetFluxAxis();
 
-    Float64 sumLogNoise = 0.0;
+    auto const &flux_for_weight =
+        (spcComponent == "noContinuum")
+            ? getSpectrumModel().getSpcFluxAxisNoContinuum()
+            : getSpectrumModel().getSpcFluxAxis();
 
-    auto const &[imin, imax] = getLambdaRange().getClosestInnerIndices(
-        spcSpectralAxis.GetSamplesVector());
+    auto const &iRange = TInt32Range(getLambdaRange().getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector()));
 
-    Int32 numDevs = std::abs(imax - imin + 1);
-    for (Int32 j = imin; j <= imax; j++)
-      sumLogNoise += log(flux_for_weight.GetWeight(j));
+    Int32 numDevs = iRange.GetLength() + 1;
+    Float64 sumLogNoise =
+        std::transform_reduce(iRange.begin(), iRange.end(), 0., std::plus(),
+                              [&flux_for_weight](Int32 j) {
+                                return log(flux_for_weight.GetWeight(j));
+                              });
 
     cstLog += -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
   }

@@ -119,7 +119,6 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();
-  const auto &flux_for_weight = getSpectrum().GetFluxAxis();
 
   if (EltsIdx.size() < 1)
     THROWG(ErrorCode::IE_EMPTY_LIST, Formatter()
@@ -159,7 +158,7 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
     Float64 const yi = fluxAxis[idx] * normFactor;
-    Float64 const wi = flux_for_weight.GetWeight(idx, normFactor);
+    Float64 const wi = fluxAxis.GetWeight(idx, normFactor);
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, wi);
   }

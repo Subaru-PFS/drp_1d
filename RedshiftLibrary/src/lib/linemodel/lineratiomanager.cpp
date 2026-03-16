@@ -216,8 +216,6 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    const auto &flux_for_weight = getSpectrum().GetFluxAxis();
-
     const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
     const CSpectrumFluxAxis &Ymodel =
         getModel().GetModelSpectrum().GetFluxAxis();
@@ -226,10 +224,11 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
 
     auto const &irange =
         spcSpectralAxis.GetIndexRangeAtWaveLengthRange(getLambdaRange());
-    for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
-      diff = (Yspc[j] - Ymodel[j]);
-      fit += (diff * diff) * flux_for_weight.GetWeight(j);
-    }
+    fit += std::transform_reduce(irange.begin(), irange.end(), 0., std::plus(),
+                                 [&Yspc, &Ymodel](Int32 j) {
+                                   Float64 const diff = Yspc[j] - Ymodel[j];
+                                   return (diff * diff) * Yspc.GetWeight(j);
+                                 });
     if (std::isnan(fit)) {
       Log.LogDetail(
           Formatter()
@@ -243,7 +242,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
              "the true observed spectral axis lambdarange = ("
           << spcSpectralAxis[irange.GetBegin()] << ", "
           << spcSpectralAxis[irange.GetEnd()] << ")");
-      for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
+      for (Int32 j : irange) {
         if (std::isnan(Yspc[j])) {
           Log.LogDetail(
               Formatter()
@@ -260,7 +259,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
               << spcSpectralAxis[j]);
           break;
         }
-        Float64 const w = flux_for_weight.GetWeight(j);
+        Float64 const w = Yspc.GetWeight(j);
         if (std::isnan(w)) {
           Log.LogDetail(
               Formatter()

@@ -150,8 +150,6 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
   for (auto const iElt : EltsIdxToFit_ini)
     m_ElementsVector->SetElementAmplitude(iElt, 1.0, 0.0);
 
-  const auto &flux_for_weight = getSpectrum().GetFluxAxis();
-
   // Linear fit
   Float64 fval;
   double chisq;
@@ -178,7 +176,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
     Int32 idx = xInds[i];
     xi = spectralAxis[idx];
     yi = fluxAxis[idx] * normFactor;
-    wi = flux_for_weight.GetWeight(idx, normFactor);
+    wi = fluxAxis.GetWeight(idx, normFactor);
 
     gsl_vector_set(y, i, yi);
     gsl_vector_set(w, i, wi);

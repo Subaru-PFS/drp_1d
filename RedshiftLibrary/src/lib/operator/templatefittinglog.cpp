@@ -1375,9 +1375,9 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
 
     Float64 sumLogNoise = 0.0;
 
-    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
-        spcSpectralAxis.GetSamplesVector());
-    for (Int32 j = imin; j <= imax; j++) {
+    auto const &iRange = TInt32Range(lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector()));
+    for (auto j : iRange) {
       if (mask[j]) {
         numDevs++;
         sumLogNoise += log(flux_for_weight.GetWeight(j));

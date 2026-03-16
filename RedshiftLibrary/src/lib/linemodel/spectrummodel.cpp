@@ -404,7 +404,6 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   // and after to spectrumFluxAxis.GetError
   const CSpectrumFluxAxis &fluxRef =
       with_continuum ? getSpcFluxAxis() : getSpcFluxAxisNoContinuum();
-  auto const &flux_for_weight = getSpcFluxAxis();
 
   if (EltsIdx.empty())
     return std::make_pair(NAN, NAN);
@@ -419,7 +418,7 @@ CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
   TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
   for (Int32 const j : xInds) {
     diff = (Yspc[j] - Ymodel[j]);
-    Float64 const w = with_weight ? flux_for_weight.GetWeight(j) : 1.0;
+    Float64 const w = with_weight ? fluxRef.GetWeight(j) : 1.0;
     fit += (diff * diff) * w;
     sumErr += w;
   }
@@ -436,30 +435,25 @@ void CSpectrumModel::setContinuumComponent(
 
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
+  // the observed spectrum is the input spectrum
+  m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
+
   if (component.isNoContinuum()) {
-    // the continuum is set to zero and the observed spectrum is the spectrum
-    // without continuum
-    m_spcFluxAxisNoContinuum =
-        m_inputSpc
-            ->GetRawFluxAxis(); // m_inputSpc->GetWithoutContinuumFluxAxis();
-    m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
-    m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
+    // the continuum is set to zero
     m_ContinuumFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
+    m_spcFluxAxisNoContinuum = m_SpcFluxAxis;
+    m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
   }
   if (component.isFromSpectrum()) {
-    // the continuum is set to the spectrum continuum and the observed
-    // spectrum is the raw spectrum
-    m_spcFluxAxisNoContinuum = m_inputSpc->GetWithoutContinuumFluxAxis();
-    m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
+    // the continuum is set to the spectrum continuum
     m_ContinuumFluxAxis = m_inputSpc->GetContinuumFluxAxis();
+    m_spcFluxAxisNoContinuum = m_inputSpc->GetWithoutContinuumFluxAxis();
     m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   }
   if (component.isContinuumFit()) {
-    // the continuum is set to zero and the observed spectrum is the raw
-    // spectrum
-    m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
-    m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
+    // the continuum is initialized to zero (will be set later on)
     m_ContinuumFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
+    m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
   }
 }
 

@@ -64,8 +64,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
       m_normLbdaOffset(normLbdaOffset),
       m_spectralAxis(&fitter.getSpectrum().GetSpectralAxis()),
       m_noContinuumFluxAxis(&fitter.getModel().getSpcFluxAxisNoContinuum()),
-      m_continuumFluxAxis(&fitter.getModel().getContinuumFluxAxis()),
-      m_fluxAxis_for_weight(&fitter.getSpectrum().GetFluxAxis()) {
+      m_continuumFluxAxis(&fitter.getModel().getContinuumFluxAxis()) {
 
   // init normalized polynomial
   if (m_fitter->m_enableAmplitudeOffsets) {
@@ -82,7 +81,7 @@ CLbfgsbFitter::CLeastSquare::CLeastSquare(
     Float64 yi, wi;
     Int32 idx = (*m_xInds)[i];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
+    wi = (*m_noContinuumFluxAxis).GetWeight(idx, m_normFactor);
     sumSquare += yi * yi * wi;
 
     m_sumSquareData = sumSquare;
@@ -223,7 +222,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquare(
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
+    wi = (*m_noContinuumFluxAxis).GetWeight(idx, m_normFactor);
 
     // compute model value
     Float64 fval = 0.;
@@ -258,7 +257,7 @@ Float64 CLbfgsbFitter::CLeastSquare::ComputeLeastSquareAndGrad(
     Int32 idx = (*m_xInds)[i];
     xi = (*m_spectralAxis)[idx];
     yi = (*m_noContinuumFluxAxis)[idx] * m_normFactor;
-    wi = (*m_fluxAxis_for_weight).GetWeight(idx, m_normFactor);
+    wi = (*m_noContinuumFluxAxis).GetWeight(idx, m_normFactor);
 
     // compute model value and gradient
     Float64 fval = 0.;

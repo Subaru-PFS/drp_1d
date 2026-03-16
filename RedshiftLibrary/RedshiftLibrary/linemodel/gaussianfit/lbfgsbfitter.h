@@ -122,7 +122,6 @@ public:
     const CSpectrumSpectralAxis *m_spectralAxis;
     const CSpectrumFluxAxis *m_noContinuumFluxAxis;
     const CSpectrumFluxAxis *m_continuumFluxAxis;
-    const CSpectrumFluxAxis *m_fluxAxis_for_weight;
     CPolynomCoeffsNormalized m_pCoeffs;
     Float64 m_sumSquareData;
   };
