@@ -220,8 +220,6 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
     const CSpectrumFluxAxis &Ymodel =
         getModel().GetModelSpectrum().GetFluxAxis();
 
-    Float64 diff = 0.0;
-
     auto const &irange =
         spcSpectralAxis.GetIndexRangeAtWaveLengthRange(getLambdaRange());
     fit += std::transform_reduce(irange.begin(), irange.end(), 0., std::plus(),

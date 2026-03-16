@@ -849,7 +849,7 @@ void CLineModelFitting::updateResidualsAndContinuum(
     Int32 iRestLine, CLineModelSolution &modelSolution, Int32 eIdx,
     Int32 line_index) const {
   modelSolution.ResidualRMS[iRestLine] =
-      m_fitter->getModelResidualRmsUnderElements({eIdx}, true);
+      m_fitter->getModelResidualRmsUnderElements({eIdx});
 
   if (m_enableAmplitudeOffsets) {
     const auto &polynom_coeffs = getElementsParams()[eIdx]->m_ampOffsetsCoeffs;

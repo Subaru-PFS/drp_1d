@@ -396,14 +396,12 @@ Float64 CSpectrumModel::getMaxContinuumUnderElement(Int32 eIdx) const {
  **/
 std::pair<Float64, Float64>
 CSpectrumModel::getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
-                                                     bool with_continuum,
                                                      bool with_weight) const {
   // before elementlistcutting this variable was
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
   // and after to spectrumFluxAxis.GetError
-  const CSpectrumFluxAxis &fluxRef =
-      with_continuum ? getSpcFluxAxis() : getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &fluxRef = getSpcFluxAxis();
 
   if (EltsIdx.empty())
     return std::make_pair(NAN, NAN);

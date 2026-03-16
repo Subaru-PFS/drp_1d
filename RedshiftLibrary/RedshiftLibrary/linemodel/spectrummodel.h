@@ -100,7 +100,6 @@ public:
 
   std::pair<Float64, Float64>
   getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
-                                       bool with_continuum,
                                        bool with_weight = true) const;
 
   std::pair<Float64, Float64> getFluxDirectIntegration(
@@ -198,15 +197,14 @@ public:
   }
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
-                                           bool with_continuum,
                                            bool with_weight = true) const {
     Float64 fit_allObs = 0;
     Float64 sumErr_allObs = 0;
     std::size_t nb_nan = 0;
     for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
       auto [fit, sumErr] =
-          getSpectrumModel().getModelSquaredResidualUnderElements(
-              EltsIdx, with_continuum, with_weight);
+          getSpectrumModel().getModelSquaredResidualUnderElements(EltsIdx,
+                                                                  with_weight);
       if (fit == 0.0)
         continue;
       if (std::isnan(fit)) {
