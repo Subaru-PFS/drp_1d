@@ -126,10 +126,14 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
     if (isContinuumComponentPowerLawXXX()) {
       getModel().ApplyContinuumPowerLawOnGrid(*m_fitContinuum);
     } else {
-      std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-          {m_tplCategory}, m_fitContinuum->name);
+      auto &model = getModel();
+      bool logSampling = model.m_continuumFittingOperator->IsFFTProcessing();
 
-      getModel().ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
+      std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
+          {m_tplCategory}, m_fitContinuum->name, m_tplCatalog->m_orthogonal,
+          logSampling);
+
+      model.ApplyContinuumTplOnGrid(tpl, m_fitContinuum->redshift);
 
       setFitContinuum_tplAmplitude(m_fitContinuum->tplAmplitude,
                                    m_fitContinuum->tplAmplitudeError,
@@ -277,16 +281,7 @@ void CContinuumManager::setContinuumComponent(TContinuumComponent component) {
   }
 }
 
-void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
-  for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
-    std::shared_ptr<const CTemplate> tpl =
-        m_tplCatalog->GetTemplateByName({m_tplCategory}, m_fitContinuum->name);
-    getModel().ApplyContinuumTplOnGrid(tpl, redshift);
-  }
-}
-
-void CContinuumManager::reinterpolateContinuumResetAmp() {
-  reinterpolateContinuum(m_fitContinuum->redshift);
+void CContinuumManager::setFitContinuum_tplAmplitudeOne() {
   m_fitContinuum->tplAmplitude = 1.0;
   m_fitContinuum->tplAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;

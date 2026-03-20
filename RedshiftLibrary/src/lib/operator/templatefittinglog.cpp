@@ -106,16 +106,16 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     m_spectraFull.clear();
     for (const auto &spectrum : Context.getRebinnedFullSpectra())
       m_spectraFull.push_back(spectrum);
-    m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
+    m_lambdaRangesFull = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 
   // else subsampling required, subsample each spectrum :
   //  (coarse redshift grid)
   m_spectraFull.clear();
-  m_lambdaRanges.clear();
+  m_lambdaRangesFull.clear();
   m_spectraFull.reserve(Context.getSpectra().size());
-  m_lambdaRanges.reserve(Context.getSpectra().size());
+  m_lambdaRangesFull.reserve(Context.getSpectra().size());
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
        boost::combine(Context.getRebinnedFullSpectra(),
@@ -145,7 +145,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
                                                    *ssLambdaRange);
 
     m_spectraFull.push_back(std::move(ssSpectrum));
-    m_lambdaRanges.push_back(std::move(ssLambdaRange));
+    m_lambdaRangesFull.push_back(std::move(ssLambdaRange));
   }
 }
 
@@ -1003,6 +1003,10 @@ void COperatorTemplateFittingLog::FitRangez(
           amp_err[k] = INFINITY;
           amp_sigma[k] = -INFINITY;
           chi2[k] = INFINITY;
+          bestFitAmp[k] = amp[k];
+          bestFitAmpErr[k] = amp_err[k];
+          bestFitAmpSigma[k] = amp_sigma[k];
+          bestChi2[k] = chi2[k];
         } else if (mtm_vec[k] == 0.0) {
           THROWG(ErrorCode::INTERNAL_ERROR, "mtm_vec[k] == 0");
         } else {
@@ -1141,6 +1145,37 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
 
   return TInt32Range(ilbdamin, ilbdamax);
 }
+
+void COperatorTemplateFittingLog::buildTemplateAtFullRedshiftRange(
+    const CTemplate &logSampledTpl) {
+
+  if (!logSampledTpl.GetSpectralAxis().IsLogSampled()) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
+  }
+  // check if spc and tpl have same step
+  const Float64 epsilon = 1E-8;
+  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
+               logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
+      epsilon)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "tpl and spc are not sampled with the same step");
+
+  // subsample template if necessary
+  TInt32Range ilbda = FindTplSpectralIndex(m_spectraFull[0]->GetSpectralAxis(),
+                                           logSampledTpl.GetSpectralAxis(),
+                                           TFloat64Range(m_redshifts));
+  TMaskList mask_tpl =
+      logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
+
+  m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);
+  // double make sure that subsampled spectrum is well sampled
+  if (!m_templateRebined_bf[0].GetSpectralAxis().IsLogSampled(m_logstep)) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "subsampled template "
+           "is not log sampled with the redshift step");
+  }
+}
+
 /**
  * \brief COperatorTemplateFittingLog::Compute
  *
@@ -1183,37 +1218,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
 
-  if (!logSampledTpl.GetSpectralAxis().IsLogSampled()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
-  }
-  // check if spc and tpl have same step
-  const Float64 epsilon = 1E-8;
-  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
-               logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
-      epsilon)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "tpl and spc are not sampled with the same step");
-
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
-  // subsample template if necessary
-  if (m_ssRatio == 1) { // no required subsampling
-    m_templateRebined_bf[0] = logSampledTpl;
-  } else {
-    TInt32Range ilbda = FindTplSpectralIndex(
-        m_spectraFull[0]->GetSpectralAxis(), logSampledTpl.GetSpectralAxis(),
-        TFloat64Range(m_redshifts));
-    TMaskList mask_tpl =
-        logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
-
-    m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);
-    // double make sure that subsampled spectrum is well sampled
-    if (!m_templateRebined_bf[0].GetSpectralAxis().IsLogSampled(m_logstep)) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             "subsampled template "
-             "is not log sampled with the redshift step");
-    }
-  }
+  buildTemplateAtFullRedshiftRange(logSampledTpl);
 
   //**************** Fitting at all redshifts ****************//
   // Note: below corresponds to ::BasicFit code except that redshift loop
@@ -1276,6 +1283,74 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   return result;
 }
 
+// for use inside the linemodelfitting, when useLogLambdaSampling == true
+// will build a model using the fine logStep (like if m_ssratio=1)
+std::pair<CModelSpectrumResult, TPhotVal>
+COperatorTemplateFittingLog::ComputeSpectrumModel(
+    const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
+    Float64 amplitude, const Float64 overlapThreshold, Int32 spcIndex) {
+
+  auto &spectra = Context.getRebinnedFullSpectra()[spcIndex];
+  auto &modelTpl = m_templateRebined_bf[spcIndex];
+
+  if (!tpl.GetSpectralAxis().IsLogSampled(m_logstep / m_ssRatio)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
+  }
+  // check if spc and tpl have same step
+  const Float64 epsilon = 1E-8;
+  if (std::abs(spectra->GetSpectralAxis().GetlogGridStep() -
+               tpl.GetSpectralAxis().GetlogGridStep()) > epsilon)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "tpl and spc are not sampled with the same step");
+
+  // extract part of template visible at redshift
+  auto const &iRange =
+      FindTplSpectralIndex(spectra->GetSpectralAxis(), tpl.GetSpectralAxis(),
+                           TFloat64Range{redshift, redshift});
+  TMaskList mask(tpl.GetSampleCount(), 0);
+  auto const &start = mask.begin() + iRange.GetBegin();
+  auto const &end = mask.begin() + iRange.GetEnd() + 1;
+  std::fill(start, end, Mask{1});
+
+  // remove the spectrum masked samples
+  auto const &spcMaskList = spectra->getMask().getMaskList();
+  std::transform(start, end, spcMaskList.begin(), start, std::bit_and());
+  modelTpl = CTemplate(tpl, mask);
+
+  // apply IGM & ISM
+  if ((ebmvCoef > 0.) || (meiksinIdx > -1))
+    InitIsmIgmConfig(redshift, 0, modelTpl.GetSampleCount() - 1, spcIndex);
+
+  if (ebmvCoef > 0.) {
+    if (modelTpl.CalzettiInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
+    }
+    Int32 idxEbmv = -1;
+    idxEbmv = modelTpl.m_ismCorrectionCalzetti->GetEbmvIndex(ebmvCoef);
+
+    if (idxEbmv != -1)
+      ApplyDustCoeff(idxEbmv, spcIndex);
+  }
+  if (meiksinIdx > -1) {
+    if (modelTpl.MeiksinInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
+    }
+    ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+  }
+
+  ApplyAmplitude(amplitude, spcIndex);
+
+  // shift the spectralaxis to sync with the spectrum lambdaAxis
+  const CSpectrumFluxAxis &modelflux = modelTpl.GetFluxAxis();
+  CSpectrumSpectralAxis modelwav = modelTpl.GetSpectralAxis().ShiftByWaveLength(
+      (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
+  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+                             modelflux.GetSamplesVector(),
+                             m_spectra[spcIndex]->getObsID());
+  return std::make_pair(std::move(model),
+                        spcIndex > 0 ? TPhotVal() : getIntegratedFluxes());
+}
+
 CMask COperatorTemplateFittingLog::maskTemplate() {
   auto const &spectralAxis = m_templateRebined_bf[0].GetSpectralAxis();
   auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis();
@@ -1293,7 +1368,7 @@ CMask COperatorTemplateFittingLog::maskTemplate() {
 Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
   Float64 cstLog = 0.0;
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
-       boost::combine(m_spectraFull, m_lambdaRanges)) {
+       boost::combine(m_spectraFull, m_lambdaRangesFull)) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         spectrum_ptr->GetSpectralAxis();
     const TFloat64List &error =

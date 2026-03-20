@@ -679,7 +679,6 @@ CSpectrumModel::computeModelFlux(const TInt32List &eIdx_list,
 void CSpectrumModel::ApplyContinuumTplOnGrid(
     const std::shared_ptr<const CTemplate> &tpl, Float64 zcontinuum) {
   m_fitContinuum->name = tpl->GetName();
-  Int32 n = tpl->GetSampleCount();
 
   if (m_fitContinuum->ebmvCoef > 0.) {
     if (tpl->CalzettiInitFailed()) {
@@ -687,8 +686,6 @@ void CSpectrumModel::ApplyContinuumTplOnGrid(
              "  no calzetti calib. file in template");
     }
   }
-  const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
-  TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
 
   std::string inter_opt = "spline";
   tpl->setRebinInterpMethod(inter_opt);

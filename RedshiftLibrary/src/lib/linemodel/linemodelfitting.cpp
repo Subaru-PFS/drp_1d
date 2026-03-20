@@ -162,9 +162,7 @@ void CLineModelFitting::initMembers(
   LogCatalogInfos();
 }
 
-void CLineModelFitting::reloadFor2ndPass(
-    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator,
-    ElementComposition element_composition) {
+void CLineModelFitting::reloadFor2ndPass() {
 
   auto lineRatioType = m_lineRatioManager->getStrictType();
 
@@ -285,13 +283,9 @@ void CLineModelFitting::LogCatalogInfos() {
 Change the actual value of redshift.
 the continuum can be reinterpolate.
 */
-void CLineModelFitting::setRedshift(Float64 redshift,
-                                    bool reinterpolatedContinuum) {
+void CLineModelFitting::setRedshift(Float64 redshift) {
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
     getSpectrumModel().m_Redshift = redshift;
-  }
-  if (reinterpolatedContinuum) {
-    m_continuumManager->reinterpolateContinuum(redshift);
   }
 }
 
@@ -703,7 +697,7 @@ linemeas_model
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
 
-  setRedshift(modelSolution.Redshift, false);
+  setRedshift(modelSolution.Redshift);
 
   // reset before loading
   for (auto param_ptr : m_ElementsVector->getElementsParams()) {

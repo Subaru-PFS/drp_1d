@@ -100,9 +100,8 @@ public:
   Int32 m_maxModelSaveCount = 20;
   std::string m_tplCategory;
 
-  bool m_opt_tplfit_fftprocessing =
-      false; // we cant set it as the default since not taken into account when
-             // deciding on rebinning
+  bool m_opt_tplfit_fftprocessing = false;
+  bool m_useloglambdasampling = false;
   bool m_opt_tplfit_use_photometry = false;
   bool m_opt_tplfit_dustFit = true;
   bool m_opt_tplfit_extinction = true;

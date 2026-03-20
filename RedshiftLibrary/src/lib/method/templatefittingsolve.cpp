@@ -585,11 +585,16 @@ std::shared_ptr<ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     auto const spcmodelPtr = std::make_shared<CModelSpectrumResult>();
     for (int spcIndex = 0; spcIndex < ssize(Context.getSpectra()); spcIndex++) {
 
+      // call here the base ComputeSpectrumModel method to be sure to generate
+      // the model on the input spectrum lambda grid (since the overriden method
+      // in templatefittingLog generates a model on the log-resampled grid)
       auto &&[spcModel, photModel] =
-          m_templateFittingOperator->ComputeSpectrumModel(
-              tpl, z, bestResult->FitEbmvCoeff[zIndex],
-              bestResult->FitMeiksinIdx[zIndex],
-              bestResult->FitAmplitude[zIndex], m_overlapThreshold, spcIndex);
+          m_templateFittingOperator
+              ->COperatorTemplateFittingBase::ComputeSpectrumModel(
+                  tpl, z, bestResult->FitEbmvCoeff[zIndex],
+                  bestResult->FitMeiksinIdx[zIndex],
+                  bestResult->FitAmplitude[zIndex], m_overlapThreshold,
+                  spcIndex);
       (*spcmodelPtr).insert(std::move(spcModel));
 
       if (spcIndex == 0)

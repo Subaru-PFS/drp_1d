@@ -195,16 +195,14 @@ Int32 CSpectrumLogRebinning::inferTemplateRebinningSetup(
       log(m_lambdaRange_ref.GetBegin() / (1.0 + zrange.GetEnd()));
   Float64 loglbdamax =
       log(m_lambdaRange_ref.GetEnd() / (1.0 + zrange.GetBegin()));
-  Int32 _round = std::round((loglbdamax - loglbdamin) / m_logGridStep) + 1;
-  Float64 _neat =
-      (loglbdamax - loglbdamin) / m_logGridStep +
-      1; // we expect to get an int value with no need to any rounding
-  if (std::abs(_round - _neat) > 1E-8) {
+  Float64 count = (loglbdamax - loglbdamin) /
+                  m_logGridStep; // we expect to get an int value with no need
+                                 // to any rounding
+  Int32 loglambda_count_tpl = std::round(count);
+  if (std::abs(loglambda_count_tpl - count) > 1E-8) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Problem in logrebinning setup");
   }
-  Int32 loglambda_count_tpl =
-      std::round((loglbdamax - loglbdamin) / m_logGridStep) + 1;
-
+  loglambda_count_tpl++;
   Float64 tgt_loglbdamax = loglbdamax;
   Float64 tgt_loglbdamin =
       loglbdamax - (loglambda_count_tpl - 1) * m_logGridStep;
