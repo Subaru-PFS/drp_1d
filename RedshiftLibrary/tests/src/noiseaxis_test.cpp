@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   BOOST_CHECK(noiseAxis[2] == 2.0);
 
   // Invert
-  noiseAxis.Invert();
+  BOOST_CHECK_THROW(noiseAxis.Invert(), AmzException);
+  noiseAxis.Invert(false);
   BOOST_CHECK(noiseAxis.GetSamplesCount() == 3);
   BOOST_CHECK(noiseAxis[0] == INFINITY);
   BOOST_CHECK(noiseAxis[1] == INFINITY);

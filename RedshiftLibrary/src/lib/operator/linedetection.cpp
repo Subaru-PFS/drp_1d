@@ -360,7 +360,7 @@ Float64 CLineDetection::ComputeFluxes(CSpectrum const &spectrum,
   Float64 noise_win = xmad;
   // use noise spectrum
   // check if noise file has been loaded
-  bool hasNoise = fluxAxis.HasError();
+  bool hasNoise = fluxAxis.hasErrorData();
 
   if (hasNoise) {
     const TFloat64List &error = fluxAxis.GetError().GetSamplesVector();

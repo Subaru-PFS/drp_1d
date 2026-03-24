@@ -65,7 +65,7 @@ public:
   CSpectrumFluxAxis(const Float64 *samples, Int32 n, const Float64 *error,
                     const Int32 m);
 
-  bool HasError() const;
+  bool hasErrorData() const;
   const CSpectrumNoiseAxis &GetError() const;
   Float64 GetWeight(Int32 idx, Float64 normFactor = 1.0) const;
   std::pair<Float64, Float64> GetMeanAndStd() const;
@@ -124,7 +124,7 @@ private:
   bool mutable m_meanAndStdevComputed = false;
 };
 
-inline bool CSpectrumFluxAxis::HasError() const { return m_hasStdError; }
+inline bool CSpectrumFluxAxis::hasErrorData() const { return m_hasStdError; }
 
 inline const CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() const {
   if (!m_hasStdError)
@@ -163,7 +163,7 @@ CSpectrumFluxAxis::GetSamplesAndErrorVector() && {
 
 inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
                                                     Int32 endIdx) const {
-  if (HasError())
+  if (hasErrorData())
     return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
                              m_StdError.extract(startIdx, endIdx));
   else

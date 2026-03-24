@@ -296,7 +296,9 @@ inline CSpectrumFluxAxis &CSpectrum::GetWithoutContinuumFluxAxis_() {
   return m_WithoutContinuumFluxAxis;
 }
 
-inline bool CSpectrum::HasErrorAxis() const { return GetFluxAxis().HasError(); }
+inline bool CSpectrum::HasErrorAxis() const {
+  return GetFluxAxis().hasErrorData();
+}
 
 inline const CSpectrumNoiseAxis &CSpectrum::GetErrorAxis() const {
   return GetFluxAxis().GetError();

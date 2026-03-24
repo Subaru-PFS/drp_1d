@@ -174,7 +174,7 @@ CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask,
            "mask.GetMasksCount() != GetSamplesCount()");
 
   std::function getWeight = [](Int32 j) { return 1.; };
-  if (withWeight && HasError())
+  if (withWeight && hasErrorData())
     getWeight = [this](Int32 j) { return this->GetWeight(j); };
 
   std::function getmask = [&mask](Int32 j) { return mask[j]; };
@@ -301,8 +301,8 @@ bool CSpectrumFluxAxis::correctFluxAndNoiseAxis(Int32 iMin, Int32 iMax,
 CSpectrumFluxAxis &
 CSpectrumFluxAxis::operator+=(CSpectrumFluxAxis const &other) {
   CSpectrumAxis::operator+=(other);
-  if (other.HasError()) {
-    if (HasError())
+  if (other.hasErrorData()) {
+    if (hasErrorData())
       m_StdError += other.GetError();
     else
       setError(other.GetError());
@@ -313,8 +313,8 @@ CSpectrumFluxAxis::operator+=(CSpectrumFluxAxis const &other) {
 CSpectrumFluxAxis &
 CSpectrumFluxAxis::operator-=(CSpectrumFluxAxis const &other) {
   CSpectrumAxis::operator-=(other);
-  if (other.HasError()) {
-    if (HasError())
+  if (other.hasErrorData()) {
+    if (hasErrorData())
       m_StdError += other.GetError();
     else
       setError(other.GetError());

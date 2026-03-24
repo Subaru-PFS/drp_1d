@@ -775,7 +775,7 @@ TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
                         std::make_move_iterator(tmpFlux.end()));
 
     TList<Float64> tmpError =
-        flux_axis.HasError()
+        flux_axis.hasErrorData()
             ? flux_axis.GetError()
                   .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
                   .GetSamplesVector()

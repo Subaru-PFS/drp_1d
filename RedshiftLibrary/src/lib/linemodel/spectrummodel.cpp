@@ -60,7 +60,7 @@ CSpectrumModel::CSpectrumModel(
       m_ContinuumFluxAxis(m_inputSpc->GetSampleCount()),
       m_SpcFluxAxis(m_inputSpc->GetSampleCount()),
       m_spcFluxAxisNoContinuum(
-          m_inputSpc->GetFluxAxis().HasError()
+          m_inputSpc->GetFluxAxis().hasErrorData()
               ? CSpectrumFluxAxis(m_SpcFluxAxis,
                                   m_inputSpc->GetFluxAxis().GetError())
               : CSpectrumFluxAxis(m_SpcFluxAxis)),

@@ -352,7 +352,7 @@ void COperatorTplcombination::BasicFit(
   TFloat64List fluxInRange(flux.cbegin() + m_kStart[0],
                            flux.cbegin() + m_kEnd[0] + 1);
   TFloat64List errorInRange =
-      spcFluxAxis.HasError()
+      spcFluxAxis.hasErrorData()
           ? TFloat64List(spcFluxAxis.GetError().GetSamplesVector().cbegin() +
                              m_kStart[0],
                          spcFluxAxis.GetError().GetSamplesVector().cbegin() +

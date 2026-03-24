@@ -111,7 +111,7 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Float64 redshift) {
     Float64 amplitudeSNR =
         m_fitContinuum_tplfitStore->getFracAmplitudeSigma(idxZ, icontinuum);
     m_continuumFittedToNull =
-        amplitudeSNR < m_opt_fitcontinuum_null_amp_threshold ? true : false;
+        amplitudeSNR < m_opt_fitcontinuum_null_amp_threshold;
   } else if (m_fitContinuum_option != EFitType::fixedValues) {
     THROWG(ErrorCode::INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }

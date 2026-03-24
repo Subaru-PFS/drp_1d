@@ -50,7 +50,6 @@ class CSpectrumNoiseAxis : public CSpectrumAxis {
 
 public:
   using CSpectrumAxis::CSpectrumAxis;
-  // using CSpectrumAxis::operator+=, CSpectrumAxis::operator-=;
   explicit CSpectrumNoiseAxis(const CSpectrumAxis &other)
       : CSpectrumAxis(other){};
   explicit CSpectrumNoiseAxis(CSpectrumAxis &&other)
@@ -63,8 +62,6 @@ public:
   CSpectrumNoiseAxis &operator-=(CSpectrumAxis const &other) override {
     return operator+=(other);
   }
-  // CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis other) const;
-  // CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis other) const;
   friend CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
                                       CSpectrumNoiseAxis const &axis2);
   friend CSpectrumNoiseAxis operator+(CSpectrumNoiseAxis const &axis1,
@@ -80,13 +77,6 @@ public:
 
   const TBoolList checkNoise() const;
   CSpectrumNoiseAxis extract(Int32 startIdx, Int32 endIdx) const;
-
-  // CSpectrumAxis operator+(CSpectrumAxis other) const override {
-  //   THROWG(ErrorCode::INTERNAL_ERROR, "not implemented");
-  // }
-  // CSpectrumAxis operator-(CSpectrumAxis other) const override {
-  //       THROWG(ErrorCode::INTERNAL_ERROR, "not implemented");
-  // }
 };
 
 inline CSpectrumNoiseAxis &
@@ -128,18 +118,6 @@ inline CSpectrumNoiseAxis operator-(CSpectrumNoiseAxis const &axis1,
                                     CSpectrumAxis const &axis2) {
   return axis2 + axis1;
 }
-
-// inline CSpectrumNoiseAxis CSpectrumNoiseAxis::operator+(CSpectrumNoiseAxis
-// other) const {
-//     CSpectrumNoiseAxis sumaxis(std::move(other));
-//     sumaxis += *this;
-//     return sumaxis;
-//   }
-
-// inline CSpectrumNoiseAxis CSpectrumNoiseAxis::operator-(CSpectrumNoiseAxis
-// other) const {
-//   return *this + std::move(other);
-// }
 
 inline CSpectrumNoiseAxis CSpectrumNoiseAxis::extract(Int32 startIdx,
                                                       Int32 endIdx) const {

@@ -290,7 +290,6 @@ void CSpectrum::EstimateContinuum() const {
                               << m_medianWindowSize);
   } else if (m_estimationMethod == "raw") {
     m_ContinuumFluxAxis = m_RawFluxAxis;
-    // m_WithoutContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
   } else if (m_estimationMethod == "zero") {
     Int32 nbSamples = this->GetSampleCount();
     m_ContinuumFluxAxis = CSpectrumFluxAxis(nbSamples, 0.0);
@@ -451,7 +450,7 @@ void CSpectrum::ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const {
 void CSpectrum::ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 nInvalid = 0;
 
-  if (!GetFluxAxis().HasError())
+  if (!GetFluxAxis().hasErrorData())
     return;
 
   if (IsNoiseEmpty())
@@ -674,7 +673,7 @@ std::pair<Float64, Float64> CSpectrum::integrateFluxes_usingTrapez(
            "spectral axis and flux axis have different samples number");
 
   const auto &Error =
-      fluxAxis.HasError() ? fluxAxis.GetError() : CSpectrumNoiseAxis{};
+      fluxAxis.hasErrorData() ? fluxAxis.GetError() : CSpectrumNoiseAxis{};
   for (auto &r : indexRangeList) {
     for (Int32 t = r.GetBegin(), e = r.GetEnd(); t < e; t++) {
       Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;

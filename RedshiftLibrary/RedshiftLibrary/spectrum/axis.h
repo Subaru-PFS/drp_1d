@@ -72,8 +72,6 @@ public:
   virtual CSpectrumAxis &operator-=(CSpectrumAxis const &other);
   Float64 operator[](Int32 i) const;
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
-  // virtual CSpectrumAxis operator+(CSpectrumAxis other) const;
-  // virtual CSpectrumAxis operator-(CSpectrumAxis other) const;
   // Hidden friend symmetric operators (ie non-member, but here for ADL )
   friend CSpectrumAxis operator*(CSpectrumAxis axis, Float64 op);
   friend CSpectrumAxis operator*(Float64 op, CSpectrumAxis axis);
@@ -91,11 +89,12 @@ public:
   Int32 GetSamplesCount() const;
   virtual void resize(Int32 s, Float64 valueDef = 0.0);
   virtual void clear();
-  void Invert();
+  void Invert(bool checkNull = true);
   void Negate();
 
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
+  bool containsNullValue() const;
 
 protected:
   TAxisSampleList m_Samples;
@@ -159,18 +158,6 @@ inline CSpectrumAxis operator-(CSpectrumAxis const &axis1,
   return diffaxis;
 }
 
-// inline CSpectrumAxis CSpectrumAxis::operator+(CSpectrumAxis other) const {
-//   CSpectrumAxis sumaxis(std::move(other));
-//   sumaxis += *this;
-//   return sumaxis;
-// }
-
-// inline CSpectrumAxis CSpectrumAxis::operator-(CSpectrumAxis other) const {
-//   CSpectrumAxis diffaxis(std::move(other));
-//   diffaxis -= *this;
-//   return diffaxis;
-// }
-
 inline CSpectrumAxis CSpectrumAxis::operator/(Float64 op) const {
   CSpectrumAxis dividedAxis = *this;
   dividedAxis /= op;
@@ -207,7 +194,15 @@ inline void CSpectrumAxis::clear() {
 
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
 
-inline void CSpectrumAxis::Invert() {
+inline bool CSpectrumAxis::containsNullValue() const {
+  return std::find(m_Samples.cbegin(), m_Samples.cend(), 0.) !=
+         m_Samples.cend();
+}
+
+inline void CSpectrumAxis::Invert(bool checkNull) {
+  if (checkNull && containsNullValue())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Try to invert an axis containing a null value");
   std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
                  [](Float64 val) { return 1 / val; });
 }
