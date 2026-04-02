@@ -110,12 +110,6 @@ public:
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;
 
-  bool m_enableAmplitudeOffsets = false;
-  Float64 m_Redshift = 0.;
-  // new methods
-  Int32 m__count = 0;
-  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
-
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs);
@@ -136,6 +130,10 @@ public:
   void setElements(CLineModelElementList const &elements) {
     m_Elements = elements;
   };
+
+  bool m_enableAmplitudeOffsets = false;
+  Float64 m_Redshift = 0.;
+  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
 private:
   CSpectrumFluxAxis

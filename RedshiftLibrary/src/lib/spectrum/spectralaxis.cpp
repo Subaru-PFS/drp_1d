@@ -407,10 +407,13 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
   if (ilbda.GetEnd() > ssize(m_Samples) - 1)
     THROWG(ErrorCode::INTERNAL_ERROR, "range's upper bound > samples size");
 
-  Int32 s = GetSamplesCount();
-  if (ssratio == 1)
-    return TMaskList(s, 1);
-  TMaskList mask(s, 0);
+  TMaskList mask(GetSamplesCount(), 0);
+  if (ssratio == 1) {
+    std::fill(mask.begin() + ilbda.GetBegin(),
+              mask.begin() + ilbda.GetEnd() + 1, 1);
+    return mask;
+  }
+
   for (Int32 i = ilbda.GetEnd(); i >= ilbda.GetBegin();
        i -= ssratio) { // ensure that z[0] remains the same
     mask[i] = 1;

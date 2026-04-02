@@ -217,15 +217,19 @@ bool COperatorLineModel::isfftprocessingActive(Int32 redshiftsTplFitCount) {
     return false;
   }
 
-  bool fftprocessing = m_opt_tplfit_fftprocessing;
+  if (!m_opt_tplfit_fftprocessing)
+    return false;
+
   Log.LogDebug(Formatter()
                << "COperatorLineModel::isfftprocessingActive: redshtplfitsize "
                << redshiftsTplFitCount);
+
   // heuristic value corresponding to a threshold below wich fftprocessing is
   // considered slow nb of redshift samples
   const Int32 fftprocessing_min_sample_nb = 100;
-  if ((redshiftsTplFitCount < fftprocessing_min_sample_nb) && fftprocessing) {
-    fftprocessing = false;
+  bool fftprocessing = m_useloglambdasampling || // always keep fftpprocessing
+                       (redshiftsTplFitCount >= fftprocessing_min_sample_nb);
+  if (!fftprocessing) {
     Log.LogInfo("COperatorLineModel::isfftprocessingActive: auto deselect fft "
                 "processing (faster when only few redshifts calc. points)");
   }
@@ -681,7 +685,7 @@ COperatorLineModel::ComputeSecondPass() {
       boost::chrono::thread_clock::now();
   if (m_fittingManager->getLineRatioStrictType() ==
       CLineRatioManager::EType::ratioToFree) {
-    m_fittingManager->reloadFor2ndPass(m_continuumFittingOperator);
+    m_fittingManager->reloadFor2ndPass();
   }
   m_fittingManager->setPassMode(2);
 
@@ -1469,6 +1473,8 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
 
     m_opt_tplfit_fftprocessing =
         ps->GetScoped<bool>("continuumFit.fftProcessing");
+    if (m_opt_tplfit_fftprocessing)
+      m_useloglambdasampling = ps->GetScoped<bool>("useLogLambdaSampling");
     if (ps->HasScoped<bool>("enablePhotometry"))
       m_opt_tplfit_use_photometry = ps->GetScoped<bool>("enablePhotometry");
     m_opt_tplfit_dustFit = ps->GetScoped<bool>("continuumFit.ismFit");
@@ -1497,14 +1503,22 @@ void COperatorLineModel::Init(const TFloat64List &redshifts, Float64 zStep,
   tplCatalog = Context.GetTemplateCatalog();
 
   makeContinuumFittingOperator(m_redshifts);
-  if (m_continuumFittingOperator->IsFFTProcessing()) { // create a default
-    const TFloat64List &redshifts = m_redshifts;
-    m_fittingManager = std::make_shared<CLineModelFitting>(
-        std::make_shared<COperatorTemplateFitting>(redshifts));
-  } else {
-    m_fittingManager =
-        std::make_shared<CLineModelFitting>(m_continuumFittingOperator);
+
+  // instantiate the fitting manager with a continuumfitting operator used only
+  // to build the continuum (not to fit it)
+  auto linemodelFitting_continuumFittingOperator = m_continuumFittingOperator;
+  bool use_different_fitting_operator =
+      m_continuumFittingOperator->IsFFTProcessing() && !m_useloglambdasampling;
+  if (use_different_fitting_operator) {
+    //  if not m_use_loglambdasampling  we should not build
+    //  the continuum with the fftprocessing operator but with a default one
+
+    // create a default TemplateFittingOperator (not templateFittingLog)
+    linemodelFitting_continuumFittingOperator =
+        std::make_shared<COperatorTemplateFitting>(m_redshifts);
   }
+  m_fittingManager = std::make_shared<CLineModelFitting>(
+      linemodelFitting_continuumFittingOperator);
 
   Int32 nfitcontinuum = 0;
   if (m_opt_continuumcomponent.isTplFitXXX())

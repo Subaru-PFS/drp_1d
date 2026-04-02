@@ -226,10 +226,7 @@ public:
                        &continuumFittingOperator,
                    CLineRatioManager::EType const &lineRatioType,
                    ElementComposition element_composition);
-  void reloadFor2ndPass(
-      const std::shared_ptr<COperatorContinuumFitting>
-          &continuumFittingOperator,
-      ElementComposition element_composition = ElementComposition::Default);
+  void reloadFor2ndPass();
   void
   setChiSquareRatioResult(const Int32 index_z,
                           const std::shared_ptr<CLineModelResult> &lmResult);
@@ -245,7 +242,7 @@ protected:
                          ElementComposition const &element_composition);
 
   void LogCatalogInfos();
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
+  void setRedshift(Float64 redshift);
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
   Float64 EstimateLikelihoodCstLog() const;
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);

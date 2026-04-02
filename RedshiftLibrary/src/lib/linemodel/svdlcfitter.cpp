@@ -69,11 +69,9 @@ CSvdlcFitter::CSvdlcFitter(
 
 void CSvdlcFitter::doFit(Float64 redshift) {
   // NB dummy multiobs implementation (functional for one obs only)
-  //  1. fit only the current continuum
-  //  prepare continuum on the observed grid
 
-  // re-interpolate the continuum on the grid
-  m_continuumManager->reinterpolateContinuumResetAmp();
+  // set the continuum with amplitude at 1.0
+  m_continuumManager->setFitContinuum_tplAmplitudeOne();
 
   m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 

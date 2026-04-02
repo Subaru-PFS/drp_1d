@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
 
 BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   Int32 ssratio;
-  TInt32Range range(1., 3.);
+  TInt32Range range(1, 3);
   CSpectrumSpectralAxis spcAxis({exp(1.), exp(2.), exp(3.), exp(4.), exp(5.)});
 
   // not LogSampled
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   // ssratio = 1
   TMaskList mask = spcAxis.GetSubSamplingMask(ssratio, range);
   BOOST_CHECK(mask.size() == 5);
-  TMaskList mask_ref(5, 1);
+  TMaskList mask_ref{0, 1, 1, 1, 0};
   BOOST_CHECK(mask == mask_ref);
 
   // ssratio = 2
