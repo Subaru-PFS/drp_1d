@@ -14,6 +14,7 @@
 * [10207] : set the parameter `templateFittingSolve.firstPass.extremaCount` as required, and removed `templateFittingSolve.secondPass.continuumFit`
 * [10016] : Fix overlapping line support in hybrid fitter, with new parameter `nSigmaAmpOffset` to set the added line support margin for polynomials under lines.
 * [10047] : Update of fit quality anderson test : divide result by n samples, and set bad test values to DBL_MAX rather than NAN
+* [10282] : Fix redshift uncertainty computation (deltaz) from pdf : add factor 1/sqrt(2)
 
 ## 1.16.0 (2025-11-20)
 ### Added
