@@ -41,8 +41,8 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include <boost/range/counting_range.hpp>
 
 using namespace NSEpic;
 using namespace std;
@@ -308,8 +308,14 @@ void CLMEltListVector::resetAsymfitParams() {
   }
 }
 
-void CLMEltListVector::computeGlobalOutsideLambdaRange() {
-  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+void CLMEltListVector::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  auto idxList = EltsIdx;
+  if (idxList.empty()) {
+    idxList.resize(getNbElements());
+    std::iota(idxList.begin(), idxList.end(), 0);
+  }
+  for (auto elt_idx : idxList) {
     m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
         computeOutsideLambdaRange(elt_idx);
     for (Int32 line_idx = 0; line_idx < ssize(*m_ElementsParams[elt_idx]);
@@ -338,6 +344,12 @@ void CLMEltListVector::setAllAbsLinesNullContinuum() {
 void CLMEltListVector::resetNullLineProfiles() {
   for (auto &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_nullLineProfiles = false;
+  }
+}
+
+void CLMEltListVector::resetFitFailed() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_fitFailed = false;
   }
 }
 
@@ -378,4 +390,5 @@ void CLMEltListVector::computeGlobalLineValidity(
   computeGlobalOutsideLambdaRange();
   setNullNominalAmplitudesNotFittable();
   resetNullLineProfiles();
+  resetFitFailed();
 };

@@ -198,6 +198,11 @@ void CAbstractFitter::computeGlobalLineValidity() {
   m_ElementsVector->computeGlobalLineValidity(m_models, checkNullContinuum);
 }
 
+void CAbstractFitter::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  m_ElementsVector->computeGlobalOutsideLambdaRange(EltsIdx);
+}
+
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   TInt32List idxEltIGM;
   std::vector<TInt32List> idxLineIGM;

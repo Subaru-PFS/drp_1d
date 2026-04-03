@@ -276,7 +276,7 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
       // set the amplitude to NAN
       Int32 elt_idx = EltsIdx[iddl];
       m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
-      m_ElementsVector->getElementsParams()[elt_idx]->m_nullLineProfiles = true;
+      m_ElementsVector->getElementsParams()[elt_idx]->m_fitFailed = true;
       Flag.warning(WarningCode::NULL_LINES_PROFILE,
                    Formatter() << "Null lines profile"
                                << " of elt " << elt_idx);

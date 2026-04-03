@@ -160,13 +160,14 @@ public:
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
-  void computeGlobalOutsideLambdaRange();
+  void computeGlobalOutsideLambdaRange(TInt32List const &EltsIdx = {});
   void setNullNominalAmplitudesNotFittable();
   void setAbsLinesNullContinuumNotFittable(
       std::shared_ptr<CSpcModelVector> const &models);
   void unsetAllAbsLinesNullContinuum();
   void setAllAbsLinesNullContinuum();
   void resetNullLineProfiles();
+  void resetFitFailed();
   void computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models,
                                  bool checkNullContinuum = true);
   void computeAbsLineValidity(std::shared_ptr<CSpcModelVector> const &models,

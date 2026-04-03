@@ -135,7 +135,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                              << ", number of parameters to fit = " << nddl_ini);
     for (Int32 iElt : EltsIdxToFit_ini) {
       m_ElementsVector->SetElementAmplitude(iElt, NAN, NAN);
-      m_ElementsVector->getElementsParams()[iElt]->m_nullLineProfiles = true;
+      m_ElementsVector->getElementsParams()[iElt]->m_fitFailed = true;
     }
     if (m_enableAmplitudeOffsets) {
       for (Int32 iElt : EltsIdxToFit_ini)

@@ -190,7 +190,7 @@ CLbfgsbFitter::CLeastSquare::unpack(const VectorXd &x) const {
     elt_ptr->prepareSupport(*m_spectralAxis, m_redshift,
                             m_fitter->getLambdaRange());
   }
-  m_fitter->computeGlobalLineValidity();
+  m_fitter->computeGlobalOutsideLambdaRange(*m_EltsIdx);
 
   // unpack amplitudes and set them
   // be carefull, since it depends on line validity
@@ -425,8 +425,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                              << ", number of parameters to fit = " << nddl);
     for (Int32 eltIndex : EltsIdx) {
       m_ElementsVector->SetElementAmplitude(eltIndex, NAN, NAN);
-      m_ElementsVector->getElementsParams()[eltIndex]->m_nullLineProfiles =
-          true;
+      m_ElementsVector->getElementsParams()[eltIndex]->m_fitFailed = true;
     }
     if (m_enableAmplitudeOffsets) {
       for (Int32 eltIndex : EltsIdx)
@@ -525,7 +524,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  computeGlobalLineValidity();
+  computeGlobalOutsideLambdaRange(EltsIdx);
   auto const ValidEltsIdx = m_ElementsVector->getValidElementIndices(EltsIdx);
   if (ValidEltsIdx.empty())
     return;
@@ -535,9 +534,11 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   for (size_t i = 0; i != EltsIdx.size(); ++i) {
     auto &elt_param = getElementsParams()[EltsIdx[i]];
     if (elt_param->isNotFittable()) {
-      // the initial velocity renders the line outside range, set amplitude at
-      // zero and do not update the max snr
+      // the initial velocity and offset renders the line outside range or
+      // unfittable, set amplitude at zero and do not update the max snr
       v_xGuess[i] = 0.0;
+      m_ElementsVector->resetNullLineProfiles();
+      m_ElementsVector->resetFitFailed();
       continue;
     }
     v_xGuess[i] = elt_param->IsEmission()
@@ -743,7 +744,7 @@ void CLbfgsbFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     elt_ptr->prepareSupport(getSpectrum().GetSpectralAxis(), redshift,
                             getLambdaRange());
   }
-  computeGlobalLineValidity();
+  computeGlobalOutsideLambdaRange(EltsIdx);
 
   // store amplitudes
   for (Int32 i = 0; i < ssize(EltsIdx); ++i) {
