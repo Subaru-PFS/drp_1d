@@ -243,12 +243,15 @@ void COperatorTemplateFitting::updateQualityFitWithResult(
 
   for (auto const &[spc, tpl, mask, kStart, kEnd] : boost::combine(
            m_spectra, m_templateRebined_bf, maskList, m_kStart, m_kEnd)) {
-    auto const &fluxBegin = spc->GetFluxAxis().GetSamplesVector().cbegin();
+    auto const &flux_axis = spc->GetFluxAxis();
+    auto const &flux_axis_for_error = spc->GetRawFluxAxis();
+
+    auto const &fluxBegin = flux_axis.GetSamplesVector().cbegin();
     spcFluxInRange.push_back(
         TFloat64List(fluxBegin + kStart, fluxBegin + kEnd + 1));
 
     auto const &errorBegin =
-        spc->GetFluxAxis().GetError().GetSamplesVector().cbegin();
+        flux_axis_for_error.GetError().GetSamplesVector().cbegin();
     spcFluxErrorInRange.push_back(
         TFloat64List(errorBegin + kStart, errorBegin + kEnd + 1));
 
@@ -304,7 +307,6 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
   Int32 sumsIgmSaved = 0;
 
   Float64 err2 = 0.0;
-  const CSpectrumNoiseAxis &error = spcFluxAxis.GetError();
 
   Int32 kIgmEnd = m_option_igmFastProcessing
                       ? m_templateRebined_bf[spcIndex].GetIgmEndIndex()
@@ -322,7 +324,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
 
     if (mask[j]) {
 
-      err2 = 1.0 / (error[j] * error[j]);
+      err2 = spcFluxAxis.GetWeight(j);
 
       // Tonry&Davis formulation
       sumCross += Yspc[j] * Ytpl[j] * err2;
@@ -340,7 +342,7 @@ TCrossProductResult COperatorTemplateFitting::ComputeCrossProducts(
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "Invalid dtd value: dtd=" << sumS
                            << ", Yspc=" << Yspc[j] << ", err2=" << err2
-                           << ", error=" << error[j] << ", for index=" << j
+                           << ", Weight=" << err2 << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
 
       if (std::isinf(sumT) || std::isnan(sumT)) {

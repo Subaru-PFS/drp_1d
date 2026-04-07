@@ -59,7 +59,7 @@ class CSpectrumFluxAxis;
  * Algorithm for estimating the continuum by computing the 'medium' resolution
  * and applying the median method to it.
  */
-class CContinuumIrregularSamplingMedian : public CContinuum {
+class CContinuumIrregularSamplingMedian : public CContinuumEstimator {
 
 public:
   CContinuumIrregularSamplingMedian()
@@ -71,11 +71,9 @@ public:
   void SetMedianCycleCount(Int32 count);
   void SetMedianEvenReflection(bool evenReflection);
 
-  bool RemoveContinuum(const CSpectrum &s,
-                       CSpectrumFluxAxis &noContinuumFluxAxis) const;
-  bool ProcessRemoveContinuum(const CSpectrum &s,
-                              CSpectrumFluxAxis &noContinuumFluxAxis,
-                              Float64 resolution) const;
+  CSpectrumFluxAxis computeContinuum(const CSpectrum &s) const override;
+  CSpectrumFluxAxis ProcessEstimateContinuum(const CSpectrum &s,
+                                             Float64 resolution) const;
 
 private:
   friend class continuum_test::mean_test;
@@ -98,8 +96,8 @@ private:
 
   Float64 FitBorder(const CSpectrum &s, Int32 kstart, Int32 kend,
                     bool isRightBorder) const;
-  bool FindEffectiveSpectrumBorder(const CSpectrumFluxAxis &s, Int32 &kstart,
-                                   Int32 &kend) const;
+  std::pair<Int32, Int32>
+  FindEffectiveSpectrumBorder(const CSpectrumFluxAxis &s) const;
 
   Float32 m_MeanSmoothAmplitude;
   Int32 m_MedianSmoothCycles;

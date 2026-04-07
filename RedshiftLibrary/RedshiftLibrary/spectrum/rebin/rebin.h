@@ -67,10 +67,10 @@ public:
 
   virtual void reset(){};
   virtual const std::string &getType() = 0;
+  bool handleError(std::string const opt_error_interp) const;
 
 protected:
-  virtual void rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                     const TFloat64Range &range,
+  virtual void rebin(TAxisSampleList &rebinedFlux, const TFloat64Range &range,
                      const CSpectrumSpectralAxis &targetSpectralAxis,
                      CMask &rebinedMask, const std::string opt_error_interp,
                      const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
@@ -82,5 +82,8 @@ protected:
   const CSpectrum &m_spectrum;
 };
 
+inline bool CRebin::handleError(std::string const opt_error_interp) const {
+  return m_spectrum.GetFluxAxis().hasErrorData() && (opt_error_interp != "no");
+}
 } // namespace NSEpic
 #endif

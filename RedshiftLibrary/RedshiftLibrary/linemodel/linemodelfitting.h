@@ -79,7 +79,7 @@ public:
     return m_continuumManager->getContinuumComponent();
   };
 
-  bool initDtd();
+  void initDtd();
   Float64 EstimateMTransposeM() const;
   Float64 getOrInitDtD();
   Float64 getOrInitLikelihoodCstLog();
@@ -244,7 +244,7 @@ protected:
   void LogCatalogInfos();
   void setRedshift(Float64 redshift);
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
-  Float64 EstimateLikelihoodCstLog() const;
+  Float64 EstimateLikelihoodCstLog(const std::string &spcComponent) const;
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
 

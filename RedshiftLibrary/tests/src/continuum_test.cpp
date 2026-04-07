@@ -369,13 +369,10 @@ BOOST_AUTO_TEST_CASE(fitBorder_test) {
 //-----------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   // Output Flux
-  Int32 n = 10;
-  CSpectrumFluxAxis noContinuumFluxAxis(n, 0.);
 
   // CContinuumIrregularSamplingMedian
   CContinuumIrregularSamplingMedian sample;
   sample.SetMedianEvenReflection(false);
-  bool result;
   Float32 width;
 
   // -------- FUNCTIONAL TESTS ------------
@@ -388,11 +385,9 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   CSpectrumSpectralAxis spectralAxis(sAxis);
   CSpectrumFluxAxis fluxAxis(fAxis);
   CSpectrum spectra = CSpectrum(spectralAxis, fluxAxis);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == false);
-  Int32 k0, k1;
-  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(sample.computeContinuum(spectra), AmzException);
+
+  BOOST_CHECK_THROW(sample.FindEffectiveSpectrumBorder(fluxAxis), AmzException);
 
   // TEST 2 : mean smooth defined to -75.
   // (test meanSmoothAmplitude<=0)
@@ -403,24 +398,21 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   spectra = CSpectrum(spectralAxis, fluxAxis);
   width = -75;
   sample.SetMeanKernelWidth(width);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(sample.computeContinuum(spectra), AmzException);
 
   // TEST 3 : cycles defines to 0
   // (test m_MedianSmoothCycles<=0)
   width = 75;
   sample.SetMeanKernelWidth(width);
   sample.SetMedianCycleCount(0);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(sample.computeContinuum(spectra), AmzException);
 
   // TEST 4 : median smooth defined to -75.
   // (test medianSmoothAmplitude<=0)
   width = -75;
   sample.SetMedianKernelWidth(width);
   sample.SetMedianCycleCount(5);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(sample.computeContinuum(spectra), AmzException);
 
   // TEST 5 : spectra with more than ten 0. values at the beginning of spectra
   // (test k<=10)
@@ -433,10 +425,8 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   spectralAxis = CSpectrumSpectralAxis(sAxis);
   fluxAxis = CSpectrumFluxAxis(fAxis);
   spectra = CSpectrum(spectralAxis, fluxAxis);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == false);
-  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
-  BOOST_CHECK(result == false);
+  BOOST_CHECK_THROW(sample.computeContinuum(spectra), AmzException);
+  BOOST_CHECK_THROW(sample.FindEffectiveSpectrumBorder(fluxAxis), AmzException);
 
   // -------- SPECTRA WITH TWO PARTS TESTS ------------
 
@@ -453,34 +443,35 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   spectralAxis = CSpectrumSpectralAxis(sAxis);
   fluxAxis = CSpectrumFluxAxis(fAxis);
   spectra = CSpectrum(spectralAxis, fluxAxis);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == true);
+  CSpectrumFluxAxis continuumFluxAxis;
+  BOOST_CHECK_NO_THROW(continuumFluxAxis = sample.computeContinuum(spectra));
   BOOST_TEST_MESSAGE("TEST REMOVE CONTINUUM WITH ODD REFLECTION");
-  print_flux(noContinuumFluxAxis.GetSamplesVector());
-  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  print_flux(continuumFluxAxis.GetSamplesVector());
+  Int32 k0 = undefIdx;
+  Int32 k1 = undefIdx;
+  BOOST_CHECK_NO_THROW(std::tie(k0, k1) =
+                           sample.FindEffectiveSpectrumBorder(fluxAxis));
   BOOST_CHECK(k0 == 2 && k1 == 27);
 
   // TEST 7 : odd mirror
   sample.SetMedianEvenReflection(true);
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == true);
+  BOOST_CHECK_NO_THROW(continuumFluxAxis = sample.computeContinuum(spectra));
   BOOST_TEST_MESSAGE("TEST REMOVE CONTINUUM WITH EVEN REFLECTION");
-  print_flux(noContinuumFluxAxis.GetSamplesVector());
-  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  print_flux(continuumFluxAxis.GetSamplesVector());
+  BOOST_CHECK_NO_THROW(std::tie(k0, k1) =
+                           sample.FindEffectiveSpectrumBorder(fluxAxis));
   BOOST_CHECK(k0 == 2 && k1 == 27);
 }
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(ProcessRemoveContinuum) {
   // Output Flux
-  Int32 n = 10;
-  CSpectrumFluxAxis noContinuumFluxAxis(n, 0.);
-  CSpectrumFluxAxis noContinuumFluxAxis2(n, 0.);
+  CSpectrumFluxAxis continuumFluxAxis;
+  CSpectrumFluxAxis continuumFluxAxis2;
 
   // CContinuumIrregularSamplingMedian
   CContinuumIrregularSamplingMedian sample;
   CContinuumIrregularSamplingMedian sample2;
-  bool result;
 
   Float64 width = 75;
   sample.SetMeanKernelWidth(width);
@@ -498,19 +489,17 @@ BOOST_AUTO_TEST_CASE(ProcessRemoveContinuum) {
   CSpectrum spectra = CSpectrum(spectralAxis, fluxAxis);
 
   // Test
-  result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
-  BOOST_CHECK(result == true);
-  result = sample2.ProcessRemoveContinuum(spectra, noContinuumFluxAxis2,
-                                          spectra.GetMeanResolution());
-  BOOST_CHECK(result == true);
+  BOOST_CHECK_NO_THROW(continuumFluxAxis = sample.computeContinuum(spectra));
+  BOOST_CHECK_NO_THROW(continuumFluxAxis2 = sample2.ProcessEstimateContinuum(
+                           spectra, spectra.GetMeanResolution()));
   BOOST_TEST_MESSAGE("TEST ProcessRemoveContinuum");
-  for (int i = 0; i < noContinuumFluxAxis.GetSamplesCount(); i++) {
-    BOOST_CHECK_CLOSE(abs(noContinuumFluxAxis.GetSamplesVector()[i] -
-                          noContinuumFluxAxis2.GetSamplesVector()[i]),
+  for (int i = 0; i < continuumFluxAxis.GetSamplesCount(); i++) {
+    BOOST_CHECK_CLOSE(abs(continuumFluxAxis.GetSamplesVector()[i] -
+                          continuumFluxAxis2.GetSamplesVector()[i]),
                       0.0, 1e-6);
   }
-  print_flux(noContinuumFluxAxis.GetSamplesVector());
-  print_flux(noContinuumFluxAxis2.GetSamplesVector());
+  print_flux(continuumFluxAxis.GetSamplesVector());
+  print_flux(continuumFluxAxis2.GetSamplesVector());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

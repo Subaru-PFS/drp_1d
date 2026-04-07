@@ -65,6 +65,7 @@ public:
   CMask operator&(const CMask &other) const;
   CMask &operator&=(const CMask &other);
   Int32 GetMasksCount() const;
+  bool isEmpty() const;
   Mask operator[](const Int32 i) const;
   Mask &operator[](const Int32 i);
   Float64 ComputeOverlapFraction(const CMask &other) const;
@@ -89,6 +90,8 @@ inline Mask CMask::operator[](const Int32 i) const { return m_Mask[i]; }
 inline Mask &CMask::operator[](const Int32 i) { return m_Mask[i]; }
 
 inline Int32 CMask::GetMasksCount() const { return m_Mask.size(); }
+
+inline bool CMask::isEmpty() const { return m_Mask.empty(); };
 
 inline Int32 CMask::GetMaskedSampleCount() const {
   return m_Mask.size() - GetUnMaskedSampleCount();

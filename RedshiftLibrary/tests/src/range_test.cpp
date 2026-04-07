@@ -889,6 +889,21 @@ BOOST_AUTO_TEST_CASE(Union) {
   ret = TInt32Range::getUnion(b, c, resultUnion);
   BOOST_CHECK(ret == true);
   BOOST_CHECK(resultUnion == TInt32Range(1, 4));
+
+  BOOST_CHECK(b.unionWith(c) == true);
+  BOOST_CHECK(b == TInt32Range(1, 4));
+}
+
+BOOST_AUTO_TEST_CASE(Include) {
+  TInt32Range a{1, 5};
+  TInt32Range b{2, 3};
+  TInt32Range c{3, 7};
+  TInt32Range d{0, 2};
+
+  BOOST_CHECK(a.Include(b));
+  BOOST_CHECK(!b.Include(a));
+  BOOST_CHECK(!a.Include(c));
+  BOOST_CHECK(!a.Include(d));
 }
 
 BOOST_AUTO_TEST_CASE(signCheck) {

@@ -565,6 +565,9 @@ void CLineModelElement::addToSpectrumModel(
   if (m_OutsideLambdaRange || getElementParam()->isNotFittable())
     return;
 
+  auto [modelflux, modelError] =
+      std::move(modelfluxAxis).GetSamplesAndErrorVector();
+
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on the interval
     if (m_OutsideLambdaRangeList[index])
       continue;
@@ -576,8 +579,8 @@ void CLineModelElement::addToSpectrumModel(
       Float64 lambda = modelspectralAxis[i];
       Float64 Yi =
           getModelAtLambda(lambda, redshift, continuumfluxAxis[i], index);
-      modelfluxAxis[i] += Yi;
-      if (std::isnan(modelfluxAxis[i]))
+      modelflux[i] += Yi;
+      if (std::isnan(modelflux[i]))
         THROWG(ErrorCode::INTERNAL_ERROR,
                Formatter() << "NaN flux Line: "
                            << getElementParam()->GetLineName(index)
@@ -586,43 +589,9 @@ void CLineModelElement::addToSpectrumModel(
                            << m_rangeNoOverlap[index]);
     }
   }
-  return;
-}
-
-void CLineModelElement::addToSpectrumModelDerivVel(
-    const CSpectrumSpectralAxis &modelspectralAxis,
-    CSpectrumFluxAxis &modelfluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-    bool emissionLine) const {
-  if (m_OutsideLambdaRange)
-    return;
-
-  for (Int32 index = 0; index != GetSize(); ++index) {
-    if (m_OutsideLambdaRangeList[index])
-      continue;
-
-    if ((emissionLine != getElementParam()->IsEmission()))
-      continue;
-
-    Float64 A = m_ElementParam->m_FittedAmplitudes[index];
-    if (std::isnan(A))
-      THROWG(ErrorCode::INTERNAL_ERROR, "FittedAmplitude cannot be NAN");
-
-    for (Int32 i : m_rangeNoOverlap[index]) {
-
-      Float64 const x = modelspectralAxis[i];
-      auto const &[mu, sigma] =
-          getObservedPositionAndLineWidth(redshift, index, false);
-
-      if (m_ElementParam->IsAbsorption())
-        modelfluxAxis[i] -=
-            A * continuumfluxAxis[i] *
-            m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
-      else
-        modelfluxAxis[i] +=
-            A * m_ElementParam->GetLineProfileDerivVel(index, x, mu, sigma);
-    }
-  }
+  modelfluxAxis = CSpectrumFluxAxis(std::move(modelflux));
+  if (!modelError.empty())
+    modelfluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
   return;
 }
 
@@ -792,11 +761,14 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
  * \brief For lines inside lambda range, sets the flux to the continuum flux.
  **/
 void CLineModelElement::initSpectrumModel(
-    CSpectrumFluxAxis &modelfluxAxis,
+    CSpectrumFluxAxis &modelFluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) const {
 
   if (m_OutsideLambdaRange)
     return;
+
+  auto [modelFlux, modelError] =
+      std::move(modelFluxAxis).GetSamplesAndErrorVector();
 
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on the interval
     if (m_OutsideLambdaRangeList[index])
@@ -806,8 +778,12 @@ void CLineModelElement::initSpectrumModel(
       continue;
 
     for (Int32 i : m_rangeNoOverlap[index])
-      modelfluxAxis[i] = continuumfluxAxis[i];
+      modelFlux[i] = continuumfluxAxis[i];
   }
+  modelFluxAxis = CSpectrumFluxAxis(std::move(modelFlux));
+  if (!modelError.empty())
+    modelFluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
+  ;
   return;
 }
 
@@ -815,12 +791,14 @@ void CLineModelElement::initSpectrumModel(
  * \brief For lines inside lambda range, sets the flux to the polynomial.
  **/
 void CLineModelElement::initSpectrumModelPolynomial(
-    CSpectrumFluxAxis &modelfluxAxis, const CSpectrumSpectralAxis &spcAxis,
+    CSpectrumFluxAxis &modelFluxAxis, const CSpectrumSpectralAxis &spcAxis,
     Int32 line_index) const {
 
   if (m_OutsideLambdaRange)
     return;
 
+  auto [modelFlux, modelError] =
+      std::move(modelFluxAxis).GetSamplesAndErrorVector();
   for (Int32 index = 0; index != GetSize(); ++index) { // loop on the interval
     if (m_OutsideLambdaRangeList[index])
       continue;
@@ -829,9 +807,11 @@ void CLineModelElement::initSpectrumModelPolynomial(
       continue;
 
     for (Int32 i : m_rangeNoOverlap[index])
-      modelfluxAxis[i] =
-          m_ElementParam->m_ampOffsetsCoeffs.getValue(spcAxis[i]);
+      modelFlux[i] = m_ElementParam->m_ampOffsetsCoeffs.getValue(spcAxis[i]);
   }
+  modelFluxAxis = CSpectrumFluxAxis(std::move(modelFlux));
+  if (!modelError.empty())
+    modelFluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
   return;
 }
 
@@ -881,7 +861,6 @@ Int32 CLineModelElement::computeCrossProducts(
     const CSpectrumFluxAxis &noContinuumfluxAxis,
     const CSpectrumFluxAxis &continuumfluxAxis, Int32 line_index) {
 
-  const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
   auto &nominalAmplitudes = m_ElementParam->m_NominalAmplitudes;
   Float64 y = 0.0;
   Float64 x = 0.0;
@@ -918,7 +897,7 @@ Int32 CLineModelElement::computeCrossProducts(
         yg += amp * GetLineProfileAtRedshift(index2, redshift, x);
       }
       num++;
-      err2 = 1.0 / (error[i] * error[i]);
+      err2 = noContinuumfluxAxis.GetWeight(i);
       m_ElementParam->m_dtmFree += yg * y * err2;
       m_ElementParam->m_sumGauss += yg * yg * err2;
     }

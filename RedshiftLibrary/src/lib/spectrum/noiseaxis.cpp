@@ -45,21 +45,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumNoiseAxis::CSpectrumNoiseAxis(Int32 n) : CSpectrumAxis(n, 1.0) {}
-
-bool CSpectrumNoiseAxis::Invert() {
-  Int32 N = GetSamplesCount();
-  for (Int32 i = 0; i < N; i++) {
-    m_Samples[i] = 1 / m_Samples[i];
-  }
-  return true;
-}
-
-// default to 1. instead of O.
-void CSpectrumNoiseAxis::SetSize(Int32 s, Float64 valueDef) {
-  m_Samples.assign(s, valueDef);
-}
-
 const TBoolList CSpectrumNoiseAxis::checkNoise() const {
   TBoolList isValid(m_Samples.size(), true);
   for (std::size_t i = 0; i < m_Samples.size(); i++) {
@@ -70,4 +55,15 @@ const TBoolList CSpectrumNoiseAxis::checkNoise() const {
       isValid[i] = false;
   }
   return isValid;
+}
+
+CSpectrumNoiseAxis &
+CSpectrumNoiseAxis::operator+=(CSpectrumNoiseAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Cannot sum noise axis of different sizes");
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(),
+                 [](Float64 a, Float64 b) { return std::sqrt(a * a + b * b); });
+  return *this;
 }

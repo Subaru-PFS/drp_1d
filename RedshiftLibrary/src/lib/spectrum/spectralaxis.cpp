@@ -38,6 +38,7 @@
 // ============================================================================
 #include <cmath>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
@@ -48,11 +49,6 @@
 
 using namespace NSEpic;
 using namespace std;
-
-/**
- * Constructor, flags log scale when set.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n) : CSpectrumAxis(n) {}
 
 /**
  * Constructor, flags log scale when set.
@@ -86,28 +82,19 @@ void CSpectrumSpectralAxis::convertToVacuum(std::string const &AirVacuum) {
   }
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(Int32 n, Float64 value)
-    : CSpectrumAxis(n, value) {}
+CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(Float64 op) {
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
+  if (op < 0 && !indeterminate(m_isSorted))
+    m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
+  if (!op)
+    m_isSorted = (GetSamplesCount() < 2);
+  return *this;
+}
 
-CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator*=(const Float64 op) {
-  CSpectrumAxis::operator*=(op);
-  if (op < 0 && !indeterminate(m_isSorted))
-    m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
-  if (!op)
-    m_isSorted = (GetSamplesCount() < 2);
-  return *this;
-}
-CSpectrumSpectralAxis &CSpectrumSpectralAxis::operator/=(const Float64 op) {
-  CSpectrumAxis::operator/=(op);
-  if (op < 0 && !indeterminate(m_isSorted))
-    m_isSorted = m_isSorted ? static_cast<tribool>(false) : indeterminate;
-  if (!op)
-    m_isSorted = (GetSamplesCount() < 2);
-  return *this;
-}
 CSpectrumSpectralAxis
 CSpectrumSpectralAxis::MaskAxis(const TMaskList &mask) const {
-  CSpectrumSpectralAxis spc_axis = CSpectrumAxis::MaskAxis(mask);
+  CSpectrumSpectralAxis spc_axis(CSpectrumAxis::MaskAxis(mask));
   spc_axis.m_isSorted = m_isSorted;
   if (spc_axis.GetSamplesCount() < 2)
     spc_axis.m_isSorted = true;
@@ -115,9 +102,9 @@ CSpectrumSpectralAxis::MaskAxis(const TMaskList &mask) const {
   return spc_axis;
 }
 
-void CSpectrumSpectralAxis::SetSize(Int32 s) {
-  Float64 sample_size = GetSamplesCount();
-  CSpectrumAxis::SetSize(s);
+void CSpectrumSpectralAxis::resize(Int32 s, Float64 valueDef) {
+  Float64 const sample_size = GetSamplesCount();
+  CSpectrumAxis::resize(s, valueDef);
   if (s < 2)
     m_isSorted = true;
   else {
@@ -150,15 +137,6 @@ CSpectrumSpectralAxis::ShiftByWaveLengthInPlace(Float64 wavelengthOffset,
     }
   }
   return *this;
-}
-
-void CSpectrumSpectralAxis::ApplyOffset(Float64 wavelengthOffset) {
-  Int32 nSamples = m_Samples.size();
-  for (Int32 i = 0; i < nSamples; i++) {
-    m_Samples[i] += wavelengthOffset;
-  }
-  if (!wavelengthOffset)
-    m_isLogSampled = false;
 }
 
 /**
@@ -208,29 +186,18 @@ CSpectrumSpectralAxis::GetMeanResolution(TInt32Range const &index_range) const {
 /**
  *
  */
-TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const {
-  if (m_Samples.size() < 2)
-    return TLambdaRange(0.0, 0.0);
-  return TLambdaRange(m_Samples[0], m_Samples[m_Samples.size() - 1]);
-}
-
-/**
- *
- */
-void CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange,
-                                    CMask &mask) const {
-  TFloat64Range range = lambdaRange;
-
-  mask.SetSize(m_Samples.size());
+CMask CSpectrumSpectralAxis::GetMask(const TFloat64Range &lambdaRange) const {
+  CMask mask(m_Samples.size());
 
   // weight = Spectrum over lambdarange flag
   for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    mask[i] = Mask(0);
     // If this sample is somewhere in a valid lambdaRange, tag weight with 1
-    if (m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd()) {
+    if (m_Samples[i] >= lambdaRange.GetBegin() &&
+        m_Samples[i] <= lambdaRange.GetEnd()) {
       mask[i] = Mask(1);
     }
   }
+  return mask;
 }
 
 /**
@@ -497,11 +464,6 @@ bool CSpectrumSpectralAxis::isSorted() const {
       m_isSorted = true;
   }
   return bool(m_isSorted);
-}
-void CSpectrumSpectralAxis::resetAxisProperties() {
-  // reset states since m_Samples is going to change
-  m_isSorted = indeterminate;
-  m_isLogSampled = indeterminate;
 }
 
 CSpectrumSpectralAxis CSpectrumSpectralAxis::blueShift(Float64 z) const {

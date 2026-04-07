@@ -193,21 +193,21 @@ Float64 CContinuumIrregularSamplingMedian::FitBorder(const CSpectrum &s,
                                                      Int32 kstart, Int32 kend,
                                                      bool isRightBorder) const {
   const CSpectrumSpectralAxis &spectralAxis = s.GetSpectralAxis();
-  const CSpectrumFluxAxis &fluxAxis = s.GetRawFluxAxis();
 
   TFloat64Range range = TFloat64Range(spectralAxis[kstart], spectralAxis[kend]);
 
-  Float64 a;
-  Float64 b;
-  bool ret = s.GetLinearRegInRange(range, a, b);
+  auto [a, b] = s.GetLinearRegInRange(range);
   Int32 k = isRightBorder ? kend : kstart;
-  Float64 fitValue = ret ? spectralAxis[k] * a + b : fluxAxis[k];
+  Float64 fitValue = spectralAxis[k] * a + b;
 
   return fitValue;
 }
 
-bool CContinuumIrregularSamplingMedian::FindEffectiveSpectrumBorder(
-    const CSpectrumFluxAxis &fluxAxis, Int32 &k0, Int32 &k1) const {
+std::pair<Int32, Int32>
+CContinuumIrregularSamplingMedian::FindEffectiveSpectrumBorder(
+    const CSpectrumFluxAxis &fluxAxis) const {
+  Int32 k0 = undefIdx;
+  Int32 k1 = undefIdx;
   // Find the first not null element, and put its index in k0
   Int32 norig = fluxAxis.GetSamplesCount();
   Int32 j;
@@ -238,10 +238,10 @@ bool CContinuumIrregularSamplingMedian::FindEffectiveSpectrumBorder(
   }
 
   if (k <= 10) {
-    return false;
+    THROWG(ErrorCode::INTERNAL_ERROR, "less than 10 non null samples");
   }
 
-  return true;
+  return {k0, k1};
 }
 
 /**
@@ -250,11 +250,11 @@ bool CContinuumIrregularSamplingMedian::FindEffectiveSpectrumBorder(
  *doesn't vary more than ~ 25 % in a spectral axis') compute the continuum
  *using the median technique with that adapted resolution
  **/
-bool CContinuumIrregularSamplingMedian::RemoveContinuum(
-    const CSpectrum &s, CSpectrumFluxAxis &noContinuumFluxAxis) const {
+CSpectrumFluxAxis
+CContinuumIrregularSamplingMedian::computeContinuum(const CSpectrum &s) const {
   Float64 resolution = s.GetMeanResolution();
 
-  bool result = ProcessRemoveContinuum(s, noContinuumFluxAxis, resolution);
+  auto result = ProcessEstimateContinuum(s, resolution);
 
   return result;
 }
@@ -262,11 +262,9 @@ bool CContinuumIrregularSamplingMedian::RemoveContinuum(
 /**
  * Computes the continuum using the median technique, and the input resolution.
  */
-bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
-    const CSpectrum &s, CSpectrumFluxAxis &noContinuumFluxAxis,
-    Float64 resolution) const {
-  Int32 k0 = 0;
-  Int32 k1 = 0;
+CSpectrumFluxAxis CContinuumIrregularSamplingMedian::ProcessEstimateContinuum(
+    const CSpectrum &s, Float64 resolution) const {
+
   Int32 nd;
 
   Int32 j, k;
@@ -279,31 +277,28 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
 
   // set default
   if (meanSmoothAmplitude <= 0) {
-    return false;
+    THROWG(ErrorCode::INTERNAL_ERROR, "negative meanSmoothAmplitude");
   }
 
   meanSmoothAmplitude = min(meanSmoothAmplitude, norig / 2);
 
   // set default
   if (m_MedianSmoothCycles <= 0) {
-    return false;
+    THROWG(ErrorCode::INTERNAL_ERROR, "negative medianSmoothCycles");
   }
 
   Int32 medianSmoothAmplitude = round(m_MedianSmoothAmplitude / resolution);
 
   // set default
   if (medianSmoothAmplitude <= 0) {
-    return false;
+    THROWG(ErrorCode::INTERNAL_ERROR, "negative medianSmoothAmplitude");
   }
 
   medianSmoothAmplitude = max(meanSmoothAmplitude, medianSmoothAmplitude);
 
-  noContinuumFluxAxis = CSpectrumFluxAxis(norig, 0.);
-  noContinuumFluxAxis.setError(fluxAxis.GetError());
+  TAxisSampleList continuumFluxAxis(norig, 0.);
 
-  bool result = FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
-  if (!result)
-    return false;
+  auto [k0, k1] = FindEffectiveSpectrumBorder(fluxAxis);
 
   nd = k1 - k0 + 1;
 
@@ -361,22 +356,10 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
     ysmoobig = MeanSmooth(ysmoobig, meanSmoothAmplitude / 4);
   }
 
-  // Copy spectrum before k0
-  for (j = 0; j < k0; j++) {
-    noContinuumFluxAxis[j] = fluxAxis[j];
-  }
-
   // Set continuum inside "effective spectrum"
   for (j = k0; j <= k1; j++) {
-    noContinuumFluxAxis[j] = fluxAxis[j] - ysmoobig[j - k0 + nreflex];
+    continuumFluxAxis[j] = ysmoobig[j - k0 + nreflex];
   }
 
-  // Copy spectrum after k1
-  if (k1 + 1 < s.GetSampleCount()) {
-    for (j = k1 + 1; j < s.GetSampleCount(); j++) {
-      noContinuumFluxAxis[j] = fluxAxis[j];
-    }
-  }
-
-  return true;
+  return CSpectrumFluxAxis(std::move(continuumFluxAxis));
 }

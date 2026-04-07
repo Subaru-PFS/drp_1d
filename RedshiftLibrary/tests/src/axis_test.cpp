@@ -111,13 +111,26 @@ BOOST_AUTO_TEST_CASE(operator_test) {
   BOOST_CHECK(n2Axis[0] == n2Array[0]);
   BOOST_CHECK(n2Axis[1] == n2Array[1]);
 
+  // operator +
+  BOOST_CHECK_THROW(n10Axis + n2Axis, AmzException);
+  CSpectrumAxis n3Axis(TFloat64List{2., 3.});
+  auto const &nsumAxis = n2Axis + n3Axis;
+  BOOST_CHECK(nsumAxis[0] == 2.);
+  BOOST_CHECK(nsumAxis[1] == 4.);
+
+  // operator -
+  BOOST_CHECK_THROW(n10Axis - n2Axis, AmzException);
+  auto const &ndiffAxis = n3Axis - n2Axis;
+  BOOST_CHECK(ndiffAxis[0] == 2.);
+  BOOST_CHECK(ndiffAxis[1] == 2.);
+
   // operator *
-  n2Axis *= 2;
+  n2Axis = 2 * n2Axis;
   BOOST_CHECK(n2Axis[0] == n2Array[0] * 2);
   BOOST_CHECK(n2Axis[1] == n2Array[1] * 2);
 
   // operator /
-  n2Axis /= 2;
+  n2Axis = n2Axis / 2.;
   BOOST_CHECK(n2Axis[0] == n2Array[0]);
   BOOST_CHECK(n2Axis[1] == n2Array[1]);
 }
@@ -190,12 +203,12 @@ BOOST_AUTO_TEST_CASE(SpectrumAxis_test) {
   BOOST_CHECK(n2Axis.GetSamplesCount() == 0);
 
   // test SetSize
-  n4Axis.SetSize(2);
+  n4Axis.resize(2);
   BOOST_CHECK(n4Axis.GetSamplesCount() == 2);
   BOOST_CHECK(n4Axis[0] == n4Array[0]);
   BOOST_CHECK(n4Axis[1] == n4Array[1]);
 
-  n4Axis.SetSize(4);
+  n4Axis.resize(4);
   BOOST_CHECK(n4Axis.GetSamplesCount() == 4);
   BOOST_CHECK(n4Axis[0] == n4Array[0]);
   BOOST_CHECK(n4Axis[1] == n4Array[1]);

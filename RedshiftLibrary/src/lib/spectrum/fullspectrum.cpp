@@ -68,11 +68,15 @@ CFullSpectrum::CFullSpectrum(const CFullSpectrum &other, const TMaskList &mask)
 }
 
 CFullSpectrum::CFullSpectrum(const std::string &name, const std::string &obsId)
-    : CSpectrum(name, obsId) {}
+    : CSpectrum(name, obsId) {
+  m_rebin = CRebin::create("linFull", *this);
+}
 
 CFullSpectrum::CFullSpectrum(CSpectrumSpectralAxis spectralAxis,
                              CSpectrumFluxAxis fluxAxis)
-    : CSpectrum(spectralAxis, fluxAxis) {}
+    : CSpectrum(spectralAxis, fluxAxis) {
+  m_rebin = CRebin::create("linFull", *this);
+}
 
 std::shared_ptr<CSpectrum> CFullSpectrum::getUnmaskedSpectrum() {
   return std::make_shared<CSpectrum>(*this, m_mask.getMaskList());

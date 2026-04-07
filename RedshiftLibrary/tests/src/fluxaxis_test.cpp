@@ -36,11 +36,13 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include <boost/test/tools/old/interface.hpp>
 #include <cmath>
 #include <numeric>
 
 #include <boost/test/unit_test.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
@@ -61,23 +63,26 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
 
   Int32 n = 10;
   TFloat64List sample_ref(n, 0);
-  TFloat64List noiseSample_ref(n, 1);
+  TFloat64List noiseSample_ref(n, 0);
 
   CSpectrumFluxAxis object_FluxAxis;
   BOOST_CHECK(object_FluxAxis.GetSamplesCount() == 0);
+  BOOST_CHECK(object_FluxAxis.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis.GetError(), AmzException);
 
   CSpectrumFluxAxis object_FluxAxis2(n);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == n);
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
-  CSpectrumNoiseAxis spectrumNoiseAxis2 = object_FluxAxis2.GetError();
-  BOOST_CHECK(spectrumNoiseAxis2.GetSamplesCount() == n);
-  BOOST_CHECK(spectrumNoiseAxis2.GetSamplesVector() == noiseSample_ref);
+  BOOST_CHECK(object_FluxAxis2.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis2.GetError(), AmzException);
+  BOOST_CHECK(object_FluxAxis2.GetInverseWeight(0) == 0);
 
   CSpectrumAxis spectrumAxis(n);
   CSpectrumNoiseAxis spectrumNoiseAxis(n);
   CSpectrumFluxAxis object_FluxAxis2_b(spectrumAxis, spectrumNoiseAxis);
   BOOST_CHECK(object_FluxAxis2_b.GetSamplesCount() == n);
   BOOST_CHECK(object_FluxAxis2_b.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxis2_b.hasErrorData() == true);
   CSpectrumNoiseAxis spectrumNoiseAxis2_b = object_FluxAxis2_b.GetError();
   BOOST_CHECK(spectrumNoiseAxis2_b.GetSamplesCount() == n);
   BOOST_CHECK(spectrumNoiseAxis2_b.GetSamplesVector() == noiseSample_ref);
@@ -85,38 +90,50 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
   CSpectrumFluxAxis object_FluxAxis2_c(spectrumAxis);
   BOOST_CHECK(object_FluxAxis2_c.GetSamplesCount() == n);
   BOOST_CHECK(object_FluxAxis2_c.GetSamplesVector() == sample_ref);
-  CSpectrumNoiseAxis spectrumNoiseAxis2_c = object_FluxAxis2_c.GetError();
-  BOOST_CHECK(spectrumNoiseAxis2_c.GetSamplesCount() == n);
-  BOOST_CHECK(spectrumNoiseAxis2_c.GetSamplesVector() == noiseSample_ref);
+  BOOST_CHECK(object_FluxAxis2_c.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis2_c.GetError(), AmzException);
 
   sample_ref = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   Float64 Array1[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   CSpectrumFluxAxis object_FluxAxis3(Array1, 10);
   BOOST_CHECK(object_FluxAxis3.GetSamplesCount() == 10);
   BOOST_CHECK(object_FluxAxis3.GetSamplesVector() == sample_ref);
-  CSpectrumNoiseAxis spectrumNoiseAxis3 = object_FluxAxis3.GetError();
-  BOOST_CHECK(spectrumNoiseAxis3.GetSamplesVector() == noiseSample_ref);
+  BOOST_CHECK(object_FluxAxis3.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis3.GetError(), AmzException);
 
   TFloat64List sampleIn1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   CSpectrumFluxAxis object_FluxAxis3_b(sampleIn1);
   BOOST_CHECK(object_FluxAxis3_b.GetSamplesCount() == 10);
   BOOST_CHECK(object_FluxAxis3_b.GetSamplesVector() == sample_ref);
-  CSpectrumNoiseAxis spectrumNoiseAxis3_b = object_FluxAxis3_b.GetError();
-  BOOST_CHECK(spectrumNoiseAxis3_b.GetSamplesVector() == noiseSample_ref);
+  BOOST_CHECK(object_FluxAxis3_b.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis3_b.GetError(), AmzException);
 
   CSpectrumFluxAxis object_FluxAxis3_c({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
   BOOST_CHECK(object_FluxAxis3_c.GetSamplesCount() == 10);
   BOOST_CHECK(object_FluxAxis3_c.GetSamplesVector() == sample_ref);
-  CSpectrumNoiseAxis spectrumNoiseAxis3_c = object_FluxAxis3_c.GetError();
-  BOOST_CHECK(spectrumNoiseAxis3_c.GetSamplesVector() == noiseSample_ref);
+  BOOST_CHECK(object_FluxAxis3_c.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis3_c.GetError(), AmzException);
 
   noiseSample_ref = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
   Float64 Array2[10] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
   CSpectrumFluxAxis object_FluxAxis4(Array1, 10, Array2, 10);
   BOOST_CHECK(object_FluxAxis4.GetSamplesCount() == 10);
   BOOST_CHECK(object_FluxAxis4.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxis4.hasErrorData() == true);
   CSpectrumNoiseAxis spectrumNoiseAxis4 = object_FluxAxis4.GetError();
   BOOST_CHECK(spectrumNoiseAxis4.GetSamplesVector() == noiseSample_ref);
+  TFloat64List weight_ref = {1 / 4.,   1 / 16.,  1 / 36.,  1 / 64.,  1 / 100.,
+                             1 / 144., 1 / 196., 1 / 256., 1 / 324., 1 / 400.};
+  TFloat64List inverse_weight_ref = {4.,   16.,  36.,  64.,  100.,
+                                     144., 196., 256., 324., 400.};
+  TFloat64List weight;
+  for (Int32 i = 0; i != 10; ++i)
+    weight.push_back(object_FluxAxis4.GetWeight(i));
+  BOOST_CHECK(weight == weight_ref);
+  TFloat64List inverse_weight;
+  for (Int32 i = 0; i != 10; ++i)
+    inverse_weight.push_back(object_FluxAxis4.GetInverseWeight(i));
+  BOOST_CHECK(inverse_weight == inverse_weight_ref);
 
   BOOST_CHECK_THROW(CSpectrumFluxAxis object_FluxAxis4_b(Array1, 10, Array2, 9),
                     AmzException);
@@ -134,6 +151,7 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   // test setError
   CSpectrumNoiseAxis spectrumNoiseAxis(Array2);
   object_FluxAxis.setError(spectrumNoiseAxis);
+  BOOST_CHECK(object_FluxAxis.hasErrorData() == true);
   BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector() == Array2);
   TAxisSampleList noise = spectrumNoiseAxis.GetSamplesVector();
   noise.pop_back();
@@ -147,13 +165,15 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   CSpectrumFluxAxis object_FluxAxis2 = object_FluxAxis.extract(0, 4);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 5);
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxis2.hasErrorData() == true);
   CSpectrumNoiseAxis spectrumNoiseAxis2 = object_FluxAxis2.GetError();
   BOOST_CHECK(spectrumNoiseAxis2.GetSamplesVector() == noiseSample_ref);
 
   //-------------//
   // test SetSize
-  object_FluxAxis2.SetSize(10);
+  object_FluxAxis2.resize(10);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 10);
+  BOOST_CHECK(object_FluxAxis2.hasErrorData() == true);
   spectrumNoiseAxis2 = object_FluxAxis2.GetError();
   BOOST_CHECK(spectrumNoiseAxis2.GetSamplesCount() == 10);
 
@@ -161,8 +181,8 @@ BOOST_AUTO_TEST_CASE(basic_function_test) {
   // test clear
   object_FluxAxis2.clear();
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 0);
-  spectrumNoiseAxis2 = object_FluxAxis2.GetError();
-  BOOST_CHECK(spectrumNoiseAxis2.GetSamplesCount() == 0);
+  BOOST_CHECK(object_FluxAxis2.hasErrorData() == false);
+  BOOST_CHECK_THROW(object_FluxAxis2.GetError(), AmzException);
 }
 
 BOOST_AUTO_TEST_CASE(ApplyMedianSmooth_test) {
@@ -279,33 +299,31 @@ BOOST_AUTO_TEST_CASE(ComputeMeanAndSDev_test) {
 
   Float64 mean;
   Float64 sdev;
-  bool result;
 
   //--------------------//
   // test ComputeMeanAndSDev
 
   // 1st case : size of mask != size of sample
   CMask mask(5);
-  BOOST_CHECK_THROW(
-      object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev),
-      AmzException);
+  BOOST_CHECK_THROW(object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask),
+                    AmzException);
 
   // 2nd case : mask = 0
   mask.SetSize(10);
   for (Int32 i = 0; i < mask.GetMasksCount(); i++) {
     mask[i] = 0;
   }
-  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
-  BOOST_CHECK(result == false);
-  BOOST_CHECK(mean != mean);
-  BOOST_CHECK(sdev != sdev);
+  BOOST_CHECK_NO_THROW(std::tie(mean, sdev) =
+                           object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask));
+  BOOST_CHECK(std::isnan(mean));
+  BOOST_CHECK(std::isnan(sdev));
 
   // 3rd case : mask = 1 for i=2 & i=3
   mask[2] = 1;
   mask[3] = 1;
   error_ref = TFloat64List(10, 0.5); // weight = 4
   object_CSpectrumFluxAxis.setError(CSpectrumNoiseAxis(error_ref));
-  result = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask, mean, sdev);
+  std::tie(mean, sdev) = object_CSpectrumFluxAxis.ComputeMeanAndSDev(mask);
   Float64 sdev_ref = sqrt(
       (4 * (30 - 35) * (30 - 35) + 4 * (40 - 35) * (40 - 35)) / (8 - 32 / 8));
   BOOST_CHECK_CLOSE(mean, 35, precision);
@@ -355,10 +373,7 @@ BOOST_AUTO_TEST_CASE(ComputeRMSDiff_test) {
   BOOST_CHECK_CLOSE(resultComputeRMSDiff, er, precision);
 }
 
-BOOST_AUTO_TEST_CASE(Subtract_test) {
-
-  //--------------------//
-  // test Subtract
+BOOST_AUTO_TEST_CASE(Add_test) {
 
   // size of sampleA != size of sampleB
 
@@ -368,17 +383,90 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   TFloat64List sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18.};
   CSpectrumFluxAxis object_FluxAxisB(sampleB);
 
-  BOOST_CHECK_THROW(object_FluxAxisA.Subtract(object_FluxAxisB), AmzException);
+  BOOST_CHECK_THROW(object_FluxAxisA += object_FluxAxisB, AmzException);
 
   // size of sampleA = size of sampleB
   sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
   object_FluxAxisB = CSpectrumFluxAxis(sampleB);
 
-  object_FluxAxisA.Subtract(object_FluxAxisB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+
+  TFloat64List sample_ref = {3., 6., 9., 12., 15., 18., 21., 24., 27., 30.};
+
+  BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+  BOOST_CHECK(object_FluxAxisA.hasErrorData() == false);
+
+  object_FluxAxisA = CSpectrumFluxAxis(sampleA);
+  CSpectrumFluxAxis diff = object_FluxAxisA + object_FluxAxisB;
+  BOOST_CHECK(sample_ref == diff.GetSamplesVector());
+
+  TFloat64List noise_ref(10, 1.);
+  CSpectrumNoiseAxis noise(noise_ref);
+  CSpectrumAxis axisA(sampleA);
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noise);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.hasErrorData());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+
+  noise_ref = TFloat64List(10, 5.);
+  CSpectrumNoiseAxis noiseA(TFloat64List(10, 3.));
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noiseA);
+  CSpectrumAxis axisB(sampleB);
+  CSpectrumNoiseAxis noiseB(TFloat64List(10, 4.));
+  object_FluxAxisB = CSpectrumFluxAxis(axisB, noiseB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA += object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.hasErrorData());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+}
+
+BOOST_AUTO_TEST_CASE(Subtract_test) {
+
+  // size of sampleA != size of sampleB
+
+  TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+  CSpectrumFluxAxis object_FluxAxisA(sampleA);
+
+  TFloat64List sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18.};
+  CSpectrumFluxAxis object_FluxAxisB(sampleB);
+
+  BOOST_CHECK_THROW(object_FluxAxisA -= object_FluxAxisB, AmzException);
+
+  // size of sampleA = size of sampleB
+  sampleB = {2., 4., 6., 8., 10., 12., 14., 16., 18., 20};
+  object_FluxAxisB = CSpectrumFluxAxis(sampleB);
+
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
 
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
   BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
+  BOOST_CHECK(object_FluxAxisA.hasErrorData() == false);
+
+  object_FluxAxisA = CSpectrumFluxAxis(sampleA);
+  CSpectrumFluxAxis diff = object_FluxAxisA - object_FluxAxisB;
+  BOOST_CHECK(sample_ref == diff.GetSamplesVector());
+
+  TFloat64List noise_ref(10, 1.);
+  CSpectrumNoiseAxis noise(noise_ref);
+  CSpectrumAxis axisA(sampleA);
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noise);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.hasErrorData());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
+
+  noise_ref = TFloat64List(10, 5.);
+  CSpectrumNoiseAxis noiseA(TFloat64List(10, 3.));
+  object_FluxAxisA = CSpectrumFluxAxis(axisA, noiseA);
+  CSpectrumAxis axisB(sampleB);
+  CSpectrumNoiseAxis noiseB(TFloat64List(10, 4.));
+  object_FluxAxisB = CSpectrumFluxAxis(axisB, noiseB);
+  BOOST_CHECK_NO_THROW(object_FluxAxisA -= object_FluxAxisB);
+  BOOST_CHECK(object_FluxAxisA.GetSamplesVector() == sample_ref);
+  BOOST_CHECK(object_FluxAxisA.hasErrorData());
+  BOOST_CHECK(object_FluxAxisA.GetError().GetSamplesVector() == noise_ref);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeMaxAbsValue) {
@@ -406,7 +494,7 @@ BOOST_AUTO_TEST_CASE(Invert_test) {
   // test Invert
   TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
   CSpectrumFluxAxis object_FluxAxisA(sampleA);
-  object_FluxAxisA.Invert();
+  object_FluxAxisA.Negate();
 
   TFloat64List sample_ref = {-1., -2., -3., -4., -5., -6., -7., -8., -9., -10.};
 
@@ -430,7 +518,9 @@ BOOST_AUTO_TEST_CASE(CorrectFluxAndNoiseAxis_test) {
   BOOST_CHECK(fluxAxis.GetError()[0] == 1.0); // max valid noise * coeff
 
   // 1st value of flux is not valid
-  fluxAxis[0] = std::numeric_limits<double>::infinity();
+  auto flux = std::move(fluxAxis).GetSamplesVector();
+  flux[0] = std::numeric_limits<double>::infinity();
+  fluxAxis.setSamplesVector(std::move(flux));
   // short test on checkFlux
   TBoolList isValid(10, true);
   isValid[0] = false;

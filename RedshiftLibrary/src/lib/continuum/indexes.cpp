@@ -79,15 +79,10 @@ CContinuumIndexes::getIndexes(const CSpectrum &spectrum, Float64 z) {
   for (Int32 i = 0; i < nIndexes; i++) {
     TFloat64Range rangeA = restLambdaRanges_A[i] * (z + 1);
     TFloat64Range rangeB = restLambdaRanges_B[i] * (z + 1);
-    Float64 Fa = NAN;
-    Float64 std = NAN;
-    bool retA = spectrum.GetMeanAndStdFluxInRange(rangeA, Fa, std);
-    Float64 Fb = NAN;
-    bool retB = spectrum.GetMeanAndStdFluxInRange(rangeB, Fb, std);
+    auto [Fa, _] = spectrum.GetMeanAndStdFluxInRange(rangeA);
+    auto [Fb, __] = spectrum.GetMeanAndStdFluxInRange(rangeB);
 
-    Float64 a;
-    Float64 b;
-    bool retC = spectrum.GetLinearRegInRange(rangeA, a, b);
+    auto [a, b] = spectrum.GetLinearRegInRange(rangeA);
     Float64 wlCenterB = rangeB.GetMidRange();
     Float64 Fc = wlCenterB * a + b;
 
@@ -95,14 +90,14 @@ CContinuumIndexes::getIndexes(const CSpectrum &spectrum, Float64 z) {
     sci.Break = NAN;
     sci.Color = NAN;
 
-    if (Fb > 0.0 && Fa > 0.0 && retA && retB) {
+    if (Fb > 0.0 && Fa > 0.0) {
       sci.Color = -2.5 * log10(Fa / Fb);
-    } else if (Fb <= 0.0 && Fa > 0.0 && retA && retB) {
+    } else if (Fb <= 0.0 && Fa > 0.0) {
       sci.Color = -6.0;
     }
-    if (Fc > 0.0 && Fb > 0.0 && retB && retC) {
+    if (Fc > 0.0 && Fb > 0.0) {
       sci.Break = -2.5 * log10(Fb / Fc);
-    } else if (Fc <= 0.0 && Fb > 0.0 && retB && retC) {
+    } else if (Fc <= 0.0 && Fb > 0.0) {
       sci.Break = -6.0;
     }
 
@@ -119,12 +114,9 @@ CContinuumIndexes::getIndexes(const CSpectrum &spectrum, Float64 z) {
 CContinuumIndexes::SContinuumRelevance
 CContinuumIndexes::getRelevance(const CSpectrum &spectrum,
                                 const CSpectrum &continuum) {
-  Float64 Fa = NAN;
-  Float64 stdS = NAN;
-  Float64 stdC = NAN;
-
-  spectrum.GetMeanAndStdFluxInRange(spectrum.GetLambdaRange(), Fa, stdS);
-  continuum.GetMeanAndStdFluxInRange(continuum.GetLambdaRange(), Fa, stdC);
+  auto [_, stdS] = spectrum.GetMeanAndStdFluxInRange(spectrum.GetLambdaRange());
+  auto [__, stdC] =
+      continuum.GetMeanAndStdFluxInRange(continuum.GetLambdaRange());
 
   SContinuumRelevance relevance;
   relevance.StdSpectrum = stdS;

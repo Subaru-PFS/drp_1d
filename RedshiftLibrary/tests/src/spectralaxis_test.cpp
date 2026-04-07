@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   // operator *=
   //------------
 
-  spcAxis *= 2;
+  spcAxis = 2 * spcAxis;
   BOOST_CHECK(spcAxis[0] == sample_in[0] * 2);
   BOOST_CHECK(spcAxis[1] == sample_in[1] * 2);
 
@@ -190,15 +190,22 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   BOOST_CHECK(spcAxis[0] == sample_in[0] * -4);
   BOOST_CHECK(spcAxis[1] == sample_in[1] * -4);
 
+  // operator /=
+  spcAxis = spcAxis / 2.;
+  BOOST_CHECK(spcAxis[0] == sample_in[0] * -2);
+  BOOST_CHECK(spcAxis[1] == sample_in[1] * -2);
+
   //
   sample_in.pop_back();
   CSpectrumSpectralAxis spcAxis_2(sample_in);
   BOOST_ASSERT(indeterminate(spcAxis_2.m_isSorted));
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == true);
-  spcAxis_2.SetSize(3);
+  spcAxis_2.resize(3);
   spcAxis_2 *= 0;
   BOOST_ASSERT(spcAxis_2.m_isSorted == false);
+
+  spcAxis += spcAxis;
 
   // SetSize
   //--------
@@ -207,7 +214,7 @@ BOOST_AUTO_TEST_CASE(basic_functions_test) {
   sample_in = {1., 2., 3.};
   CSpectrumSpectralAxis spcAxis_4(sample_in);
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isSorted));
-  spcAxis_4.SetSize(1);
+  spcAxis_4.resize(1);
   BOOST_ASSERT(spcAxis_4.m_isSorted == true);
 
   BOOST_ASSERT(indeterminate(spcAxis_4.m_isLogSampled));
@@ -242,22 +249,6 @@ BOOST_AUTO_TEST_CASE(MaskAxis_test) {
   CSpectrumSpectralAxis spcAxisMasked = spcAxis.MaskAxis(mask);
   BOOST_CHECK(spcAxisMasked.GetSamplesCount() == 1);
   BOOST_CHECK(spcAxisMasked[0] == sample_in[2]);
-}
-
-BOOST_AUTO_TEST_CASE(ApplyOffset) {
-  const TFloat64List array{1., 2., 3.};
-  CSpectrumSpectralAxis axis(array);
-  axis.ApplyOffset(1.);
-
-  const CSpectrumSpectralAxis &const_Axis = axis;
-  BOOST_CHECK_CLOSE(const_Axis[0], 2., 1.e-12);
-  BOOST_CHECK_CLOSE(const_Axis[1], 3., 1.e-12);
-  BOOST_CHECK_CLOSE(const_Axis[2], 4., 1.e-12);
-
-  axis.ApplyOffset(0.);
-  BOOST_CHECK_CLOSE(axis[0], 2., 1.e-12);
-  BOOST_CHECK_CLOSE(axis[1], 3., 1.e-12);
-  BOOST_CHECK_CLOSE(axis[2], 4., 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(Operator) {
@@ -297,12 +288,11 @@ BOOST_AUTO_TEST_CASE(Resolution) {
 
 BOOST_AUTO_TEST_CASE(GetMask) {
   const TFloat64List array{1., 3., 4., 10.};
-  CMask mask;
   const TFloat64Range range(0.5, 5.);
   TMaskList result = {1, 1, 1, 0};
 
   const CSpectrumSpectralAxis axis(array);
-  axis.GetMask(range, mask);
+  CMask mask = axis.GetMask(range);
   BOOST_CHECK(mask.getMaskList() == result);
 }
 
@@ -390,7 +380,7 @@ BOOST_AUTO_TEST_CASE(LambdaRange) {
   const TLambdaRange irange6 = axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange6.GetBegin(), arr[0], 1.e-12);
   BOOST_CHECK_CLOSE(irange6.GetEnd(), arr[1], 1.e-12);
-  const CSpectrumSpectralAxis n122Axis(1, false);
+  const CSpectrumSpectralAxis n122Axis(1);
   const TLambdaRange irange7 = n122Axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange7.GetBegin(), 0., 1.e-12);
   BOOST_CHECK_CLOSE(irange7.GetEnd(), 0., 1.e-12);
@@ -486,7 +476,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   BOOST_CHECK_CLOSE(spcAxisLinear.m_regularLogSamplingStep, 1., 1e-12);
 
   // step KO
-  spcAxisLinear[2] = exp(3.5);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.5)});
   result = spcAxisLinear.IsLogSampled();
   BOOST_CHECK(result == false);
   BOOST_ASSERT(spcAxisLinear.m_isLogSampled == false);
@@ -495,7 +485,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   //------------------------------------
 
   // step OK
-  spcAxisLinear[2] = exp(3.);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.)});
   result = spcAxisLinear.IsLogSampled(1.);
   BOOST_CHECK(result == true);
   BOOST_ASSERT(spcAxisLinear.m_isLogSampled == true);
@@ -506,7 +496,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   BOOST_CHECK(result == false);
 
   // IsLogSampled KO
-  spcAxisLinear[2] = exp(3.5);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.5)});
   result = spcAxisLinear.IsLogSampled(1.);
   BOOST_CHECK(result == false);
 
@@ -514,12 +504,12 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   //---------------------
 
   // IsLogSampled OK
-  spcAxisLinear[2] = exp(3.);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.)});
   Float64 regLogStep = spcAxisLinear.GetlogGridStep();
   BOOST_CHECK_CLOSE(regLogStep, 1., 1e-12);
 
   // IsLogSampled KO
-  spcAxisLinear[2] = exp(3.5);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.5)});
   BOOST_CHECK_THROW(spcAxisLinear.GetlogGridStep(), AmzException);
 
   // GetLogSamplingIntegerRatio
@@ -527,7 +517,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   Float64 modulo;
 
   // IsLogSampled OK
-  spcAxisLinear[2] = exp(3.);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.)});
   Int32 ratio = spcAxisLinear.GetLogSamplingIntegerRatio(1., modulo);
   BOOST_CHECK(ratio == 1);
   BOOST_CHECK_CLOSE(modulo, 0., precision);
@@ -542,7 +532,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   BOOST_CHECK_CLOSE(modulo, -0.2, precision);
 
   // IsLogSampled KO
-  spcAxisLinear[2] = exp(3.5);
+  spcAxisLinear = CSpectrumSpectralAxis({exp(1.), exp(2.), exp(3.5)});
   BOOST_CHECK_THROW(spcAxisLinear.GetLogSamplingIntegerRatio(1.8, modulo);
                     , AmzException);
 }
@@ -550,15 +540,16 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
 BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
   Int32 ssratio;
   TInt32Range range(1, 3);
-  CSpectrumSpectralAxis spcAxis({exp(1.), exp(2.), exp(3.), exp(4.), exp(5.)});
+  CSpectrumSpectralAxis spcAxis_ref(
+      {exp(1.), exp(2.), exp(3.), exp(4.), exp(5.)});
 
   // not LogSampled
-  spcAxis[2] = 3.5;
+  CSpectrumSpectralAxis spcAxis({exp(1.), exp(2.), exp(3.5), exp(4.), exp(5.)});
   ssratio = 1;
   BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range), AmzException);
 
   // range bound KO
-  spcAxis[2] = exp(3.);
+  spcAxis = spcAxis_ref;
   TInt32Range range2(-5., 2.);
   BOOST_CHECK_THROW(spcAxis.GetSubSamplingMask(ssratio, range2), AmzException);
   TInt32Range range3(0., 8.);
@@ -595,7 +586,7 @@ BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
   BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), AmzException);
 
   // not enough points
-  wrong_spcAxis[1] = exp(2);
+  wrong_spcAxis = TFloat64List{exp(1), exp(2.), exp(3)};
   BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), AmzException);
 
   //

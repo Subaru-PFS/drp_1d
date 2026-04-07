@@ -46,7 +46,7 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinSpline::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinSpline::rebin(TAxisSampleList &rebinedFlux,
                          const TFloat64Range &range,
                          const CSpectrumSpectralAxis &targetSpectralAxis,
                          CMask &rebinedMask, const std::string opt_error_interp,
@@ -68,8 +68,7 @@ void CRebinSpline::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
   // lambda range interval.
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
-    rebinedFluxAxis[cursor] =
-        gsl_spline_eval(spline, Xtgt[cursor], accelerator);
+    rebinedFlux[cursor] = gsl_spline_eval(spline, Xtgt[cursor], accelerator);
     rebinedMask[cursor] = 1;
 
     // note: error rebin not

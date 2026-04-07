@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_SUITE(Mask)
 BOOST_AUTO_TEST_CASE(Mask1) {
   CMask mask;
 
+  BOOST_CHECK(mask.isEmpty());
+
   mask.SetSize(4);
 
   BOOST_CHECK(mask.GetMasksCount() == 4);

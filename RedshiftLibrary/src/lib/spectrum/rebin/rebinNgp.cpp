@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/rebin/rebinNgp.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/log/log.h"
@@ -44,19 +45,22 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
-                      const TFloat64Range &range,
+void CRebinNgp::rebin(TAxisSampleList &rebinedFlux, const TFloat64Range &range,
                       const CSpectrumSpectralAxis &targetSpectralAxis,
                       CMask &rebinedMask, const std::string opt_error_interp,
                       const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
                       Int32 &cursor) {
+
+  bool const handle_error = handleError(opt_error_interp);
 
   const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
 
   // nearest sample, lookup
   Int32 k = 0;
-  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
+  const TFloat64List &Error = handle_error
+                                  ? m_spectrum.GetErrorAxis().GetSamplesVector()
+                                  : TFloat64List{};
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
     // k = gsl_interp_bsearch
@@ -70,9 +74,9 @@ void CRebinNgp::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       xSrcStep = Xsrc[k + 1] - Xsrc[k];
 
     // closest value
-    rebinedFluxAxis[cursor] = Ysrc[k];
+    rebinedFlux[cursor] = Ysrc[k];
 
-    if (opt_error_interp != "no") {
+    if (handle_error) {
 
       error_tmp[cursor] = Error[k];
       if (opt_error_interp == "rebinVariance") {

@@ -38,22 +38,27 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
 
-void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinLinear::rebin(TAxisSampleList &rebinedFlux,
                          const TFloat64Range &range,
                          const CSpectrumSpectralAxis &targetSpectralAxis,
                          CMask &rebinedMask, const std::string opt_error_interp,
                          const TAxisSampleList &Xtgt, TFloat64List &error_tmp,
                          Int32 &cursor) {
 
+  bool const handle_error = handleError(opt_error_interp);
+
   Int32 n = m_spectrum.GetSampleCount();
   const TAxisSampleList &Xsrc = m_spectrum.GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &Ysrc = m_spectrum.GetFluxAxis().GetSamplesVector();
-  const TFloat64List &Error = m_spectrum.GetErrorAxis().GetSamplesVector();
+  const TFloat64List &Error = handle_error
+                                  ? m_spectrum.GetErrorAxis().GetSamplesVector()
+                                  : TFloat64List{};
 
   Int32 k = 0;
   // For each sample in the valid lambda range interval.
@@ -65,17 +70,18 @@ void CRebinLinear::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // perform linear interpolation of the flux
       Float64 xSrcStep = (Xsrc[k + 1] - Xsrc[k]);
       Float64 t = (Xtgt[cursor] - Xsrc[k]) / xSrcStep;
-      rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+      rebinedFlux[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
       rebinedMask[cursor] = 1;
-
-      if (opt_error_interp == "rebin")
-        error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
-      else if (opt_error_interp == "rebinVariance") {
-        error_tmp[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                                 Error[k + 1] * Error[k + 1] * t * t);
-        Float64 xStepCompensation = computeXStepCompensation(
-            targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
+      if (handle_error) {
+        if (opt_error_interp == "rebin")
+          error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
+        else if (opt_error_interp == "rebinVariance") {
+          error_tmp[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
+                                   Error[k + 1] * Error[k + 1] * t * t);
+          Float64 xStepCompensation = computeXStepCompensation(
+              targetSpectralAxis, Xtgt, cursor, xSrcStep);
+          error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
+        }
       }
       cursor++;
     }

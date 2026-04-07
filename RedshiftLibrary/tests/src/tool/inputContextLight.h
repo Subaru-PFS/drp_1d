@@ -216,78 +216,78 @@ public:
 class fixture_NoiseAxis {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumNoiseAxis noiseAxis = spectrumData.myNoiseList;
+  CSpectrumNoiseAxis noiseAxis{spectrumData.myNoiseList};
   TFloat64List noiseList = spectrumData.myNoiseList;
 };
 
 class fixture_MultiNoiseAxis {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumNoiseAxis noiseAAxis = spectrumData.noiseAList;
-  CSpectrumNoiseAxis noiseBAxis = spectrumData.noiseBList;
+  CSpectrumNoiseAxis noiseAAxis{spectrumData.noiseAList};
+  CSpectrumNoiseAxis noiseBAxis{spectrumData.noiseBList};
   TFloat64List noiseAList = spectrumData.noiseAList;
   TFloat64List noiseBList = spectrumData.noiseBList;
 };
 
 class fixture_NoiseAxisLight {
 public:
-  CSpectrumNoiseAxis noiseAxisLight = myNoiseListLight;
+  CSpectrumNoiseAxis noiseAxisLight{myNoiseListLight};
 };
 
 class fixture_NoiseAxisExtended {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumNoiseAxis noiseAxis = spectrumData.myExtendedNoiseList;
+  CSpectrumNoiseAxis noiseAxis{spectrumData.myExtendedNoiseList};
 };
 
 class fixture_NoiseAxisSuperExtended {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumNoiseAxis noiseAxis = spectrumData.mySuperExtendedNoiseList;
+  CSpectrumNoiseAxis noiseAxis{spectrumData.mySuperExtendedNoiseList};
 };
 
 class fixture_NoiseAxisQso {
 public:
   fixture_spectralQsoData spcQsoData;
-  CSpectrumSpectralAxis noiseAxis = spcQsoData.myNoiseList;
+  CSpectrumNoiseAxis noiseAxis{spcQsoData.myNoiseList};
 };
 
 class fixture_NoiseAxisFull {
 public:
-  CSpectrumNoiseAxis noiseAxis = errorE;
+  CSpectrumNoiseAxis noiseAxis{errorE};
 };
 
 // create Flux Axis
 class fixture_FluxAxis {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumFluxAxis fluxAxis =
-      CSpectrumFluxAxis(spectrumData.myFluxList, fixture_NoiseAxis().noiseAxis);
+  CSpectrumFluxAxis fluxAxis{CSpectrumAxis(spectrumData.myFluxList),
+                             fixture_NoiseAxis().noiseAxis};
   TFloat64List fluxAxisList = spectrumData.myFluxList;
 };
 
 class fixture_MultiFluxAxis {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumFluxAxis fluxAAxis = CSpectrumFluxAxis(
-      spectrumData.fluxAList, fixture_MultiNoiseAxis().noiseAAxis);
-  CSpectrumFluxAxis fluxBAxis = CSpectrumFluxAxis(
-      spectrumData.fluxBList, fixture_MultiNoiseAxis().noiseBAxis);
+  CSpectrumFluxAxis fluxAAxis{CSpectrumAxis(spectrumData.fluxAList),
+                              fixture_MultiNoiseAxis().noiseAAxis};
+  CSpectrumFluxAxis fluxBAxis{CSpectrumAxis(spectrumData.fluxBList),
+                              fixture_MultiNoiseAxis().noiseBAxis};
   TFloat64List fluxAxisAList = spectrumData.fluxAList;
   TFloat64List fluxAxisBList = spectrumData.fluxBList;
 };
 
 class fixture_FluxAxisLight {
 public:
-  CSpectrumFluxAxis fluxAxisLight = CSpectrumFluxAxis(
-      myFluxListLight, fixture_NoiseAxisLight().noiseAxisLight);
+  CSpectrumFluxAxis fluxAxisLight{CSpectrumAxis(myFluxListLight),
+                                  fixture_NoiseAxisLight().noiseAxisLight};
 };
 
 class fixture_FluxAxisExtended {
 public:
   fixture_SpectrumData spectrumData;
-  CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
-      spectrumData.myExtendedFluxList, fixture_NoiseAxisExtended().noiseAxis);
+  CSpectrumFluxAxis fluxAxis{CSpectrumAxis(spectrumData.myExtendedFluxList),
+                             fixture_NoiseAxisExtended().noiseAxis};
   TFloat64List fluxAxisList = spectrumData.myExtendedFluxList;
 };
 
@@ -309,8 +309,9 @@ public:
         fixture_NoiseAxisSuperExtended().noiseAxis.GetSamplesVector();
     std::transform(noise.begin(), noise.end(), noise.begin(),
                    [](Float64 pixelNoise) { return pixelNoise / 10; });
-    fluxAxis = CSpectrumFluxAxis(spectrumData.myExtendedPowerLawList,
-                                 CSpectrumNoiseAxis(noise));
+    fluxAxis =
+        CSpectrumFluxAxis(CSpectrumAxis(spectrumData.myExtendedPowerLawList),
+                          CSpectrumNoiseAxis(noise));
   }
   fixture_SpectrumData spectrumData;
 
@@ -321,14 +322,14 @@ public:
 class fixture_FluxAxisQso {
 public:
   fixture_spectralQsoData spcQsoData;
-  CSpectrumFluxAxis fluxAxis = CSpectrumFluxAxis(
-      spcQsoData.myFluxList, fixture_NoiseAxisQso().noiseAxis);
+  CSpectrumFluxAxis fluxAxis{CSpectrumAxis(spcQsoData.myFluxList),
+                             fixture_NoiseAxisQso().noiseAxis};
 };
 
 class fixture_FluxAxisFull {
 public:
-  CSpectrumFluxAxis fluxAxis =
-      CSpectrumFluxAxis(fluxE, fixture_NoiseAxisFull().noiseAxis);
+  CSpectrumFluxAxis fluxAxis{CSpectrumAxis(fluxE),
+                             fixture_NoiseAxisFull().noiseAxis};
   TFloat64List fluxAxisList = fluxE;
 };
 
@@ -395,7 +396,8 @@ public:
     }
     spc = std::make_shared<CSpectrum>(
         fixture_SpectralAxisSuperExtended().spcAxis,
-        CSpectrumFluxAxis(lowFlux, fixture_NoiseAxisSuperExtended().noiseAxis));
+        CSpectrumFluxAxis(CSpectrumAxis(lowFlux),
+                          fixture_NoiseAxisSuperExtended().noiseAxis));
   }
   std::shared_ptr<CSpectrum> spc;
 };
@@ -490,51 +492,60 @@ class fixture_SharedStarTemplate {
 public:
   fixture_SpectrumData spectrumData;
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "star", "star", spectrumData.mySpectralList, spectrumData.myFluxList);
+      "star", "star", CSpectrumSpectralAxis(spectrumData.mySpectralList),
+      CSpectrumFluxAxis(spectrumData.myFluxList));
 };
 
 class fixture_SharedStarNotLogTemplate {
 public:
   fixture_GalaxyTplData galaxyTplData;
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "star", "star", galaxyTplData.myGalaxyLambdaList,
-      galaxyTplData.myGalaxyFluxList);
+      "star", "star", CSpectrumSpectralAxis(galaxyTplData.myGalaxyLambdaList),
+      CSpectrumFluxAxis(galaxyTplData.myGalaxyFluxList));
 };
 class fixture_SharedGalaxyTemplate {
 public:
   fixture_GalaxyTplData galaxyTplData;
   std::shared_ptr<CTemplate> tpl = std::make_shared<CTemplate>(
-      "galaxy", "galaxy", galaxyTplData.myGalaxyLambdaList,
-      galaxyTplData.myGalaxyFluxList);
+      "galaxy", "galaxy",
+      CSpectrumSpectralAxis(galaxyTplData.myGalaxyLambdaList),
+      CSpectrumFluxAxis(galaxyTplData.myGalaxyFluxList));
   std::shared_ptr<CTemplate> tpl2 = std::make_shared<CTemplate>(
-      "galaxy2", "galaxy", galaxyTplData.myGalaxyLambdaList2,
-      galaxyTplData.myGalaxyFluxList2);
+      "galaxy2", "galaxy",
+      CSpectrumSpectralAxis(galaxyTplData.myGalaxyLambdaList2),
+      CSpectrumFluxAxis(galaxyTplData.myGalaxyFluxList2));
   std::shared_ptr<CTemplate> tpl3 = std::make_shared<CTemplate>(
-      "galaxy3", "galaxy", galaxyTplData.myGalaxyLambdaListFull,
-      galaxyTplData.myGalaxyFluxListFull);
+      "galaxy3", "galaxy",
+      CSpectrumSpectralAxis(galaxyTplData.myGalaxyLambdaListFull),
+      CSpectrumFluxAxis(galaxyTplData.myGalaxyFluxListFull));
 };
 
 class fixture_SharedQsoTemplate {
 public:
   fixture_tplQsoData tplQsoData;
   std::shared_ptr<CTemplate> tpl_c1 = std::make_shared<CTemplate>(
-      "qso_c1", "qso", tplQsoData.lbda, tplQsoData.flux_c1);
+      "qso_c1", "qso", CSpectrumSpectralAxis(tplQsoData.lbda),
+      CSpectrumFluxAxis(tplQsoData.flux_c1));
   std::shared_ptr<CTemplate> tpl_c2 = std::make_shared<CTemplate>(
-      "qso_c2", "qso", tplQsoData.lbda, tplQsoData.flux_c2);
+      "qso_c2", "qso", CSpectrumSpectralAxis(tplQsoData.lbda),
+      CSpectrumFluxAxis(tplQsoData.flux_c2));
   std::shared_ptr<CTemplate> tpl_c3 = std::make_shared<CTemplate>(
-      "qso_c3", "qso", tplQsoData.lbda, tplQsoData.flux_c3);
+      "qso_c3", "qso", CSpectrumSpectralAxis(tplQsoData.lbda),
+      CSpectrumFluxAxis(tplQsoData.flux_c3));
   std::shared_ptr<CTemplate> tpl_c4 = std::make_shared<CTemplate>(
-      "qso_c4", "qso", tplQsoData.lbda, tplQsoData.flux_c4);
+      "qso_c4", "qso", CSpectrumSpectralAxis(tplQsoData.lbda),
+      CSpectrumFluxAxis(tplQsoData.flux_c4));
   std::shared_ptr<CTemplate> tpl_mean = std::make_shared<CTemplate>(
-      "qso_mean", "qso", tplQsoData.lbda, tplQsoData.flux_mean);
+      "qso_mean", "qso", CSpectrumSpectralAxis(tplQsoData.lbda),
+      CSpectrumFluxAxis(tplQsoData.flux_mean));
 };
 
 class fixture_TemplateStar {
 public:
   fixture_GalaxyTplData galaxyTplData;
-  CTemplate tplStar =
-      CTemplate("tpl_star", "star", galaxyTplData.myGalaxyLambdaList,
-                galaxyTplData.myGalaxyFluxList);
+  CTemplate tplStar{"tpl_star", "star",
+                    CSpectrumSpectralAxis(galaxyTplData.myGalaxyLambdaList),
+                    CSpectrumFluxAxis(galaxyTplData.myGalaxyFluxList)};
   Int32 spcAxisSize = galaxyTplData.myGalaxyLambdaList.size();
   TFloat64List spcAxisList = galaxyTplData.myGalaxyLambdaList;
   TFloat64List fluxAxisList = galaxyTplData.myGalaxyFluxList;

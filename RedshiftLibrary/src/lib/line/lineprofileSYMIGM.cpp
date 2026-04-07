@@ -116,7 +116,8 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
                  profile.begin(), std::multiplies());
 
   auto const &[flux, _] = CSpectrum::integrateFluxes_usingTrapez(
-      xlist_rest, profile, {TInt32Range(0, xlist_rest.size() - 1)});
+      xlist_rest, CSpectrumFluxAxis(std::move(profile)),
+      {TInt32Range(0, xlist_rest.size() - 1)});
 
   return A * flux;
 }

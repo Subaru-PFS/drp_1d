@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
 using Eigen::VectorXd;
 
@@ -121,7 +122,6 @@ public:
     const CSpectrumSpectralAxis *m_spectralAxis;
     const CSpectrumFluxAxis *m_noContinuumFluxAxis;
     const CSpectrumFluxAxis *m_continuumFluxAxis;
-    const CSpectrumNoiseAxis *m_ErrorNoContinuum;
     CPolynomCoeffsNormalized m_pCoeffs;
     Float64 m_sumSquareData;
   };

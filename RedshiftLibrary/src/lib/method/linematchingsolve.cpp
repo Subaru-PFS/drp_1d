@@ -182,7 +182,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute() {
   CSpectrum _spc = spc;
   if (lineType == CLine::EType::nType_Absorption) {
     Log.LogDebug("lineType == CLine::EType::nType_Absorption");
-    _spc.InvertFlux();
+    _spc.NegateFlux();
   }
 
   if (lineType == CLine::EType::nType_Emission) {

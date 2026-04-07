@@ -104,7 +104,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
   CSpectrumSpectralAxis modelwav =
       m_templateRebined_bf[spcIndex].GetSpectralAxis().ShiftByWaveLength(
           (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
-  CModelSpectrumResult model(std::move(modelwav.GetSamplesVector()),
+  CModelSpectrumResult model(std::move(modelwav).GetSamplesVector(),
                              modelflux.GetSamplesVector(),
                              m_spectra[spcIndex]->getObsID());
   return std::make_pair(std::move(model),
@@ -114,13 +114,14 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 void COperatorTemplateFittingBase::RebinTemplate(
     const CTemplate &tpl, Float64 redshift, TFloat64Range &currentRange,
     Float64 &overlapFraction, const Float64 overlapThreshold, Int32 spcIndex) {
-  Float64 onePlusRedshift = 1.0 + redshift;
+  Float64 const onePlusRedshift = 1.0 + redshift;
+  Float64 const oneOverOnePlusRedshift = 1. / onePlusRedshift;
 
   // shift lambdaRange backward to be in restframe
   TFloat64Range spcLambdaRange_restframe;
   TFloat64Range lambdaRange_restframe(
-      m_lambdaRanges[spcIndex]->GetBegin() / onePlusRedshift,
-      m_lambdaRanges[spcIndex]->GetEnd() / onePlusRedshift);
+      m_lambdaRanges[spcIndex]->GetBegin() * oneOverOnePlusRedshift,
+      m_lambdaRanges[spcIndex]->GetEnd() * oneOverOnePlusRedshift);
 
   // redshift in restframe the spcSpectralAxis, i.e., division by (1+Z)
   m_spcSpectralAxis_restframe[spcIndex] =

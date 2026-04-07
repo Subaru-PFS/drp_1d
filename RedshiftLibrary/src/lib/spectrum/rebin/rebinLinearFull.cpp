@@ -43,18 +43,21 @@
 using namespace NSEpic;
 using namespace std;
 
-void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinLinearFull::rebin(TAxisSampleList &rebinedFlux,
                              const TFloat64Range &range,
                              const CSpectrumSpectralAxis &targetSpectralAxis,
                              CMask &rebinedMask,
                              const std::string opt_error_interp,
                              const TAxisSampleList &Xtgt,
                              TFloat64List &error_tmp, Int32 &cursor) {
+  bool const handle_error = handleError(opt_error_interp);
+
   const CFullSpectrum &origin = dynamic_cast<const CFullSpectrum &>(m_spectrum);
   Int32 n = origin.GetSampleCount();
   const TAxisSampleList &Xsrc = origin.GetSpectralAxis().GetSamplesVector();
   const TAxisSampleList &Ysrc = origin.GetFluxAxis().GetSamplesVector();
-  const TFloat64List &Error = origin.GetErrorAxis().GetSamplesVector();
+  const TFloat64List &Error =
+      handle_error ? origin.GetErrorAxis().GetSamplesVector() : TFloat64List{};
 
   Int32 k = 0;
   // For each sample in the valid lambda range interval.
@@ -70,32 +73,34 @@ void CRebinLinearFull::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
       // If both samples arround subsample are valid, compute flux, otherwise,
       // set mask & flux to 0
       if (origin.getMask()[k] && origin.getMask()[k + 1]) {
-        rebinedFluxAxis[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
+        rebinedFlux[cursor] = Ysrc[k] + (Ysrc[k + 1] - Ysrc[k]) * t;
         rebinedMask[cursor] = 1;
       } else {
         rebinedMask[cursor] = 0;
-        rebinedFluxAxis[cursor] = 0;
+        rebinedFlux[cursor] = 0;
       }
 
       // Same for error
-      if (opt_error_interp == "rebin" && origin.getMask()[k] &&
-          origin.getMask()[k + 1])
-        error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
-      else if (opt_error_interp == "rebinVariance" && origin.getMask()[k] &&
-               origin.getMask()[k + 1]) {
-        error_tmp[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
-                                 Error[k + 1] * Error[k + 1] * t * t);
-        Float64 xStepCompensation = computeXStepCompensation(
-            targetSpectralAxis, Xtgt, cursor, xSrcStep);
-        error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
-      } else {
-        Log.LogDetail(Formatter()
-                      << "set error to dbl_min at " << cursor
-                      << " mask before=" << (Int32)origin.getMask()[k]
-                      << " after=" << (Int32)origin.getMask()[k + 1] << " at "
-                      << targetSpectralAxis[cursor] << " between" << Xsrc[k]
-                      << " and " << Xsrc[k + 1]);
-        error_tmp[cursor] = DBL_MAX;
+      if (handle_error) {
+        if (opt_error_interp == "rebin" && origin.getMask()[k] &&
+            origin.getMask()[k + 1])
+          error_tmp[cursor] = Error[k] + (Error[k + 1] - Error[k]) * t;
+        else if (opt_error_interp == "rebinVariance" && origin.getMask()[k] &&
+                 origin.getMask()[k + 1]) {
+          error_tmp[cursor] = sqrt(Error[k] * Error[k] * (1 - t) * (1 - t) +
+                                   Error[k + 1] * Error[k + 1] * t * t);
+          Float64 xStepCompensation = computeXStepCompensation(
+              targetSpectralAxis, Xtgt, cursor, xSrcStep);
+          error_tmp[cursor] = error_tmp[cursor] * sqrt(xStepCompensation);
+        } else {
+          Log.LogDetail(Formatter()
+                        << "set error to dbl_min at " << cursor
+                        << " mask before=" << (Int32)origin.getMask()[k]
+                        << " after=" << (Int32)origin.getMask()[k + 1] << " at "
+                        << targetSpectralAxis[cursor] << " between" << Xsrc[k]
+                        << " and " << Xsrc[k + 1]);
+          error_tmp[cursor] = DBL_MAX;
+        }
       }
       cursor++;
     }

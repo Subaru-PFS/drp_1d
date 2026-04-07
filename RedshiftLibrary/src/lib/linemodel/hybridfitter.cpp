@@ -274,7 +274,7 @@ void CHybridFitter::attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
                                        const TInt32List &ilinesMore,
                                        const TInt32List &idsMore,
                                        Float64 redshift) {
-  Float64 modelErr_init = getModelResidualRmsUnderElements({iEltA}, true);
+  Float64 modelErr_init = getModelResidualRmsUnderElements({iEltA});
 
   // collect amps before refit
   auto [ampA, errA] = getAmplitudeAndError(iEltA, lineA_id);
@@ -290,7 +290,7 @@ void CHybridFitter::attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
 
   // check improvement
   getModel().refreshModelUnderElements(eltsIdx);
-  Float64 modelErr_withfit = getModelResidualRmsUnderElements({iEltA}, true);
+  Float64 modelErr_withfit = getModelResidualRmsUnderElements({iEltA});
   if (modelErr_withfit > modelErr_init) {
     restoreAmplitudes(iEltA, lineA_id, ampA, errA, iEltE, lineE_id, ampE, errE,
                       ilinesMore, idsMore, ampsMore, errsMore);

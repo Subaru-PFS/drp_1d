@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/lineratiomanager.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
@@ -49,6 +50,7 @@
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
+#include <cmath>
 
 using namespace NSEpic;
 
@@ -214,20 +216,17 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
 
     const CSpectrumSpectralAxis &spcSpectralAxis =
         getSpectrum().GetSpectralAxis();
-    const auto &ErrorNoContinuum = getSpectrum().GetErrorAxis();
-
     const CSpectrumFluxAxis &Yspc = getModel().getSpcFluxAxis();
     const CSpectrumFluxAxis &Ymodel =
         getModel().GetModelSpectrum().GetFluxAxis();
 
-    Float64 diff = 0.0;
-
     auto const &irange =
         spcSpectralAxis.GetIndexRangeAtWaveLengthRange(getLambdaRange());
-    for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
-      diff = (Yspc[j] - Ymodel[j]);
-      fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
-    }
+    fit += std::transform_reduce(irange.begin(), irange.end(), 0., std::plus(),
+                                 [&Yspc, &Ymodel](Int32 j) {
+                                   Float64 const diff = Yspc[j] - Ymodel[j];
+                                   return (diff * diff) * Yspc.GetWeight(j);
+                                 });
     if (std::isnan(fit)) {
       Log.LogDetail(
           Formatter()
@@ -241,7 +240,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
              "the true observed spectral axis lambdarange = ("
           << spcSpectralAxis[irange.GetBegin()] << ", "
           << spcSpectralAxis[irange.GetEnd()] << ")");
-      for (Int32 j = irange.GetBegin(); j <= irange.GetEnd(); j++) {
+      for (Int32 j : irange) {
         if (std::isnan(Yspc[j])) {
           Log.LogDetail(
               Formatter()
@@ -258,20 +257,20 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
               << spcSpectralAxis[j]);
           break;
         }
-
-        if (std::isnan(ErrorNoContinuum[j])) {
+        Float64 const w = Yspc.GetWeight(j);
+        if (std::isnan(w)) {
           Log.LogDetail(
               Formatter()
               << "CLineModelFitting::getLeastSquareMerit: NaN value found "
-                 "for the sqrt(variance) at lambda="
+                 "for the weight 1./variance at lambda="
               << spcSpectralAxis[j]);
           break;
         }
-        if (ErrorNoContinuum[j] == 0.0) {
+        if (std::isinf(w)) {
           Log.LogDetail(
               Formatter()
               << "CLineModelFitting::getLeastSquareMerit: 0 value found "
-                 "for the sqrt(variance) at lambda="
+                 "for the variance at lambda="
               << spcSpectralAxis[j]);
           break;
         }

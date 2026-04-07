@@ -90,7 +90,7 @@ void CRebinFineGrid::clearFineGrid() {
   m_pfgFlux.clear();
 }
 
-void CRebinFineGrid::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
+void CRebinFineGrid::rebin(TAxisSampleList &rebinedFlux,
                            const TFloat64Range &range,
                            const CSpectrumSpectralAxis &targetSpectralAxis,
                            CMask &rebinedMask,
@@ -115,7 +115,7 @@ void CRebinFineGrid::rebin(CSpectrumFluxAxis &rebinedFluxAxis,
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] <= range.GetEnd()) {
     k = int((Xtgt[cursor] - lmin) / m_dLambdaFineGrid + 0.5);
-    rebinedFluxAxis[cursor] = m_pfgFlux[k];
+    rebinedFlux[cursor] = m_pfgFlux[k];
     rebinedMask[cursor] = 1;
 
     // note: error rebin not

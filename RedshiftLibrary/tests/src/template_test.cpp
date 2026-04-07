@@ -312,7 +312,8 @@ BOOST_AUTO_TEST_CASE(Getter_Setter_test) {
   tplStar.SetSpectralAxis(std::move(spcAxisList));
 
   // GetIgmEndIndex
-  CTemplate tpl3("name", "category", tplStar.GetSpectralAxis(), fluxAxisList);
+  CTemplate tpl3("name", "category", tplStar.GetSpectralAxis(),
+                 CSpectrumFluxAxis(fluxAxisList));
   BOOST_CHECK_THROW(tpl3.GetIgmEndIndex(0, 2), AmzException);
 
   tpl3.InitIsmIgmConfig(0, spcAxisSize - 1, 2.86);

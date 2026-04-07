@@ -470,7 +470,7 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
           if (1) {
             m_models->refreshAllModelsUnderElements(filterEltsIdxLya,
                                                     idxLineLyaE);
-            m = getModelResidualRmsUnderElements({idxLyaE}, true);
+            m = getModelResidualRmsUnderElements({idxLyaE});
 
           } else {
             m_spectraIndex.setAtBegining(); // temporary multiobs implementation
@@ -520,7 +520,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
       for (auto const &[elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
       m_models->refreshAllModelsUnderElements(elt_indices);
-      Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
+      Float64 m = getModelResidualRmsUnderElements(elt_indices);
 
       if (m < meritMin) {
         meritMin = m;

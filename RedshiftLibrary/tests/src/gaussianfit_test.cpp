@@ -54,9 +54,11 @@ BOOST_AUTO_TEST_SUITE(gaussianfit_test)
 
 void addLine(CSpectrumFluxAxis &spectrumFluxAxis, Float64 sigma, Float64 mu,
              Float64 A) {
+  auto flux = std::move(spectrumFluxAxis).GetSamplesVector();
   for (Int32 k = mu - sigma * 5; k <= mu + sigma * 5; k++) {
-    spectrumFluxAxis[k] += A * exp(-(k - mu) * (k - mu) / (2 * sigma * sigma));
+    flux[k] += A * exp(-(k - mu) * (k - mu) / (2 * sigma * sigma));
   }
+  spectrumFluxAxis.setSamplesVector(std::move(flux));
 }
 
 Float64 precision = 1e-12;
@@ -64,17 +66,13 @@ Float64 precision = 1e-12;
 BOOST_AUTO_TEST_CASE(GaussianFit) {
 
   Int32 n = 1000;
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false);
-  for (Int32 k = 0; k < n; k++) {
-    spectralAxis[k] = k;
-  }
+  TFloat64List waveLength(n);
+  std::iota(waveLength.begin(), waveLength.end(), 0);
+  CSpectrumSpectralAxis spectralAxis =
+      CSpectrumSpectralAxis(std::move(waveLength));
 
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
-  for (Int32 k = 0; k < n; k++) {
-    modelfluxAxis[k] = 0;
-  }
-  TFloat64List error(n, 0.5);
-  modelfluxAxis.setError(CSpectrumNoiseAxis(error));
+  CSpectrumFluxAxis modelfluxAxis(n, 0);
+  modelfluxAxis.setError(CSpectrumNoiseAxis(n, 0.5));
 
   addLine(modelfluxAxis, 4., 40., 1.5);
   addLine(modelfluxAxis, 4., 80., 4.5);
