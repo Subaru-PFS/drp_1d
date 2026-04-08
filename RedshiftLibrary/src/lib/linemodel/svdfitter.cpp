@@ -350,7 +350,7 @@ bool CSvdFitter::fitAmplitudesLinSolve(const TInt32List &EltsIdx,
 // poor-man positive constraint
 // if some amplitudes are negative, force them to zero and refit the
 // positive ones
-void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+bool CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                                Float64 redshift) {
   // NB dummy multiobs implementation (functional for one obs only)
   TFloat64List ampsfitted;
@@ -361,7 +361,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
   bool const allPositive =
       fitAmplitudesLinSolve(ValidEltsIdx, ampsfitted, errorsfitted, redshift);
   if (allPositive)
-    return;
+    return true;
 
   TInt32List idx_positive;
   for (Int32 ifit = 0; ifit < ssize(ValidEltsIdx); ifit++) {
@@ -373,19 +373,19 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   if (idx_positive.empty())
-    return;
+    return false;
 
   // refit the positive elements together
   if (!m_enableAmplitudeOffsets && idx_positive.size() == 1) {
     fitAmplitude(ValidEltsIdx[idx_positive.front()], redshift, undefIdx);
     m_spectraIndex.setAtBegining(); // temporary multiobs implementation
-    return;
+    return true;
   }
   bool const allPositive2 = fitAmplitudesLinSolve(
       ValidEltsIdx, ampsfitted, errorsfitted, redshift, idx_positive);
   if (allPositive2) {
     m_spectraIndex.setAtBegining(); // temporary multiobs implementation
-    return;
+    return true;
   }
   for (Int32 irefit = 0; irefit < ssize(idx_positive); ++irefit) {
     // set at zero negative amplitudes
@@ -395,6 +395,7 @@ void CSvdFitter::fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
     }
   }
   m_spectraIndex.setAtBegining(); // temporary multiobs implementation
+  return false;
 }
 
 void CSvdFitter::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
