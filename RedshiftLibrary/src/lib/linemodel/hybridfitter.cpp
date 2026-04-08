@@ -286,6 +286,7 @@ void CHybridFitter::attemptBalmerRefit(Int32 iEltA, Int32 lineA_id, Int32 iEltE,
   eltsIdx.insert(eltsIdx.end(), ilinesMore.begin(), ilinesMore.end());
 
   TFloat64List ampsfitted, errorsfitted;
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   fitAmplitudesLinSolve(eltsIdx, ampsfitted, errorsfitted, redshift);
 
   // check improvement
