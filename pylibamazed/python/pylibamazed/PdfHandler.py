@@ -75,8 +75,6 @@ def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
     redshift_step = parameters.get_redshiftstep(spectrum_model)
     is_log = parameters.is_log_sampling(spectrum_model)
 
-    grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
-
     if parameters.has_two_pass(spectrum_model):
         ratio = parameters.get_large_grid_ratio(spectrum_model, method)
         if ratio is not None:
@@ -85,6 +83,9 @@ def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
             redshift_range = TFloat64Range(p_redshift_range[0], zend)
             grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
             output = grid_param.getZGrid(is_log)
+    else:
+        grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+        output = grid_param.getZGrid(is_log)
 
     return output
 
