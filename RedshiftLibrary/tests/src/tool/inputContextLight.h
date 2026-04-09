@@ -660,8 +660,6 @@ public:
     // 3729.88 [OII] 3729 E 7.65e-15
     lineRatioCatalog->setLineAmplitude(0, 3729.88);
     lineRatioCatalog->setLineAmplitude(1, 3727.09);
-    lineRatioCatalog->addVelocity("em_vel", 320.0);
-    lineRatioCatalog->addVelocity("abs_vel", 640.0);
     lineRatioCatalog->setAsymProfileAndParams("ASYMFIXED",
                                               TAsymParams(3.0, 1.5, 1.0));
     lineRatioCatalog->convertLineProfiles2SYMIGM(

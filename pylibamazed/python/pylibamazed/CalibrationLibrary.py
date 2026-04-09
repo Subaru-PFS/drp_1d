@@ -421,8 +421,6 @@ class CalibrationLibrary:
             lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type]["lineModelSolve"])
             for index, row in lr_catalog_df.iterrows():
                 lr_catalog.setLineAmplitude(int(index), row.NominalAmplitude)
-            lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
-            lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
             lr_catalog.setAsymProfileAndParams(
                 line_ratio_catalog_parameter["asym_params"]["profile"],
                 TAsymParams(
