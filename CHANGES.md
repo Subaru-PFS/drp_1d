@@ -8,6 +8,8 @@
 * [10196] : Update of ExternalStorage : Remove spectrum_id argument from constructor. Add spectrum_id and spectrum_file_path arguments to read method
 * [10221] : Move spectrum_infos dictionary to the Spectrum class, this optional dictionary can provide additional information to external clients if needed
 * [9820] : [API] Renamed AbstractSpectrumReader::set_air_or_vaccum to set_air_or_vacuum
+* [10339] : Change prototypes of get_attribute_short, get_attribute and has_attribute functions
+
 
 ### Deprecated
 ### Removed
