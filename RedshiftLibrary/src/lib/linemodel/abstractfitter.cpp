@@ -165,6 +165,7 @@ void CAbstractFitter::fit(Float64 redshift) {
 void CAbstractFitter::initFit(Float64 redshift) {
 
   resetSupport(redshift);
+  computeGlobalLineValidity();
 
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
@@ -188,7 +189,18 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
                               m_enlarge_line_supports);
     }
   }
-  m_ElementsVector->computeGlobalLineValidity(m_models);
+}
+
+void CAbstractFitter::computeGlobalLineValidity() {
+  // don't invalidate abs line for null continuum if ampOffset (polynomial under
+  // line is used)
+  bool const checkNullContinuum = !m_enableAmplitudeOffsets;
+  m_ElementsVector->computeGlobalLineValidity(m_models, checkNullContinuum);
+}
+
+void CAbstractFitter::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  m_ElementsVector->computeGlobalOutsideLambdaRange(EltsIdx);
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {

@@ -220,9 +220,8 @@ const std::string &TLineModelElementParam::GetLineName(Int32 line_index) const {
   return m_Lines[line_index].GetName();
 }
 
-bool TLineModelElementParam::SetAbsLinesLimit(Float64 limit) {
+void TLineModelElementParam::SetAbsLinesLimit(Float64 limit) {
   m_absLinesLimit = limit;
-  return true;
 }
 
 Float64 TLineModelElementParam::GetAbsLinesLimit() const {

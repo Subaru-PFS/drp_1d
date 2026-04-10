@@ -134,7 +134,7 @@ public:
                                             bool enableOffsetFitting,
                                             Float64 redshift) override;
 
-  void fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
+  bool fitAmplitudesLinSolvePositive(const TInt32List &EltsIdx,
                                      Float64 redshift) override;
 
 private:

@@ -160,15 +160,18 @@ public:
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
-  void computeGlobalOutsideLambdaRange();
+  void computeGlobalOutsideLambdaRange(TInt32List const &EltsIdx = {});
   void setNullNominalAmplitudesNotFittable();
   void setAbsLinesNullContinuumNotFittable(
       std::shared_ptr<CSpcModelVector> const &models);
-  void setAllAbsLinesFittable();
-  void setAllAbsLinesNotFittable();
+  void unsetAllAbsLinesNullContinuum();
+  void setAllAbsLinesNullContinuum();
   void resetNullLineProfiles();
-  void
-  computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models);
+  void resetFitFailed();
+  void computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models,
+                                 bool checkNullContinuum = true);
+  void computeAbsLineValidity(std::shared_ptr<CSpcModelVector> const &models,
+                              bool checkNullContinuum);
   TInt32List getValidElementIndices(TInt32List const &EltIndices) const;
   TInt32List getValidElementIndices() const;
   Int32 getNonZeroElementsNDdl() const;
@@ -184,7 +187,7 @@ private:
 
   // when spectrum component is "noContinuum" set to true
   // to invalid all absorption lines of all element
-  bool m_allAbsLinesNoContinuum = false;
+  bool m_allAbsLinesNullContinuum = false;
 
   void AddElementParam(CLineVector lines, bool useAmpOffsetsCoeffs);
   void fillElements();

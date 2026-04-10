@@ -41,8 +41,8 @@
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include <boost/range/counting_range.hpp>
 
 using namespace NSEpic;
 using namespace std;
@@ -308,8 +308,14 @@ void CLMEltListVector::resetAsymfitParams() {
   }
 }
 
-void CLMEltListVector::computeGlobalOutsideLambdaRange() {
-  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+void CLMEltListVector::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  auto idxList = EltsIdx;
+  if (idxList.empty()) {
+    idxList.resize(getNbElements());
+    std::iota(idxList.begin(), idxList.end(), 0);
+  }
+  for (auto elt_idx : idxList) {
     m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
         computeOutsideLambdaRange(elt_idx);
     for (Int32 line_idx = 0; line_idx < ssize(*m_ElementsParams[elt_idx]);
@@ -319,15 +325,15 @@ void CLMEltListVector::computeGlobalOutsideLambdaRange() {
   }
 }
 
-void CLMEltListVector::setAllAbsLinesFittable() {
-  m_allAbsLinesNoContinuum = false;
+void CLMEltListVector::unsetAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = false;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
   }
 }
 
-void CLMEltListVector::setAllAbsLinesNotFittable() {
-  m_allAbsLinesNoContinuum = true;
+void CLMEltListVector::setAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = true;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
     if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
@@ -338,6 +344,12 @@ void CLMEltListVector::setAllAbsLinesNotFittable() {
 void CLMEltListVector::resetNullLineProfiles() {
   for (auto &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_nullLineProfiles = false;
+  }
+}
+
+void CLMEltListVector::resetFitFailed() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_fitFailed = false;
   }
 }
 
@@ -357,16 +369,26 @@ void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
     if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
         elt_param_ptr->m_globalOutsideLambdaRange)
       continue;
-    if (m_allAbsLinesNoContinuum ||
+    if (m_allAbsLinesNullContinuum ||
         models->getMaxContinuumUnderElement(eIdx) <= 0.)
       elt_param_ptr->m_absLinesNullContinuum = true;
   }
 }
 
+void CLMEltListVector::computeAbsLineValidity(CSpcModelVectorPtr const &models,
+                                              bool checkNullContinuum) {
+  if (checkNullContinuum)
+    setAbsLinesNullContinuumNotFittable(models);
+  else {
+    unsetAllAbsLinesNullContinuum();
+  }
+}
+
 void CLMEltListVector::computeGlobalLineValidity(
-    CSpcModelVectorPtr const &models) {
+    CSpcModelVectorPtr const &models, bool checkNullContinuum) {
+  computeAbsLineValidity(models, checkNullContinuum);
   computeGlobalOutsideLambdaRange();
   setNullNominalAmplitudesNotFittable();
-  setAbsLinesNullContinuumNotFittable(models);
   resetNullLineProfiles();
+  resetFitFailed();
 };

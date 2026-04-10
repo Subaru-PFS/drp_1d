@@ -56,6 +56,10 @@ class CTemplate;
 class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
+  CSpectrumModel(const CSpectrumModel &) = default;
+  CSpectrumModel(CSpectrumModel &&) = default;
+  CSpectrumModel &operator=(const CSpectrumModel &) = delete;
+  CSpectrumModel &operator=(CSpectrumModel &&) = delete;
   CSpectrumModel(
       const CLineModelElementList &elements,
       const std::shared_ptr<const CSpectrum> &spc,
@@ -66,6 +70,7 @@ public:
       Int32 spcIndex);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
+  void refreshContinuumModel();
   void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
@@ -79,7 +84,9 @@ public:
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
-  CSpectrumFluxAxis GetModelContinuum() const;
+  CSpectrumFluxAxis const &GetModelContinuum() const {
+    return m_PolynomialUnderLinesFluxAxis;
+  };
 
   CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);

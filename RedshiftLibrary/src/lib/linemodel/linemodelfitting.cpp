@@ -308,7 +308,7 @@ void CLineModelFitting::initDtd() {
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   if (isContinuumComponentNoContinuum()) {
-    m_ElementsVector->setAllAbsLinesNotFittable();
+    m_ElementsVector->setAllAbsLinesNullContinuum();
     return;
   }
 
@@ -328,9 +328,9 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   computeSpectrumFluxWithoutContinuum();
 
   if (isContinuumFittedToNull())
-    m_ElementsVector->setAllAbsLinesNotFittable();
+    m_ElementsVector->setAllAbsLinesNullContinuum();
   else
-    m_ElementsVector->setAllAbsLinesFittable();
+    m_ElementsVector->unsetAllAbsLinesNullContinuum();
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -859,8 +859,7 @@ void CLineModelFitting::updateResidualsAndContinuum(
   }
 
   Float64 cont, cont_std;
-  if (m_fittingmethod == "svd" || m_fittingmethod == "hybrid" ||
-      m_fittingmethod == "lbfgsb")
+  if (m_enableAmplitudeOffsets)
     std::tie(cont, cont_std) =
         GetContinuumAtCenterProfile(eIdx, line_index, modelSolution.Redshift);
   else
@@ -1305,7 +1304,7 @@ CLineModelFitting::GetContinuumAtCenterProfile(Int32 eltIdx, Int32 line_index,
 
     auto &model = getSpectrumModel();
     auto const &spectralAxis = model.GetModelSpectrum().GetSpectralAxis();
-    auto const continuumFluxAxis = model.GetModelContinuum();
+    auto const &continuumFluxAxis = model.getContinuumFluxAxis();
     return elt.GetContinuumAtCenterProfile(line_index, spectralAxis, redshift,
                                            continuumFluxAxis,
                                            m_enableAmplitudeOffsets);

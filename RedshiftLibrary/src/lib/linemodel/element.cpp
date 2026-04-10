@@ -40,6 +40,7 @@
 #include <cfloat>
 #include <climits>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/log/log.h"
@@ -144,7 +145,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
 std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
     Int32 line_id, const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
     const CSpectrumFluxAxis &continuumfluxAxis,
-    bool enableAmplitudeOffsets) const {
+    bool withAmplitudeOffsets) const {
   Float64 mu = GetObservedPosition(line_id, redshift);
 
   Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
@@ -154,12 +155,40 @@ std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
   }
 
   Float64 cont = continuumfluxAxis[IdxCenterProfile];
-  Float64 contStd = NAN;
-  if (enableAmplitudeOffsets) {
+  Float64 contStd = continuumfluxAxis.hasErrorData()
+                        ? continuumfluxAxis.GetError()[IdxCenterProfile]
+                        : NAN;
+  if (withAmplitudeOffsets) {
     auto const &polyCoeffs = getElementParam()->GetPolynomCoeffs();
-    contStd = std::sqrt(polyCoeffs.getVariance(spectralAxis[IdxCenterProfile]));
+    Float64 const lambda = spectralAxis[IdxCenterProfile];
+    cont += polyCoeffs.getValue(lambda);
+    auto const contVar = std::isnan(contStd) ? 0 : contStd * contStd;
+    auto const polynomVar = polyCoeffs.getVariance(lambda);
+    if (std::isfinite(polynomVar))
+      contStd = std::sqrt(contVar + polynomVar);
   }
   return std::make_pair(cont, contStd);
+}
+
+std::pair<Float64, Float64> CLineModelElement::GetContinuumAtCenterProfile(
+    const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
+    const CSpectrumFluxAxis &continuumfluxAxis,
+    bool withAmplitudeOffsets) const {
+  Float64 cont_sum = 0;
+  Float64 contVar_sum = 0;
+  Int32 nsum = 0;
+  for (Int32 line_id = 0; line_id != GetSize(); ++line_id) {
+    if (IsOutsideLambdaRangeLine(line_id))
+      continue;
+
+    auto const &[cont, contStd] =
+        GetContinuumAtCenterProfile(line_id, spectralAxis, redshift,
+                                    continuumfluxAxis, withAmplitudeOffsets);
+    cont_sum += cont;
+    contVar_sum += contStd * contStd;
+    nsum++;
+  }
+  return {cont_sum / nsum, std::sqrt(contVar_sum) / nsum};
 }
 
 // Estimate the line index range inside the spectralaxis of the line wavelength

@@ -110,6 +110,8 @@ struct TLineModelElementParam {
   bool m_nullNominalAmplitudes = false;
   // the profile is null on the element (all lines) support
   bool m_nullLineProfiles = false;
+  // if the fit failed (eg ndof > nsamples, or l-bfgs-b did not converge)
+  bool m_fitFailed = false;
 
   void init(const std::string &widthType);
   const Float64 &getSumGauss() const { return m_sumGauss; }
@@ -292,7 +294,7 @@ struct TLineModelElementParam {
 
   bool isNotFittable() const {
     return m_globalOutsideLambdaRange || m_nullNominalAmplitudes ||
-           m_absLinesNullContinuum || m_nullLineProfiles;
+           m_absLinesNullContinuum || m_nullLineProfiles || m_fitFailed;
   }
 
   bool isOutsideLambdaRangeLine(Int32 line_index) const {
@@ -315,7 +317,7 @@ struct TLineModelElementParam {
 
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
   void SetAllOffsetsEnabled(Float64 val);
-  bool SetAbsLinesLimit(Float64 limit);
+  void SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
   void setVelocity(Float64 vel);

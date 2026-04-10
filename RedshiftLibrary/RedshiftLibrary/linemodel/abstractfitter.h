@@ -63,6 +63,8 @@ public:
   void fit(Float64 redshift);
 
   virtual void resetSupport(Float64 redshift);
+  void computeGlobalLineValidity();
+  void computeGlobalOutsideLambdaRange(TInt32List const &EltsIdx);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
   void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
