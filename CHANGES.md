@@ -18,6 +18,7 @@
 * [10047] : Update of fit quality anderson test : divide result by n samples, and set bad test values to DBL_MAX rather than NAN
 * [10282] : Fix redshift uncertainty computation (deltaz) from pdf : add factor 1/sqrt(2)
 * [10335] : Fix linemodel fitting when the parameter `useLogLambdaSampling` is set to true.
+* [8868]  : Fix absorption line measurement in linemeas, when the continuum is fitted jointly with a polynomial (it was always NAN before).
 ## 1.16.0 (2025-11-20)
 ### Added
 * [10031] : Add a minimal number of samples to fit a continuum (one new parameter `nbSamplesMinForContinuumFit`) and provide the number of pixels effectively used for fitting (two new output results `ContinuumNPixelsUsedForFit` & `ContinuumNPixelsOfResiduals`)
