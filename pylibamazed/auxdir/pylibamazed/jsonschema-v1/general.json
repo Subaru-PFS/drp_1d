@@ -77,7 +77,7 @@
         "Peckreeder1972",
         "Ciddor1996"
       ],
-      "title": "Air vaccum method",
+      "title": "Air vacuum method",
       "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to Morton2000"
     },
     "extremaredshiftseparation": {

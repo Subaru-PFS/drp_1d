@@ -101,7 +101,7 @@ Int32 TLineModelElementParam::getLineIndex(
  * width in this case represents to the velocity
  * */
 Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda) const {
-  const Float64 c = SPEED_OF_LIGHT_IN_VACCUM;
+  const Float64 c = SPEED_OF_LIGHT_IN_VACUUM;
   Float64 v = m_ElementParam->getVelocity();
 
   if (!m_LSF)
@@ -180,7 +180,7 @@ void CLineModelElement::EstimateSupport(
   }
   Float64 const sigma = GetLineWidth(mu);
   Float64 const max_offset_angstrom =
-      (max_offset / SPEED_OF_LIGHT_IN_VACCUM) * mu;
+      (max_offset / SPEED_OF_LIGHT_IN_VACUUM) * mu;
   Float64 winsize =
       getElementParam()->getLineProfile(line_index)->GetNSigmaSupport() * sigma;
   winsize += 2 * max_offset_angstrom;
@@ -502,7 +502,7 @@ std::pair<Float64, Float64> CLineModelElement::getObservedPositionAndLineWidth(
 Float64 CLineModelElement::GetObservedPosition(Int32 index, Float64 redshift,
                                                bool doAsymfitdelta) const {
   Float64 dzOffset =
-      m_ElementParam->getLambdaOffset(index) / SPEED_OF_LIGHT_IN_VACCUM;
+      m_ElementParam->getLambdaOffset(index) / SPEED_OF_LIGHT_IN_VACUUM;
 
   auto const &line = m_ElementParam->GetLines()[index];
   Float64 mu = line.GetPosition() * (1 + redshift) * (1 + dzOffset);

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   BOOST_CHECK(n23Axis[0] == 0.5);
   BOOST_CHECK(n23Axis[1] == 0.5);
 
-  // constructor with airvaccum args
+  // constructor with airvacuum args
   // --------------------------------------------
 
   // without AirVacuum conversion

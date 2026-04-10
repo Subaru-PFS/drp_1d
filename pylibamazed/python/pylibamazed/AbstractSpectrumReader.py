@@ -188,9 +188,9 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         pass  # implementation not mandatory
 
     @doc_method
-    def set_air_or_vaccum(self, resource):
+    def set_air_or_vacuum(self, resource):
         """
-        Optional, set w_frame to "air" or "vaccum" (default is vacuum).
+        Optional, set w_frame to "air" or "vacuum" (default is vacuum).
         frame should be deduced from resource.
         """
         pass  # implemenation not mandatory
@@ -207,7 +207,7 @@ class AbstractSpectrumReader(metaclass=ABCMeta):
         """
         #  on first observation only:
         if self.waves.size() == 0:
-            self.set_air_or_vaccum(resource)
+            self.set_air_or_vacuum(resource)
             self.load_photometry(resource)
         for obs_id in obs_id_list:
             self.load_wave(resource, obs_id)

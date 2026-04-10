@@ -25,7 +25,7 @@ Following methods need to be implemented:
     AbstractSpectrumReader.load_lsf
     AbstractSpectrumReader.load_photometry
     AbstractSpectrumReader.load_others
-    AbstractSpectrumReader.set_air_or_vaccum
+    AbstractSpectrumReader.set_air_or_vacuum
 
 If necessary, it is possible to overload the constructor :
 

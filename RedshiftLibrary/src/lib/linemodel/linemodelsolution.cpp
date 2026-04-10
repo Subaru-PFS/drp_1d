@@ -87,7 +87,7 @@ void CLineModelSolution::computeSigmaUncertainty(
   if (lineWidthType == "instrumentDriven") {
     SigmasUncertainty = TFloat64List(size(), 0.);
   } else if (lineWidthType == "velocityDriven") {
-    SigmasUncertainty = TFloat64List(size(), 1 / SPEED_OF_LIGHT_IN_VACCUM);
+    SigmasUncertainty = TFloat64List(size(), 1 / SPEED_OF_LIGHT_IN_VACUUM);
 
     std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
                    LambdaObs.begin(), SigmasUncertainty.begin(),
@@ -97,7 +97,7 @@ void CLineModelSolution::computeSigmaUncertainty(
                    std::divides<>{});
   } else if (lineWidthType == "combined") {
     SigmasUncertainty = TFloat64List(
-        size(), 1 / (SPEED_OF_LIGHT_IN_VACCUM * SPEED_OF_LIGHT_IN_VACCUM));
+        size(), 1 / (SPEED_OF_LIGHT_IN_VACUUM * SPEED_OF_LIGHT_IN_VACUUM));
     std::transform(SigmasUncertainty.begin(), SigmasUncertainty.end(),
                    LambdaObs.begin(), SigmasUncertainty.begin(),
                    std::multiplies<>{});

@@ -267,7 +267,7 @@ void TLineModelElementParam::SetAllOffsetsEnabled(Float64 val) {
 Float64 TLineModelElementParam::GetLineProfileDerivVel(
     const CLineProfile &profile, Float64 x, Float64 x0, Float64 sigma,
     bool isEmission) const {
-  const Float64 c = SPEED_OF_LIGHT_IN_VACCUM;
+  const Float64 c = SPEED_OF_LIGHT_IN_VACUUM;
   Float64 v = getVelocity();
   Float64 v_to_sigma = 1 / c * x0;
 
