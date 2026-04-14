@@ -94,7 +94,6 @@ class TestPdfHandlerClass:
 
     def test_convertToRegular(self):
         self.pdf_handler.convertToRegular()
-        self.pdf_handler.convertToRegular(True, 10)
 
     def test_isPdfValid(self):
         with pytest.raises(Exception):

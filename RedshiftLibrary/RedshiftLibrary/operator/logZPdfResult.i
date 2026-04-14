@@ -46,7 +46,6 @@ public:
   // regular means logarithmic or arithmetic (with constant step)
   bool isRegular() const { return zcenter.size() == 1; };
   void convertToRegular(bool fine=true);
-  void extrapolate_on_right_border(Float64 zend);
   void isPdfValid() const;
   Float64 getSumTrapez() const;
 

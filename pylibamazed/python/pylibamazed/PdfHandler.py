@@ -135,11 +135,8 @@ class PdfHandler:
         return self._pdf.isRegular()
 
     @doc_method
-    def convertToRegular(self, fine=True, zgrid_max=None):
+    def convertToRegular(self, fine=True):
         self._pdf.convertToRegular(fine)
-
-        if zgrid_max is not None and self._pdf.zmax[0] < zgrid_max:
-            self._pdf.extrapolate_on_right_border(zgrid_max)
 
     def isPdfValid(self):
         return self._pdf.isPdfValid()
