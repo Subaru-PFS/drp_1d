@@ -171,10 +171,10 @@ class AbstractOutput(metaclass=ABCMeta):
             return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
 
     @doc_method
-    def get_attribute_short(self, attribute: str, lines_ids, obs_id=None, pdf_builder=None):
-        return self._get_attribute_short(attribute, lines_ids, obs_id=obs_id, pdf_builder=pdf_builder)
+    def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None, obs_id=None):
+        return self._get_attribute_short(attribute, lines_ids, pdf_builder=pdf_builder, obs_id=obs_id)
 
-    def _get_attribute_short(self, attribute: str, lines_ids, obs_id=None, pdf_builder=None):
+    def _get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None, obs_id=None):
         output = None
 
         attr_parts = attribute.split(".")
@@ -282,6 +282,8 @@ class AbstractOutput(metaclass=ABCMeta):
                 object_type, stage, method, dataset, attribute, rank=rank, obs_id=obs_id
             )
         if object_type:
+            if "<ObsID>" in dataset:
+                dataset = dataset.replace("<ObsID>", obs_id)
             if rank is None:
                 output = self.object_results[object_type][dataset][attribute]
             else:
@@ -323,6 +325,8 @@ class AbstractOutput(metaclass=ABCMeta):
             return self.has_attribute_in_source(
                 object_type, stage, method, dataset, attribute, rank=rank, obs_id=obs_id
             )
+        if "<ObsID>" in dataset:
+            dataset = dataset.replace("<ObsID>", obs_id)
         if not object_type:
             if dataset in self.root_results:
                 output = attribute in self.root_results[dataset]
