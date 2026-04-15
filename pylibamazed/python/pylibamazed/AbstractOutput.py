@@ -171,10 +171,10 @@ class AbstractOutput(metaclass=ABCMeta):
             return self.get_perfs(spectrum_model, stage, mode)[perf].at[0, perf]
 
     @doc_method
-    def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
-        return self._get_attribute_short(attribute, lines_ids, pdf_builder)
+    def get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None, obs_id=None):
+        return self._get_attribute_short(attribute, lines_ids, pdf_builder=pdf_builder, obs_id=obs_id)
 
-    def _get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None):
+    def _get_attribute_short(self, attribute: str, lines_ids, pdf_builder=None, obs_id=None):
         output = None
 
         attr_parts = attribute.split(".")
@@ -222,8 +222,8 @@ class AbstractOutput(metaclass=ABCMeta):
                 if self._has_attribute(object_type, dataset, attr_name, rank):
                     output = self._get_attribute(object_type, dataset, attr_name, rank)
             if dataset not in LINES_DATASETS:
-                if self._has_attribute(object_type, dataset, attr_name, rank):
-                    output = self._get_attribute(object_type, dataset, attr_name, rank)
+                if self._has_attribute(object_type, dataset, attr_name, rank, obs_id):
+                    output = self._get_attribute(object_type, dataset, attr_name, rank, obs_id)
             else:
                 line_name = attr_parts[1]
                 col_name = attr_name
@@ -270,16 +270,20 @@ class AbstractOutput(metaclass=ABCMeta):
         return pdf_attribute
 
     @doc_method
-    def get_attribute(self, object_type, dataset, attribute, rank=None):
-        return self._get_attribute(object_type, dataset, attribute, rank)
+    def get_attribute(self, object_type, dataset, attribute, rank=None, obs_id=None):
+        return self._get_attribute(object_type, dataset, attribute, rank, obs_id)
 
-    def _get_attribute(self, object_type, dataset, attribute, rank=None):
+    def _get_attribute(self, object_type, dataset, attribute, rank=None, obs_id=None):
         output = None
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
-            return self.get_attribute_from_source(object_type, stage, method, dataset, attribute, rank=rank)
+            return self.get_attribute_from_source(
+                object_type, stage, method, dataset, attribute, rank=rank, obs_id=obs_id
+            )
         if object_type:
+            if "<ObsID>" in dataset:
+                dataset = dataset.replace("<ObsID>", obs_id)
             if rank is None:
                 output = self.object_results[object_type][dataset][attribute]
             else:
@@ -310,15 +314,19 @@ class AbstractOutput(metaclass=ABCMeta):
         return output
 
     @doc_method
-    def has_attribute(self, object_type, dataset, attribute, rank=None):
-        return self._has_attribute(object_type, dataset, attribute, rank)
+    def has_attribute(self, object_type, dataset, attribute, rank=None, obs_id=None):
+        return self._has_attribute(object_type, dataset, attribute, rank, obs_id)
 
-    def _has_attribute(self, object_type, dataset, attribute, rank=None):
+    def _has_attribute(self, object_type, dataset, attribute, rank=None, obs_id=None):
         output = False
         if not self.cache:
             method = self._get_method(object_type, dataset)
             stage = self.parameters.get_stage_from_method_str(method)
-            return self.has_attribute_in_source(object_type, stage, method, dataset, attribute, rank=rank)
+            return self.has_attribute_in_source(
+                object_type, stage, method, dataset, attribute, rank=rank, obs_id=obs_id
+            )
+        if "<ObsID>" in dataset:
+            dataset = dataset.replace("<ObsID>", obs_id)
         if not object_type:
             if dataset in self.root_results:
                 output = attribute in self.root_results[dataset]
