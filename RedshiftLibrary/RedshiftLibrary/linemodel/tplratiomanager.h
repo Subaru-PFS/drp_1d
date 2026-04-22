@@ -136,6 +136,7 @@ protected:
   T2DList<bool> m_absLinesNullContinuum;
   T2DList<bool> m_nullNominalAmplitudes;
   T2DList<bool> m_nullLineProfiles;
+  T2DList<bool> m_fitFailed;
   std::vector<TFloat64List> m_LyaAsymCoeffTplratio;
   std::vector<TFloat64List> m_LyaWidthCoeffTplratio;
   std::vector<TFloat64List> m_LyaDeltaCoeffTplratio;

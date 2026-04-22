@@ -56,6 +56,10 @@ class CTemplate;
 class COperatorTemplateFittingBase;
 class CSpectrumModel {
 public:
+  CSpectrumModel(const CSpectrumModel &) = default;
+  CSpectrumModel(CSpectrumModel &&) = default;
+  CSpectrumModel &operator=(const CSpectrumModel &) = delete;
+  CSpectrumModel &operator=(CSpectrumModel &&) = delete;
   CSpectrumModel(
       const CLineModelElementList &elements,
       const std::shared_ptr<const CSpectrum> &spc,
@@ -66,20 +70,23 @@ public:
       Int32 spcIndex);
 
   void reinitModel() { m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis); };
+  void refreshContinuumModel();
   void refreshModel(CLine::EType lineTypeFilter = CLine::EType::nType_All);
   void reinitModelUnderElements(const TInt32List &filterEltsIdx, Int32 lineIdx);
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = undefIdx);
 
   CSpectrumFluxAxis
-  getModel(const TInt32List &eIdx_list,
-           CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
+  computeModelFlux(const TInt32List &eIdx_list,
+                   CLine::EType lineTypeFilter = CLine::EType::nType_All) const;
   void setContinuumToInputSpc();
   void setContinuumComponent(TContinuumComponent const &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
-  CSpectrumFluxAxis GetModelContinuum() const;
+  CSpectrumFluxAxis const &GetModelContinuum() const {
+    return m_PolynomialUnderLinesFluxAxis;
+  };
 
   CSpectrum GetObservedSpectrumWithLinesRemoved(
       CLine::EType lineTypeFilter = CLine::EType::nType_All);
@@ -100,7 +107,6 @@ public:
 
   std::pair<Float64, Float64>
   getModelSquaredResidualUnderElements(TInt32List const &EltsIdx,
-                                       bool with_continuum,
                                        bool with_weight = true) const;
 
   std::pair<Float64, Float64> getFluxDirectIntegration(
@@ -109,12 +115,6 @@ public:
   std::unordered_set<std::string>
   getLinesAboveSNR(const TFloat64Range &lambdaRange,
                    Float64 snrcut = 3.5) const;
-
-  bool m_enableAmplitudeOffsets = false;
-  Float64 m_Redshift = 0.;
-  // new methods
-  Int32 m__count = 0;
-  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
   void initModelWithContinuum();
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
@@ -136,6 +136,10 @@ public:
   void setElements(CLineModelElementList const &elements) {
     m_Elements = elements;
   };
+
+  bool m_enableAmplitudeOffsets = false;
+  Float64 m_Redshift = 0.;
+  std::shared_ptr<COperatorContinuumFitting> m_continuumFittingOperator;
 
 private:
   CSpectrumFluxAxis
@@ -200,15 +204,14 @@ public:
   }
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
-                                           bool with_continuum,
                                            bool with_weight = true) const {
     Float64 fit_allObs = 0;
     Float64 sumErr_allObs = 0;
     std::size_t nb_nan = 0;
     for ([[maybe_unused]] auto const &spcIndex : m_spectraIndex) {
       auto [fit, sumErr] =
-          getSpectrumModel().getModelSquaredResidualUnderElements(
-              EltsIdx, with_continuum, with_weight);
+          getSpectrumModel().getModelSquaredResidualUnderElements(EltsIdx,
+                                                                  with_weight);
       if (fit == 0.0)
         continue;
       if (std::isnan(fit)) {

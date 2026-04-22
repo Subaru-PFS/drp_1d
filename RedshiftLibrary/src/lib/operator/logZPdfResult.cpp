@@ -163,16 +163,6 @@ void CLogZPdfResult::convertToRegular(bool fine) {
   interpolateOnGrid(target_redshifts);
 }
 
-void CLogZPdfResult::extrapolate_on_right_border(Float64 zend) {
-  if (zend <= zmax[0])
-    return;
-
-  zmax[0] = zend;
-  setZGrid();
-  valProbaLog.resize(redshifts.size(), valProbaLog.back());
-  check_sizes();
-}
-
 Float64 CLogZPdfResult::getSumTrapez() const {
 
   check_sizes();

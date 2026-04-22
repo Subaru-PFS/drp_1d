@@ -109,90 +109,78 @@ CLineModelElementList::GetModelVelfitGroups(CLine::EType lineType) const {
   return groups;
 }
 
-/**
- * \brief Returns a sorted, de-duplicated list of indices of lines whose support
- *overlap ind's support and are not listed in the argument excludedInd.
- **/
-// TODO move this to LMElementListVector ( #8798 )
-// la difficulté viendra avec des LSF différentes, qui donc engendre un overlap
-// différent: il faudra prendre l'overlap le plus important, ie si ça overlap
-// dans un spectre alors ça overlap globalement (il faut faire un fit joint)
-TInt32List CLineModelElementList::getOverlappingElements(
-    Int32 ind, const TInt32Set &excludedInd, Float64 redshift,
-    Float64 overlapThres) const {
-  TInt32List indexes;
-
+TInt32List
+CLineModelElementList::getOverlappingElements(TInt32List &indicesToFit,
+                                              Float64 redshift) const {
+  TInt32List overlappedIndices;
+  Int32 const ind = indicesToFit.front();
   const auto &refElement = *m_Elements[ind];
   const auto &refElement_param = refElement.getElementParam();
-
-  if (refElement.IsOutsideLambdaRange()) {
-    indexes.push_back(ind);
-    return indexes;
-  }
-
-  auto const &refLinesList = refElement_param->GetLines();
   auto const refLineType = refElement_param->GetElementType();
 
-  for (Int32 iElts = 0; iElts < ssize(m_Elements); iElts++) {
-    const auto &element = *m_Elements[iElts];
-    const auto &element_param = element.getElementParam();
+  if (refElement.IsOutsideLambdaRange()) {
+    return overlappedIndices;
+  }
 
-    // skip itself
-    if (iElts == ind) {
-      indexes.push_back(ind);
-      continue;
-    }
+  // skip itself
+  indicesToFit.erase(indicesToFit.begin());
+  overlappedIndices.push_back(ind);
 
-    if (element_param->GetElementType() != refLineType)
-      continue;
+  auto intersect = [](TInt32RangeList const &supports1,
+                      TInt32RangeList const &supports2) {
+    for (auto s1 : supports1)
+      for (auto s2 : supports2)
+        if (s1.HasIntersectionWith(s2))
+          return true;
+    return false;
+  };
 
-    if (element.IsOutsideLambdaRange())
-      continue;
-
-    // check if in exclusion list
-    if (excludedInd.find(iElts) != excludedInd.cend())
-      continue;
-
-    auto const &linesElt = element_param->GetLines();
-
-    for (Int32 eltLineIdx = 0; eltLineIdx != element.GetSize(); ++eltLineIdx) {
-      auto eltLine = linesElt[eltLineIdx];
-      if (element.IsOutsideLambdaRangeLine(eltLineIdx))
-        continue;
-      for (Int32 refLineIdx = 0; refLineIdx != ssize(refLinesList);
-           ++refLineIdx) {
-        auto const &refLine = refLinesList[refLineIdx];
-        if (refElement.IsOutsideLambdaRangeLine(refLineIdx))
-          continue;
-        const Float64 muRef = refLine.GetPosition() * (1 + redshift);
-        const Float64 sigmaRef = refElement.GetLineWidth(muRef);
-        const Float64 winsizeRef =
-            refLine.GetProfile()->GetNSigmaSupport() * sigmaRef;
-        const Float64 overlapSizeMin = winsizeRef * overlapThres;
-        const Float64 xinf = muRef - winsizeRef / 2.0;
-        const Float64 xsup = muRef + winsizeRef / 2.0;
-
-        const Float64 muElt = eltLine.GetPosition() * (1 + redshift);
-        const Float64 sigmaElt = element.GetLineWidth(muElt);
-        const Float64 winsizeElt =
-            eltLine.GetProfile()->GetNSigmaSupport() * sigmaElt;
-        const Float64 yinf = muElt - winsizeElt / 2.0;
-        const Float64 ysup = muElt + winsizeElt / 2.0;
-
-        const Float64 max = std::max(xinf, yinf);
-        const Float64 min = std::min(xsup, ysup);
-        if (max - min < -overlapSizeMin) {
-          indexes.push_back(iElts);
+  auto mergeSupports = [](TInt32RangeList &supports1,
+                          TInt32RangeList const &supports2) {
+    supports1.insert(supports1.end(), supports2.begin(), supports2.end());
+    std::sort(supports1.begin(), supports1.end());
+    for (auto iter_left = supports1.begin(); iter_left != supports1.end();
+         ++iter_left) {
+      for (auto iter_right = iter_left + 1; iter_right != supports1.end();) {
+        if (iter_left->unionWith(*iter_right))
+          iter_right = supports1.erase(iter_right);
+        else
           break;
-        }
       }
+    };
+  };
+
+  auto supportsMerged = refElement.getSortedSupportNoOverlap();
+  bool intersection = true;
+  while (intersection) {
+    intersection = false;
+    for (auto Elt_it = indicesToFit.begin(); Elt_it != indicesToFit.end();
+         ++Elt_it) {
+      const auto &element = *m_Elements[*Elt_it];
+      const auto &element_param = element.getElementParam();
+
+      if (element_param->GetElementType() != refLineType)
+        continue;
+
+      if (element.IsOutsideLambdaRange())
+        continue;
+
+      // detect intersection between elements
+      auto const &supports = element.getSortedSupportNoOverlap();
+      if (!intersect(supportsMerged, supports))
+        continue;
+
+      intersection = true;
+
+      // merge elements support
+      mergeSupports(supportsMerged, supports);
+      overlappedIndices.push_back(*Elt_it);
+      indicesToFit.erase(Elt_it);
+      break;
     }
   }
 
-  std::sort(indexes.begin(), indexes.end());
-  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
-
-  return indexes;
+  return overlappedIndices;
 }
 
 /**
@@ -245,24 +233,25 @@ CLineModelElementList::findElementIndex(Int32 line_id) const {
  *index. Sort this list and remove multiple entries. Return this clean list.
  **/
 TInt32List
-CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
+CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx,
+                                         bool polynomialMargin) const {
   TInt32List indexes;
 
   if (!EltsIdx.size())
     return indexes;
-  TInt32RangeList support;
+  TInt32RangeList supportList;
   for (Int32 iElts : EltsIdx) {
     if (m_Elements[iElts]->IsOutsideLambdaRange())
       continue;
 
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
-    support.insert(support.end(), s.begin(), s.end());
+    TInt32RangeList s =
+        m_Elements[iElts]->getSupportNoOverlap(polynomialMargin);
+    supportList.insert(supportList.end(), s.begin(), s.end());
   }
 
-  for (Int32 iS = 0; iS < ssize(support); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++)
+  for (auto const &support : supportList)
+    for (Int32 j : support)
       indexes.push_back(j);
-  }
 
   std::sort(indexes.begin(), indexes.end());
   indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
@@ -271,7 +260,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
 }
 
 void CLineModelElementList::addToSpectrumAmplitudeOffset(
-    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelfluxAxis,
+    const CSpectrumSpectralAxis &spectralAxis, CSpectrumFluxAxis &modelFluxAxis,
     const TInt32List &eIdx_list, CLine::EType lineTypeFilter) const {
 
   const auto ampOffsetGroups = getFittingGroups(eIdx_list, lineTypeFilter);
@@ -281,10 +270,17 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
 
   // need to avoid overlapping polynomes since the ovelapping condition is
   // computed unsing the lambda range support of the lines that intersect with a
-  // bigger fraction than OVERLAP_THRES_HYBRID_FIT. It can lead to shared pixels
+  // big fraction. It can lead to shared pixels
   // between elements considered not overlapped. In this case we should not add
   // the overlapped polynomes, but choose one of them.
-  TInt32List mask(modelfluxAxis.GetSamplesCount(), 1);
+  TInt32List mask(modelFluxAxis.GetSamplesCount(), 1);
+  auto [modelFlux, modelError] =
+      std::move(modelFluxAxis).GetSamplesAndErrorVector();
+  bool validError = true;
+  if (modelError.empty()) {
+    modelError = TAxisSampleList(modelFlux.size(), NAN);
+    validError = false;
+  }
   for (const auto &[_, group_eIdx_list] : ampOffsetGroups) {
     // filter out not fittable elements
     TInt32List valid_eIdx_list;
@@ -294,15 +290,25 @@ void CLineModelElementList::addToSpectrumAmplitudeOffset(
                  });
     if (valid_eIdx_list.empty())
       continue;
-    auto samples = getSupportIndexes(valid_eIdx_list);
+    auto samples = getSupportIndexes(valid_eIdx_list, true);
     const auto &pCoeffs = m_Elements[valid_eIdx_list.front()]
                               ->getElementParam()
                               ->GetPolynomCoeffs();
     for (Int32 s : samples) {
-      modelfluxAxis[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      modelFlux[s] += pCoeffs.getValue(spectralAxis[s]) * mask[s];
+      auto const modelVar =
+          std::isnan(modelError[s]) ? 0 : modelError[s] * modelError[s];
+      auto const polynomVar = pCoeffs.getVariance(spectralAxis[s]);
+      if (std::isfinite(polynomVar)) {
+        validError = true;
+        modelError[s] = std::sqrt(modelVar + polynomVar);
+      }
       mask[s] = 0; // one sample can only be written once
     }
   }
+  modelFluxAxis = CSpectrumFluxAxis(std::move(modelFlux));
+  if (validError)
+    modelFluxAxis.setError(CSpectrumNoiseAxis(std::move(modelError)));
 }
 
 /**
@@ -454,7 +460,7 @@ TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
     if (sigma_support ==
         elt->getElementParam()->getLineProfile(subeIdx)->GetNSigmaSupport()) {
       // same Nsigma support, get already computed support indices
-      indexRangeList[i] = elt->getTheoreticalSupportSubElt(subeIdx);
+      indexRangeList[i] = elt->getSupportSubElt(subeIdx);
     } else {
       // different Nsigma support, thus need to recompute support indices
       auto const &[mu, LineWidth] =

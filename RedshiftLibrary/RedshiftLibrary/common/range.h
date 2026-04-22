@@ -399,7 +399,7 @@ public:
     return std::max(a.GetBegin(), b.GetBegin()) <=
            std::min(a.GetEnd(), b.GetEnd());
   }
-  bool HasIntersectionWith(const CRange<T> &r) {
+  bool HasIntersectionWith(const CRange<T> &r) const {
     return HasIntersection(*this, r);
   }
 
@@ -425,6 +425,10 @@ public:
     return false;
   }
   bool unionWith(const CRange<T> &r) { return getUnion(*this, r, *this); }
+
+  bool Include(const CRange<T> &range) const {
+    return (range.GetBegin() >= GetBegin() && range.GetEnd() <= GetEnd());
+  }
 
   static std::vector<CRange<T>>
   joinIntersections(std::vector<CRange<T>> ranges) {

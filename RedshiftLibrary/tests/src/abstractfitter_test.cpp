@@ -79,7 +79,8 @@ struct AbstractFitterFixture {
     CAutoScope autoscope4(Context.m_ScopeStack, "lineModel");
     std::shared_ptr<CLMEltListVector> elementsVector =
         std::make_shared<CLMEltListVector>(
-            *spcIndex, restLineList, ElementComposition::EmissionAbsorption);
+            *spcIndex, restLineList, ElementComposition::EmissionAbsorption,
+            false);
     CTestFitter testFitter(elementsVector, inputSpcs, lambdaRanges,
                            spectrumModels, restLineList, *spcIndex);
     return testFitter;

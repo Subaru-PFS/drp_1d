@@ -9,8 +9,10 @@ Welcome to PyLibAmazed's documentation!
  .. toctree::
 
    api
-   algorithms
    parameters
+   algorithms/algorithms
+   glossary
+   bibliography
 
 
 Indices and tables

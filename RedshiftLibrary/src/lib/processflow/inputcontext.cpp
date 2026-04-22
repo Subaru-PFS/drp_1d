@@ -199,7 +199,6 @@ void CInputContext::Init() {
   Log.LogInfo(categories_msg);
 
   // set template continuum removal parameters
-  // TODO correct this to make it non mandatory if powerlaw for instance ?
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
   bool enableInputSpcCorrect = m_ParameterStore->Get<bool>("autoCorrectInput");

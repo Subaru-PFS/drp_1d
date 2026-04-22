@@ -7,8 +7,7 @@
     "stages",
     "redshiftRange",
     "redshiftStep",
-    "redshiftSampling",
-    "templateDir"
+    "redshiftSampling"
   ],
   "additionalProperties": false,
   "properties": {
@@ -44,7 +43,8 @@
     },
     "templateDir": {
       "type": "string",
-      "title": "Template directory"
+      "title": "Template directory",
+      "description": "Directory containing the templates to be used for fitting the spectra. This directory is mandatory for all methods using a template fitting method : if redshiftSolver or lineMeasSolver uses templateFittingSolve or tplCombinationSolve, or if lineModelSolve uses a template fitting method (tplFit, tplFitAuto, etc.)"
     },
     "lineMeasDzHalf": {
       "type": "number",

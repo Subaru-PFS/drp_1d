@@ -56,7 +56,6 @@ namespace NSEpic {
 
 class CSpectrum;
 class COperatorResult;
-class CModelSpectrumResult;
 
 /**
  * \ingroup Redshift
@@ -86,10 +85,10 @@ public:
       TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) = 0;
 
-  std::pair<CModelSpectrumResult, TPhotVal>
-  ComputeSpectrumModel(const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef,
-                       Int32 meiksinIdx, Float64 amplitude,
-                       const Float64 overlapThreshold, Int32 index);
+  std::pair<CModelSpectrumResult, TPhotVal> virtual ComputeSpectrumModel(
+      const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef,
+      Int32 meiksinIdx, Float64 amplitude, const Float64 overlapThreshold,
+      Int32 spcIndex);
   virtual TPhotVal getIntegratedFluxes(Float64 ampl = 1.0) const {
     return TPhotVal();
   };

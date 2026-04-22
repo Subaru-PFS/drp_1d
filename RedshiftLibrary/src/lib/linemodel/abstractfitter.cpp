@@ -165,6 +165,7 @@ void CAbstractFitter::fit(Float64 redshift) {
 void CAbstractFitter::initFit(Float64 redshift) {
 
   resetSupport(redshift);
+  computeGlobalLineValidity();
 
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
@@ -188,7 +189,18 @@ void CAbstractFitter::resetSupport(Float64 redshift) {
                               m_enlarge_line_supports);
     }
   }
-  m_ElementsVector->computeGlobalLineValidity(m_models);
+}
+
+void CAbstractFitter::computeGlobalLineValidity() {
+  // don't invalidate abs line for null continuum if ampOffset (polynomial under
+  // line is used)
+  bool const checkNullContinuum = !m_enableAmplitudeOffsets;
+  m_ElementsVector->computeGlobalLineValidity(m_models, checkNullContinuum);
+}
+
+void CAbstractFitter::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  m_ElementsVector->computeGlobalOutsideLambdaRange(EltsIdx);
 }
 
 void CAbstractFitter::fitLyaProfile(Float64 redshift) {
@@ -202,7 +214,8 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
   if (indices_Igm.empty())
     return;
 
-  // ASym Profile
+  // Asym Profile : if lya profile parameter is set to asym, lya is set here. If
+  // set to igm, then profile->isAsymFit() is false and nothing is done here.
   {
     auto const &[elt_idx_LyaE, line_indices_LyaE] = indices_Igm.front();
     line_idx_LyaE = line_indices_LyaE.front();
@@ -222,16 +235,17 @@ void CAbstractFitter::fitLyaProfile(Float64 redshift) {
     }
   }
 
-  // deal with symIgm profiles
+  // deal with symIgm profiles. If lya profile parameter is set to igm, then
+  // isSymIgmFit() is false, and lya will be included here
   {
     std::vector<std::pair<Int32, TInt32List>> line_indices_tofit;
-    for (auto const &[elt_idx_igmLine, line_indices_LyaE] : indices_Igm) {
+    for (auto const &[elt_idx_igmLine, line_indices] : indices_Igm) {
       auto const &param_EltIgm =
           m_ElementsVector->getElementsParams()[elt_idx_igmLine];
 
       if (param_EltIgm->isNotFittable())
         continue;
-      auto line_indices_filtered = line_indices_LyaE;
+      auto line_indices_filtered = line_indices; // Contains lines to fit
       auto end = std::remove_if(
           line_indices_filtered.begin(), line_indices_filtered.end(),
           [&](Int32 idx) {
@@ -359,7 +373,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
                                                   Float64 redshift,
                                                   Int32 lineIdx,
                                                   bool enableOffsetFitting) {
-
+  // NB dummy multiobs implementation (functional for one obs only)
   bool atLeastOneOffsetToFit =
       HasLineElementToOffset({eltIndex}, enableOffsetFitting);
   Int32 nSteps = GetLambdaOffsetSteps(atLeastOneOffsetToFit);
@@ -383,8 +397,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
 
     // check fitting
     if (atLeastOneOffsetToFit) {
-      m_spectraIndex
-          .setAtBegining(); // TODO dummy implementation for hybridfitter
+      m_spectraIndex.setAtBegining(); // temporary multiobs implementation
       Float64 fit = getLeastSquareMeritFast(eltIndex);
       if (fit < bestMerit) {
         bestMerit = fit;
@@ -407,7 +420,7 @@ void CAbstractFitter::fitAmplitudeAndLambdaOffset(Int32 eltIndex,
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
 Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
-  Float64 fit = 0.; // TODO restore getLeastSquareContinuumMeritFast();
+  Float64 fit = 0.;
   Int32 istart = 0;
   Int32 iend = getElementsParams().size();
   if (eltIdx != undefIdx) {
@@ -431,7 +444,7 @@ Float64 CAbstractFitter::getLeastSquareMeritFast(Int32 eltIdx) const {
 
 TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                                const Int32 &idxLineLyaE) {
-
+  // NB dummy multiobs implementation (functional for one obs only)
   // 3. find the best width and asym coeff. parameters
   Float64 widthCoeffStep = m_opt_lya_fit_width_step;
   Float64 widthCoeffMin = m_opt_lya_fit_width_min;
@@ -469,11 +482,10 @@ TAsymParams CAbstractFitter::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
           if (1) {
             m_models->refreshAllModelsUnderElements(filterEltsIdxLya,
                                                     idxLineLyaE);
-            m = getModelResidualRmsUnderElements({idxLyaE}, true);
+            m = getModelResidualRmsUnderElements({idxLyaE});
 
           } else {
-            m_spectraIndex.setAtBegining(); // TODO dummy implementation, even
-                                            // if this line is disabled
+            m_spectraIndex.setAtBegining(); // temporary multiobs implementation
             m = getLeastSquareMeritFast(idxLyaE);
           }
           if (m < meritMin) {
@@ -520,7 +532,7 @@ Int32 CAbstractFitter::fitAsymIGMCorrection(
       for (auto const &[elt_idx, _] : idxLines)
         elt_indices.push_back(elt_idx);
       m_models->refreshAllModelsUnderElements(elt_indices);
-      Float64 m = getModelResidualRmsUnderElements(elt_indices, true);
+      Float64 m = getModelResidualRmsUnderElements(elt_indices);
 
       if (m < meritMin) {
         meritMin = m;

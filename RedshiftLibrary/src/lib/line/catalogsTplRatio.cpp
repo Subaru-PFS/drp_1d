@@ -68,15 +68,6 @@ TFloat64List CLineCatalogsTplRatio::getCatalogsPriors() const {
   return catalogsPriors;
 }
 
-bool CLineCatalogsTplRatio::GetCatalogVelocities(Int32 idx, Float64 &elv,
-                                                 Float64 &alv) const {
-  // TODO generic velocity groups : there should not be hardcoded values, this
-  // should return a map
-  elv = m_lineRatioCatalogs[idx].getVelocity("em_vel");
-  alv = m_lineRatioCatalogs[idx].getVelocity("abs_vel");
-  return true;
-}
-
 std::vector<std::vector<TFloat64List>>
 CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
     const std::vector<TLineModelElementParam_ptr> &LineModelElementsParams,

@@ -54,7 +54,6 @@ class SubType:
             context.GetResultStore(), self.parameters, auto_load=False, extended_results=False
         )
         ret = []
-
         for rank in range(
             context.GetResultStore().getNbRedshiftCandidates(
                 self.object_type, "redshiftSolver", "lineModelSolve"
@@ -66,7 +65,7 @@ class SubType:
                 "lineModelSolve",
                 "model_parameters",
                 "LinesRatioName",
-                rank,
+                rank=rank,
             )
             ret.append(self.calibration_library.get_sub_type(self.object_type, tpl_ratio))
         return ret

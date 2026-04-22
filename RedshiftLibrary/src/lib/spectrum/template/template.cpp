@@ -205,7 +205,8 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust) {
     return true;
   m_kDust = kDust;
 
-  CSpectrumFluxAxis &FluxAxis = GetFluxAxis_();
+  auto &fluxAxis = GetFluxAxis_();
+  auto flux = std::move(fluxAxis).GetSamplesVector();
   const CSpectrumSpectralAxis &SpectralAxis = m_SpectralAxis;
   const CSpectrumFluxAxis &NoIsmIgmFluxAxis = m_NoIsmIgmFluxAxis;
 
@@ -216,9 +217,10 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust) {
     else
       m_computedDustCoeff[k] = 1.0;
 
-    FluxAxis[k] = NoIsmIgmFluxAxis[k] * m_computedMeiksingCoeff[k] *
-                  m_computedDustCoeff[k];
+    flux[k] = NoIsmIgmFluxAxis[k] * m_computedMeiksingCoeff[k] *
+              m_computedDustCoeff[k];
   }
+  fluxAxis.setSamplesVector(std::move(flux));
   return true;
 }
 
@@ -240,7 +242,8 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx) {
   if (m_Igm_kend == -1)
     return false;
 
-  CSpectrumFluxAxis &FluxAxis = GetFluxAxis_();
+  auto &fluxAxis = GetFluxAxis_();
+  auto flux = std::move(fluxAxis).GetSamplesVector();
   const auto &SpectralAxis = m_SpectralAxis;
   const auto &NoIsmIgmFluxAxis = m_NoIsmIgmFluxAxis;
 
@@ -258,9 +261,10 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx) {
     } else
       m_computedMeiksingCoeff[k] = 1.0;
 
-    FluxAxis[k] = NoIsmIgmFluxAxis[k] * m_computedMeiksingCoeff[k] *
-                  m_computedDustCoeff[k];
+    flux[k] = NoIsmIgmFluxAxis[k] * m_computedMeiksingCoeff[k] *
+              m_computedDustCoeff[k];
   }
+  fluxAxis.setSamplesVector(std::move(flux));
   return true;
 }
 

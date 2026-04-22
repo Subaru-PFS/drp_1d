@@ -242,17 +242,20 @@ class ParametersAccessor:
     def get_additional_cols(self, default=None) -> List[str]:
         return self.parameters.get("additionalCols") or default
 
-    def get_filters(self, default=[], obs_id=""):
+    def get_filters(self, default=None, obs_id=""):
+        if default is None:
+            default = []
         if not obs_id:
             return self.parameters.get("filters", default)
+        filters = self.parameters.get("filters")
+        if filters:
+            try:
+                output = filters.get(obs_id, default)
+            except AttributeError:
+                output = filters
         else:
-            if self.parameters.get("filters"):
-                try:
-                    return self.parameters.get("filters").get(obs_id, default)
-                except AttributeError:
-                    return self.parameters.get("filters")
-            else:
-                return default
+            output = default
+        return output
 
     def get_lsf(self) -> Optional[dict]:
         return self.parameters.get("lsf")
@@ -521,6 +524,11 @@ class ParametersAccessor:
     def get_linemodel_fitting_method(self, spectrum_model: str) -> str:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "fittingMethod")
 
+    def get_linemodel_firstpass_fitting_method(self, spectrum_model: str) -> str:
+        return self._get_on_None(
+            self.get_firstpass_section(ESolveMethod.LINE_MODEL, spectrum_model), "fittingMethod"
+        )
+
     def get_skipsecondpass(
         self, solve_method: ESolveMethod, spectrum_model: str, default: Optional[bool] = None
     ) -> bool:
@@ -554,6 +562,14 @@ class ParametersAccessor:
 
     def get_linemodel_lbda_offset_step(self, spectrum_model: str):
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "lbdaOffsetStep")
+
+    def get_linemodel_amp_offset_fit(self, spectrum_model: str):
+        return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "ampOffsetFit")
+
+    def get_linemodel_amp_offset_nsigma(self, spectrum_model: str):
+        return self._get_on_None(
+            self.get_linemodel_solve_linemodel_section(spectrum_model), "nSigmaAmpOffset"
+        )
 
     def get_linemodel_velocity_fit(self, spectrum_model: str) -> bool:
         return self._get_on_None(self.get_linemodel_solve_linemodel_section(spectrum_model), "velocityFit")
@@ -639,6 +655,12 @@ class ParametersAccessor:
 
     def get_linemeas_lbda_offset_step(self, spectrum_model: str):
         return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "lbdaOffsetStep")
+
+    def get_linemeas_amp_offset_fit(self, spectrum_model: str) -> bool:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "ampOffsetFit")
+
+    def get_linemeas_amp_offset_nsigma(self, spectrum_model: str) -> float:
+        return self._get_on_None(self.get_linemeas_linemodel_section(spectrum_model), "nSigmaAmpOffset")
 
     def get_nsigmasupport(self, spectrum_model: str, method: ESolveMethod) -> Optional[float]:
         nsigmasupport = None

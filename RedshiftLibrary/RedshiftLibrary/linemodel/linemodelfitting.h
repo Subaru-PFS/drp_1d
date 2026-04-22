@@ -74,22 +74,15 @@ public:
           &continuumFittingOperator,
       ElementComposition element_composition = ElementComposition::Default);
 
-  // only used for template orthogonalization,
-  // TODO use only one of the future subclasses ?
-  //      at least inherit from clinemodelfitting
-  CLineModelFitting(const std::shared_ptr<const CSpectrum> &template_,
-                    const TLambdaRange &lambdaRange,
-                    const std::shared_ptr<COperatorContinuumFitting>
-                        &continuumFittingOperator);
   void setContinuumComponent(TContinuumComponent component);
   const TContinuumComponent &getContinuumComponent() const {
     return m_continuumManager->getContinuumComponent();
   };
 
-  bool initDtd();
+  void initDtd();
   Float64 EstimateMTransposeM() const;
-  Float64 getDTransposeD();
-  Float64 getLikelihood_cstLog();
+  Float64 getOrInitDtD();
+  Float64 getOrInitLikelihoodCstLog();
 
   void SetVelocityEmission(Float64 vel);
   void SetVelocityAbsorption(Float64 vel);
@@ -122,8 +115,8 @@ public:
   }
 
   std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
-    // TODO temp basic impl
-    m_spectraIndex.setAtBegining();
+    // NB dummy multiobs implementation (functional for one obs only)
+    m_spectraIndex.setAtBegining(); // temporary multiobs implementation
     return getSpectrumModel().getLinesAboveSNR(getLambdaRange(), snrcut);
   }
 
@@ -220,6 +213,9 @@ public:
   bool isLineRatioRules() const { return m_lineRatioManager->isRules(); }
 
   bool isLineRatioTplRatio() const { return m_lineRatioManager->isTplRatio(); }
+  bool isLineRatioRatioToFree() const {
+    return m_lineRatioManager->isRatioToFree();
+  }
 
   bool isLineRatioTplCorr() const { return m_lineRatioManager->isTplCorr(); }
 
@@ -230,10 +226,7 @@ public:
                        &continuumFittingOperator,
                    CLineRatioManager::EType const &lineRatioType,
                    ElementComposition element_composition);
-  void reloadFor2ndPass(
-      const std::shared_ptr<COperatorContinuumFitting>
-          &continuumFittingOperator,
-      ElementComposition element_composition = ElementComposition::Default);
+  void reloadFor2ndPass();
   void
   setChiSquareRatioResult(const Int32 index_z,
                           const std::shared_ptr<CLineModelResult> &lmResult);
@@ -242,15 +235,16 @@ public:
   std::shared_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CLineRatioManager> m_lineRatioManager;
 
-private:
+protected:
+  CLineModelFitting(Int32 spectraIndex);
   void initParameters();
   void setElementsVector(CLineRatioManager::EType const &lineRatioType,
                          ElementComposition const &element_composition);
 
   void LogCatalogInfos();
-  void setRedshift(Float64 redshift, bool reinterpolatedContinuum = false);
+  void setRedshift(Float64 redshift);
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
-  Float64 EstimateLikelihoodCstLog() const;
+  Float64 EstimateLikelihoodCstLog(const std::string &spcComponent) const;
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
 
@@ -323,14 +317,14 @@ private:
 
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   Int32 m_opt_fitcontinuum_maxN;
-  std::string m_opt_firstpass_fittingmethod = "hybrid";
-  std::string m_opt_secondpass_fittingmethod = "hybrid";
+  std::string m_opt_firstpass_fittingmethod;
+  std::string m_opt_secondpass_fittingmethod;
 
   //  bool m_opt_enable_improveBalmerFit = false;
 
   bool m_useloglambdasampling = false;
-  bool m_enableAmplitudeOffsets;
-  bool m_enableLbdaOffsets;
+  bool m_enableAmplitudeOffsets = false;
+  bool m_enableLbdaOffsets = false;
 
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;

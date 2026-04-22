@@ -36,39 +36,34 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include <algorithm>
 
-#include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/common/vectorOperations.h"
-#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/linemodel/linemodelfittingfortemplates.h"
 
 using namespace NSEpic;
+using namespace std;
 
-CSpectrumAxis &CSpectrumAxis::operator*=(const Float64 op) {
-  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
-                 [op](Float64 sample) { return sample * op; });
-  return *this;
-}
+CLineModelFittingForTemplates::CLineModelFittingForTemplates(
+    const std::shared_ptr<const CTemplate> &template_,
+    const TLambdaRange &lambdaRange,
+    const std::shared_ptr<COperatorContinuumFitting> &continuumFittingOperator)
+    : CLineModelFitting(1) {
+  m_inputSpcs =
+      std::make_shared<std::vector<std::shared_ptr<const CSpectrum>>>();
 
-CSpectrumAxis &CSpectrumAxis::operator/=(const Float64 op) {
-  for (Int32 i = 0; i < ssize(m_Samples); i++) {
-    m_Samples[i] /= op;
-  }
-  return *this;
-}
+  m_inputSpcs->push_back(template_);
+  m_lambdaRanges.push_back(std::make_shared<const TLambdaRange>(lambdaRange));
+  initParameters();
+  // override ortho specific parameters
+  m_fittingmethod = "hybrid";
+  m_enableAmplitudeOffsets = false;
+  m_enableLbdaOffsets = false;
 
-void CSpectrumAxis::SetSize(Int32 s) { m_Samples.resize(s); }
-void CSpectrumAxis::clear() {
-  resetAxisProperties();
-  m_Samples.clear();
-}
+  auto lineRatioType = CLineRatioManager::EType::rules;
+  initMembers(continuumFittingOperator, lineRatioType,
+              ElementComposition::Default);
+  // temporary options override to be removed when full tpl ortho is implemented
+  setLineRatioManager(lineRatioType);
 
-/*
-    maskedAxis is the output axis after applying the mask on the current object
-*/
-CSpectrumAxis
-CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
-{
-  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
+  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
+  setContinuumComponent(TContinuumComponent("fromSpectrum"));
 }

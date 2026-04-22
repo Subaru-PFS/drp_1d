@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/common/size.h"
-#include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/linemodel/linemodelfittingfortemplates.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
@@ -196,11 +196,10 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   if (!m_enableOrtho)
     return tplOrtho;
 
-  std::string opt_continuumcomponent = "fromSpectrum";
   tplOrtho->SetLSF(m_LSF);
 
   // double the template flux, and set the continuum as the initial template
-  // such that withoutContinuumFlux will be template, and continuum will be
+  // such that withoutContinuumFlux will be templaste, and continuum will be
   // template also
   {
     auto doubleFlux = tplOrtho->GetFluxAxis();
@@ -209,13 +208,16 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   }
   std::string saveContinuumEstimationMethod =
       tplOrtho->GetContinuumEstimationMethod();
-  tplOrtho->SetContinuumEstimationMethod(inputTemplate.GetFluxAxis());
+  tplOrtho->SetContinuumEstimationMethod(
+      inputTemplate.GetFluxAxis()); // Set continuum method to manual &
+                                    // continuum axis to input template flux
 
   // Compute linemodel on the template
   TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
   std::shared_ptr<COperatorTemplateFitting> continuumFittingOperator;
-  CLineModelFitting model(tplOrtho, lambdaRange, continuumFittingOperator);
+  CLineModelFittingForTemplates model(tplOrtho, lambdaRange,
+                                      continuumFittingOperator);
 
   Float64 redshift = 0.0;
   Float64 contreest_iterations = 0;
@@ -235,10 +237,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
   CSpectrum modelSpc = model.getSpectrumModel().GetModelSpectrum();
 
   const CSpectrumFluxAxis &modelFluxAxis = modelSpc.GetFluxAxis();
-  CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
-  for (Int32 i = 0; i < continuumOrthoFluxAxis.GetSamplesCount(); i++) {
-    continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
-  }
+  CSpectrumFluxAxis continuumOrthoFluxAxis =
+      tplOrtho->GetFluxAxis() - modelFluxAxis;
   tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));
 
   return tplOrtho;

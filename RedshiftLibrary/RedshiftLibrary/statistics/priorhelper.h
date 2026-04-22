@@ -65,9 +65,9 @@ public:
     Float64 logprior_precompTE; // log(p(ebv, tpl|z))
     Float64 logprior_precompZ;  // log(p(z)/dz)
   };
-  typedef std::vector<SPriorTZE> TPriorEList;
-  typedef std::vector<TPriorEList> TPriorZEList;
-  typedef std::vector<TPriorZEList> TPriorTZEList;
+  typedef std::vector<SPriorTZE> TPriorEList;      // 1D
+  typedef std::vector<TPriorEList> TPriorZEList;   // 2D
+  typedef std::vector<TPriorZEList> TPriorTZEList; // 3D
 
   void Init(std::string priorDirPath, Int32 type);
 

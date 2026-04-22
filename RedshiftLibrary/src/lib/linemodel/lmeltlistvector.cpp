@@ -37,24 +37,26 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
-#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
+#include <boost/range/counting_range.hpp>
 
 using namespace NSEpic;
 using namespace std;
 
 CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                                    const CLineMap &restLineList,
-                                   ElementComposition element_composition)
+                                   ElementComposition element_composition,
+                                   bool useAmpOffsetsCoeffs)
     : m_spectraIndex(spcIndex), m_RestLineList(restLineList) {
 
   switch (element_composition) {
   case ElementComposition::Default:
     // load the regular catalog
-    LoadCatalog();
+    LoadCatalog(useAmpOffsetsCoeffs);
     break;
   case ElementComposition::EmissionAbsorption:
     //"tplRatio", "ratioToFree" and "tplCorr"
@@ -62,15 +64,15 @@ CLMEltListVector::CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
     // LoadCatalogOneMultiline(restLineList);
     // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for
     // the Abs lines
-    LoadCatalogTwoMultilinesAE();
+    LoadCatalogTwoMultilinesAE(useAmpOffsetsCoeffs);
     break;
   case ElementComposition::OneLine:
     // load each line alone in one element (linemeas)
-    LoadCatalogOneLineByElement();
+    LoadCatalogOneLineByElement(useAmpOffsetsCoeffs);
   }
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex) {
 
-    m_ElementsVector.push_back(CLineModelElementList());
+    m_ElementsVector.emplace_back();
     fillElements();
   }
 }
@@ -120,27 +122,31 @@ bool CLMEltListVector::computeOutsideLambdaRange(Int32 elt_index) {
   return true;
 }
 
-void CLMEltListVector::AddElementParam(CLineVector lines) {
+void CLMEltListVector::AddElementParam(CLineVector lines,
+                                       bool useAmpOffsetsCoeffs) {
 
   auto const ps = Context.GetParameterStore();
   Float64 const velocity = lines.front().IsEmission()
                                ? ps->GetScoped<Float64>("velocityEmission")
                                : ps->GetScoped<Float64>("velocityAbsorption");
+  Float64 const maxDistanceToLine =
+      Context.GetParameterStore()->GetScoped<Float64>("maxDistanceToLine");
+  Int32 const minSamplesNumberForLineFit =
+      Context.GetParameterStore()->GetScoped<Int32>("nbSamplesMinForLineFit");
+
+  Float64 const nSigmaAmpOffset =
+      useAmpOffsetsCoeffs ? ps->GetScoped<Float64>("nSigmaAmpOffset") : 0;
 
   std::string lineWidthType = ps->GetScoped<std::string>("lineWidthType");
   m_ElementsParams.push_back(std::make_shared<TLineModelElementParam>(
-      std::move(lines), velocity, lineWidthType));
+      std::move(lines), velocity, lineWidthType, maxDistanceToLine,
+      minSamplesNumberForLineFit, useAmpOffsetsCoeffs, nSigmaAmpOffset));
 }
 
 void CLMEltListVector::fillElements() {
-  Float64 maxDistanceToLine =
-      Context.GetParameterStore()->GetScoped<Float64>("maxDistanceToLine");
-  Int32 minSamplesNumberForLineFit =
-      Context.GetParameterStore()->GetScoped<Int32>("nbSamplesMinForLineFit");
 
   for (auto &ep : m_ElementsParams)
-    getElementList().push_back(std::make_shared<CLineModelElement>(
-        ep, maxDistanceToLine, minSamplesNumberForLineFit));
+    getElementList().push_back(std::make_shared<CLineModelElement>(ep));
 }
 
 /**
@@ -152,29 +158,33 @@ void CLMEltListVector::fillElements() {
  *line thusly associated to this line. If at least one line was found, save
  *this result in getElementList().
  **/
-void CLMEltListVector::LoadCatalog() {
+void CLMEltListVector::LoadCatalog(bool useAmpOffsetsCoeffs) {
   auto groupList = CLineCatalog::ConvertToGroupList(m_RestLineList);
-  for (auto &[_, lines] : groupList) {
-    AddElementParam(std::move(lines));
+  for (auto &&lines : groupList) {
+    AddElementParam(std::move(lines), useAmpOffsetsCoeffs);
   }
 }
 
-void CLMEltListVector::LoadCatalogOneLineByElement() {
-  for (auto const &[_, line] : m_RestLineList) {
-    AddElementParam(CLineVector{line});
-  }
+void CLMEltListVector::LoadCatalogOneLineByElement(bool useAmpOffsetsCoeffs) {
+  CLineVector sortedLines;
+  sortedLines.reserve(m_RestLineList.size());
+  for (auto const &[_, line] : m_RestLineList)
+    sortedLines.push_back(line);
+  sortLinesByCenterWavelength(sortedLines);
+  for (auto &&line : std::move(sortedLines))
+    AddElementParam(CLineVector{std::move(line)}, useAmpOffsetsCoeffs);
 }
 
-void CLMEltListVector::LoadCatalogOneMultiline() {
+void CLMEltListVector::LoadCatalogOneMultiline(bool useAmpOffsetsCoeffs) {
   CLineVector RestLineVector;
   RestLineVector.reserve(m_RestLineList.size());
   for (auto const &[_, line] : m_RestLineList)
     RestLineVector.push_back(line);
-
-  AddElementParam(std::move(RestLineVector));
+  sortLinesByCenterWavelength(RestLineVector);
+  AddElementParam(std::move(RestLineVector), useAmpOffsetsCoeffs);
 }
 
-void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
+void CLMEltListVector::LoadCatalogTwoMultilinesAE(bool useAmpOffsetsCoeffs) {
 
   std::vector<CLine::EType> const types = {CLine::EType::nType_Absorption,
                                            CLine::EType::nType_Emission};
@@ -187,9 +197,18 @@ void CLMEltListVector::LoadCatalogTwoMultilinesAE() {
     }
 
     if (lines.size() > 0) {
-      AddElementParam(std::move(lines));
+      sortLinesByCenterWavelength(lines);
+      AddElementParam(std::move(lines), useAmpOffsetsCoeffs);
     }
   }
+}
+
+void CLMEltListVector::sortLinesByCenterWavelength(
+    CLineVector &lineVector) const {
+  std::sort(lineVector.begin(), lineVector.end(),
+            [](CLine const &l, CLine const &r) {
+              return l.GetPosition() < r.GetPosition();
+            });
 }
 
 Float64 CLMEltListVector::getScaleMargCorrection(Int32 Eltidx) const {
@@ -289,8 +308,14 @@ void CLMEltListVector::resetAsymfitParams() {
   }
 }
 
-void CLMEltListVector::computeGlobalOutsideLambdaRange() {
-  for (Int32 elt_idx = 0; elt_idx < getNbElements(); ++elt_idx) {
+void CLMEltListVector::computeGlobalOutsideLambdaRange(
+    TInt32List const &EltsIdx) {
+  auto idxList = EltsIdx;
+  if (idxList.empty()) {
+    idxList.resize(getNbElements());
+    std::iota(idxList.begin(), idxList.end(), 0);
+  }
+  for (auto elt_idx : idxList) {
     m_ElementsParams[elt_idx]->m_globalOutsideLambdaRange =
         computeOutsideLambdaRange(elt_idx);
     for (Int32 line_idx = 0; line_idx < ssize(*m_ElementsParams[elt_idx]);
@@ -300,15 +325,15 @@ void CLMEltListVector::computeGlobalOutsideLambdaRange() {
   }
 }
 
-void CLMEltListVector::setAllAbsLinesFittable() {
-  m_allAbsLinesNoContinuum = false;
+void CLMEltListVector::unsetAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = false;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
   }
 }
 
-void CLMEltListVector::setAllAbsLinesNotFittable() {
-  m_allAbsLinesNoContinuum = true;
+void CLMEltListVector::setAllAbsLinesNullContinuum() {
+  m_allAbsLinesNullContinuum = true;
   for (auto const &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_absLinesNullContinuum = false; // reset all
     if (elt_param_ptr->GetElementType() == CLine::EType::nType_Absorption)
@@ -319,6 +344,12 @@ void CLMEltListVector::setAllAbsLinesNotFittable() {
 void CLMEltListVector::resetNullLineProfiles() {
   for (auto &elt_param_ptr : m_ElementsParams) {
     elt_param_ptr->m_nullLineProfiles = false;
+  }
+}
+
+void CLMEltListVector::resetFitFailed() {
+  for (auto &elt_param_ptr : m_ElementsParams) {
+    elt_param_ptr->m_fitFailed = false;
   }
 }
 
@@ -338,16 +369,26 @@ void CLMEltListVector::setAbsLinesNullContinuumNotFittable(
     if (elt_param_ptr->GetElementType() != CLine::EType::nType_Absorption ||
         elt_param_ptr->m_globalOutsideLambdaRange)
       continue;
-    if (m_allAbsLinesNoContinuum ||
+    if (m_allAbsLinesNullContinuum ||
         models->getMaxContinuumUnderElement(eIdx) <= 0.)
       elt_param_ptr->m_absLinesNullContinuum = true;
   }
 }
 
+void CLMEltListVector::computeAbsLineValidity(CSpcModelVectorPtr const &models,
+                                              bool checkNullContinuum) {
+  if (checkNullContinuum)
+    setAbsLinesNullContinuumNotFittable(models);
+  else {
+    unsetAllAbsLinesNullContinuum();
+  }
+}
+
 void CLMEltListVector::computeGlobalLineValidity(
-    CSpcModelVectorPtr const &models) {
+    CSpcModelVectorPtr const &models, bool checkNullContinuum) {
+  computeAbsLineValidity(models, checkNullContinuum);
   computeGlobalOutsideLambdaRange();
   setNullNominalAmplitudesNotFittable();
-  setAbsLinesNullContinuumNotFittable(models);
   resetNullLineProfiles();
+  resetFitFailed();
 };

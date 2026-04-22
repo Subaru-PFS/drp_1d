@@ -41,7 +41,6 @@
 using namespace NSEpic;
 
 TFloat64List divideByTwo(TFloat64List const &initialList) {
-  // TODO see if something exist in cheatsheet for that
   TFloat64List transformedList(initialList.size());
   for (size_t i = 0; i < initialList.size(); i++) {
     transformedList[i] = initialList[i] / 2;

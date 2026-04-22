@@ -263,6 +263,7 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemeassolve_lineratiotype_rules(spectrum_model)
         self._check_linemeassolve_fittingmethod_lbfgsb_velocityfit(spectrum_model)
         self._check_linemeassolve_lbda_offset(spectrum_model)
+        self._check_linemeassolve_amp_offset(spectrum_model)
         self._check_linemeassolve_velocity_fit_params(spectrum_model)
         self._check_linemeassolve_lya_fit(spectrum_model)
 
@@ -477,7 +478,8 @@ class CustomParametersChecker(ParametersChecker):
         self._check_linemodelsolve_firstpass_extremacount(spectrum_model)
         self._check_linemodelsolve_lya_fit(spectrum_model)
         self._check_linemodelsolve_useloglambdasampling(spectrum_model)
-        self._check_linemodel_lbda_offset(spectrum_model)
+        self._check_linemodelsolve_lbda_offset(spectrum_model)
+        self._check_linemodelsolve_amp_offset(spectrum_model)
         self._check_linemodelsolve_velocity_fit_params(spectrum_model)
 
     def _check_linemodelsolve_section(self, spectrum_model: str):
@@ -650,13 +652,15 @@ class CustomParametersChecker(ParametersChecker):
             f"{spectrum_model} lineModelSolve lineModel useLogLambdaSampling",
         )
 
-    def _check_linemodel_lbda_offset(self, spectrum_model: str):
+    def _check_linemodelsolve_lbda_offset(self, spectrum_model: str):
         self._check_linemodelsolve_lbda_offset_fit(spectrum_model)
         self._check_linemodelsolve_lbda_offset_max_and_step(spectrum_model)
 
     def _check_linemodelsolve_lbda_offset_fit(self, spectrum_model: str):
         self._check_dependant_condition(
-            self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"]
+            or self.accessor.get_linemodel_firstpass_fitting_method(spectrum_model)
+            in ["svd", "hybrid", "lbfgsb"],
             self.accessor.get_linemodel_lbda_offset_fit(spectrum_model) is not None,
             f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
             f"{spectrum_model} lineModelSolve lineModel lbdaOffsetFit",
@@ -671,10 +675,35 @@ class CustomParametersChecker(ParametersChecker):
         )
         self._check_dependant_condition(
             self.accessor.get_linemodel_lbda_offset_fit(spectrum_model)
-            and self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid"],
+            and (
+                self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid"]
+                or self.accessor.get_linemodel_firstpass_fitting_method(spectrum_model) in ["svd", "hybrid"]
+            ),
             self.accessor.get_linemodel_lbda_offset_step(spectrum_model) is not None,
             f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
             f"{spectrum_model} lineModelSolve lineModel lbdaOffsetStep",
+        )
+
+    def _check_linemodelsolve_amp_offset(self, spectrum_model: str):
+        self._check_linemodelsolve_amp_offset_fit(spectrum_model)
+        self._check_linemodelsolve_amp_offset_fit_nsigma(spectrum_model)
+
+    def _check_linemodelsolve_amp_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"]
+            or self.accessor.get_linemodel_firstpass_fitting_method(spectrum_model)
+            in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemodel_amp_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineModelSolve lineModel ampOffsetFit",
+            f"{spectrum_model} lineModelSolve lineModel ampOffsetFit",
+        )
+
+    def _check_linemodelsolve_amp_offset_fit_nsigma(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemodel_amp_offset_fit(spectrum_model),
+            self.accessor.get_linemodel_amp_offset_nsigma(spectrum_model),
+            f"{spectrum_model} lineModelSolve lineModel nSigmaAmpOffset",
+            f"{spectrum_model} lineModelSolve lineModel nSigmaAmpOffset",
         )
 
     def _check_linemodelsolve_velocity_fit_params(self, spectrum_model: str):
@@ -775,6 +804,26 @@ class CustomParametersChecker(ParametersChecker):
             self.accessor.get_linemeas_lbda_offset_step(spectrum_model) is not None,
             f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
             f"{spectrum_model} lineMeasSolve lineModel lbdaOffsetStep",
+        )
+
+    def _check_linemeassolve_amp_offset(self, spectrum_model: str):
+        self._check_linemeassolve_amp_offset_fit(spectrum_model)
+        self._check_linemeassolve_amp_offset_fit_nsigma(spectrum_model)
+
+    def _check_linemeassolve_amp_offset_fit(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_fitting_method(spectrum_model) in ["svd", "hybrid", "lbfgsb"],
+            self.accessor.get_linemeas_amp_offset_fit(spectrum_model) is not None,
+            f"{spectrum_model} lineMeasSolve lineModel ampOffsetFit",
+            f"{spectrum_model} lineMeasSolve lineModel ampOffsetFit",
+        )
+
+    def _check_linemeassolve_amp_offset_fit_nsigma(self, spectrum_model: str):
+        self._check_dependant_condition(
+            self.accessor.get_linemeas_amp_offset_fit(spectrum_model),
+            self.accessor.get_linemeas_amp_offset_nsigma(spectrum_model),
+            f"{spectrum_model} lineMeasSolve lineModel nSigmaAmpOffset",
+            f"{spectrum_model} lineMeasSolve lineModel nSigmaAmpOffset",
         )
 
     def _check_linemeassolve_fittingmethod_lbfgsb_velocityfit(self, spectrum_model: str):

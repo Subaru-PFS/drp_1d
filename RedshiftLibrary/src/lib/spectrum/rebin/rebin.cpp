@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/rebin/rebin.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/noiseaxis.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinFineGrid.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinear.h"
 #include "RedshiftLibrary/spectrum/rebin/rebinLinearFull.h"
@@ -61,35 +63,40 @@ void CRebin::compute(const TFloat64Range &range,
                                       "included in spectral axis");
   }
 
-  CSpectrumFluxAxis rebinedFluxAxis(s);
+  bool const handle_error = handleError(opt_error_interp);
+
+  TAxisSampleList rebinedFlux(s);
+
   rebinedMask.SetSize(s);
 
   const TAxisSampleList &Xtgt = targetSpectralAxis.GetSamplesVector();
-  TFloat64List error_tmp = rebinedFluxAxis.GetError().GetSamplesVector();
+  TFloat64List error_tmp = handle_error ? TFloat64List(s) : TFloat64List{};
 
   // Move cursors up to lambda range start
   Int32 cursor = 0;
   while (cursor < targetSpectralAxis.GetSamplesCount() &&
          Xtgt[cursor] < range.GetBegin()) {
     rebinedMask[cursor] = 0;
-    rebinedFluxAxis[cursor] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
+    rebinedFlux[cursor] = 0.0;
+    if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
 
-  rebin(rebinedFluxAxis, range, targetSpectralAxis, rebinedMask,
-        opt_error_interp, Xtgt, error_tmp, cursor);
+  rebin(rebinedFlux, range, targetSpectralAxis, rebinedMask, opt_error_interp,
+        Xtgt, error_tmp, cursor);
 
+  // For every sample "after" the end of targetSpectralAxis set mask to 0 etc
   while (cursor < targetSpectralAxis.GetSamplesCount()) {
     rebinedMask[cursor] = 0;
-    rebinedFluxAxis[cursor] = 0.0;
-    if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance")
+    rebinedFlux[cursor] = 0.0;
+    if (handle_error)
       error_tmp[cursor] = INFINITY;
     cursor++;
   }
-
-  rebinedFluxAxis.setError(CSpectrumNoiseAxis(error_tmp));
+  CSpectrumFluxAxis rebinedFluxAxis(std::move(rebinedFlux));
+  if (handle_error)
+    rebinedFluxAxis.setError(CSpectrumNoiseAxis(std::move(error_tmp)));
   rebinedSpectrum.ResetContinuum();
   rebinedSpectrum.SetType(CSpectrum::EType::raw);
   rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,

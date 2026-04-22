@@ -39,6 +39,7 @@
 
 #include "RedshiftLibrary/operator/powerlaw.h"
 #include "RedshiftLibrary/common/curve3d.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/common/vectorOperations.h"
@@ -754,32 +755,33 @@ TCurve COperatorPowerLaw::initializeFluxCurve(Float64 redshift,
   TList<Float64> spectrumFlux;
   TList<Float64> spectrumFluxError;
   // Concatenates all curves
-  // NB: at the end, lambda is not ordered anymore
+  // NB at the end, lambda is not ordered anymore
   for (Int32 spectrumIdx = 0; spectrumIdx < m_nSpectra; spectrumIdx++) {
+    auto const &spectral_axis = m_spectra[spectrumIdx]->GetSpectralAxis();
+    auto const &flux_axis = m_spectra[spectrumIdx]->GetFluxAxis();
+
     TList<Float64> tmpLambda =
-        m_spectra[spectrumIdx]
-            ->GetSpectralAxis()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+        spectral_axis.extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
             .GetSamplesVector();
     spectrumLambda.insert(spectrumLambda.end(),
                           std::make_move_iterator(tmpLambda.begin()),
                           std::make_move_iterator(tmpLambda.end()));
 
     TList<Float64> tmpFlux =
-        m_spectra[spectrumIdx]
-            ->GetFluxAxis()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+        flux_axis.extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
             .GetSamplesVector();
     spectrumFlux.insert(spectrumFlux.end(),
                         std::make_move_iterator(tmpFlux.begin()),
                         std::make_move_iterator(tmpFlux.end()));
 
     TList<Float64> tmpError =
-        m_spectra[spectrumIdx]
-            ->GetFluxAxis()
-            .GetError()
-            .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
-            .GetSamplesVector();
+        flux_axis.hasErrorData()
+            ? flux_axis.GetError()
+                  .extract(m_kStart[spectrumIdx], m_kEnd[spectrumIdx])
+                  .GetSamplesVector()
+            : TList<Float64>(m_kEnd[spectrumIdx] - m_kStart[spectrumIdx] + 1,
+                             1.);
+
     spectrumFluxError.insert(spectrumFluxError.end(),
                              std::make_move_iterator(tmpError.begin()),
                              std::make_move_iterator(tmpError.end()));
@@ -823,7 +825,7 @@ T3DList<Float64> COperatorPowerLaw::computeIsmIgmCorrections(
           std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), NAN)));
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
-      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
+      CSpectrumFluxAxis(TFloat64List(spectrumLambdaRest.GetSamplesCount(), 1)));
   templateForCoefs.InitIsmIgmConfig(redshift);
   for (Int32 igmIdx = 0; igmIdx < m_nIgmCurves; igmIdx++) {
     if (opt_extinction) { // igm
@@ -847,7 +849,7 @@ TList<Float64> COperatorPowerLaw::computeIsmIgmCorrection(
   // at 1, and apply ism/igm on it
   CTemplate templateForCoefs(
       "", "", spectrumLambdaRest,
-      std::vector<Float64>(spectrumLambdaRest.GetSamplesCount(), 1));
+      CSpectrumFluxAxis(TFloat64List(spectrumLambdaRest.GetSamplesCount(), 1)));
   templateForCoefs.InitIsmIgmConfig(redshift);
 
   TList<Float64> correctionCoefs(spectrumLambdaRest.GetSamplesCount(), NAN);

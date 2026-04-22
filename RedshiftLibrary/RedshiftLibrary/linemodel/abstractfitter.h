@@ -63,6 +63,8 @@ public:
   void fit(Float64 redshift);
 
   virtual void resetSupport(Float64 redshift);
+  void computeGlobalLineValidity();
+  void computeGlobalOutsideLambdaRange(TInt32List const &EltsIdx);
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
   void enableLambdaOffsets() { m_enableLambdaOffsetsFit = true; }
@@ -87,10 +89,8 @@ public:
       std::vector<std::pair<Int32, TInt32List>> const &idxLines);
 
   Float64 getModelResidualRmsUnderElements(TInt32List const &EltsIdx,
-                                           bool with_continuum,
                                            bool with_weight = true) const {
-    return m_models->getModelResidualRmsUnderElements(EltsIdx, with_continuum,
-                                                      with_weight);
+    return m_models->getModelResidualRmsUnderElements(EltsIdx, with_weight);
   }
   Int32 m_cont_reestim_iterations = 0;
 

@@ -127,7 +127,13 @@ Float64 andersonDarlingTest(const TFloat64List &data, Float64 mean,
   const Int32 n = data.size();
   if (n < 2)
     return NAN;
-  return anderson_darling_normality_statistic(data, mean, stdev);
+  Float64 anderson =
+      anderson_darling_normality_statistic(data, mean, stdev) / n;
+  // In some cases, if the data is too far from a normal distribution, a NAN is
+  // returned. Replace this NAN value by the maximum possible value for clarity
+  if (std::isnan(anderson))
+    anderson = DBL_MAX;
+  return anderson;
 }
 
 Float64 ksTest(const TFloat64List &data, const Float64 mean,

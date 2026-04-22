@@ -107,11 +107,11 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   iz = 3;
   izmin = 0;
   izmax = 6;
-  deltaz_ref = 1.;
+  deltaz_ref = 1. / sqrt(2);
   sigma = deltaz.Compute(merits, Redshifts_easy, iz, izmin, izmax);
   BOOST_CHECK_CLOSE(sigma, deltaz_ref, precision);
 
-  deltaz_ref = 1.7320508075688776;
+  deltaz_ref = 1.7320508075688776 / sqrt(2);
   sigma = deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax);
   BOOST_CHECK_CLOSE(sigma, deltaz_ref, precision);
 
@@ -147,12 +147,12 @@ BOOST_AUTO_TEST_CASE(GetDeltaz_test) {
                     AmzException);
 
   // COMPUTE
-  dz_ref = 1.;
+  dz_ref = 1. / sqrt(2);
   dz_1 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target);
   BOOST_CHECK_CLOSE(dz_1, dz_ref, precision);
 
   // COMPUTE3DDL
-  dz_ref = 1.7320508075688776;
+  dz_ref = 1.7320508075688776 / sqrt(2);
   dz_2 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target, true);
   BOOST_CHECK_CLOSE(dz_2, dz_ref, precision);
 

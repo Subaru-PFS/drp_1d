@@ -41,6 +41,7 @@
 #include <cfloat>
 #include <climits>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/size.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -48,14 +49,18 @@
 using namespace std;
 using namespace NSEpic;
 
-TLineModelElementParam::TLineModelElementParam(CLineVector lines,
-                                               Float64 velocity,
-                                               const std::string &lineWidthType)
+TLineModelElementParam::TLineModelElementParam(
+    CLineVector lines, Float64 velocity, const std::string &lineWidthType,
+    Float64 maxDistanceToLine, Int32 minSamplesNumberForLineFit,
+    bool useAmpOffsetsCoeffs, Float64 nSigmaAmpOffsets)
     : m_Lines(std::move(lines)), m_Velocity(velocity), m_VelocityStd(NAN),
       m_FittedAmplitudes(m_Lines.size(), NAN),
       m_FittedAmplitudesStd(m_Lines.size(), NAN),
       m_OffsetsStd(m_Lines.size(), NAN), m_fittingGroupInfo(undefStr),
-      m_defaultVelocity(velocity),
+      m_maxDistanceToLine(maxDistanceToLine),
+      m_minSamplesNumberForLineFit(minSamplesNumberForLineFit),
+      m_useAmpOffsetsCoeffs(useAmpOffsetsCoeffs),
+      m_nSigmaAmpOffsets(nSigmaAmpOffsets), m_defaultVelocity(velocity),
       m_globalOutsideLambdaRangeList(m_Lines.size(), false) {
   m_NominalAmplitudes.reserve(m_Lines.size());
   m_Offsets.reserve(m_Lines.size());
@@ -88,8 +93,6 @@ void TLineModelElementParam::init(const std::string &widthType) {
            Formatter() << "Unknown LineWidthType" << widthType);
   }
 
-  Float64 sign = IsEmission() ? 1.0 : -1.0;
-  m_SignFactors.assign(size(), sign);
   for (Int32 index = 0; index != size(); ++index) {
     if (getLineProfile(index)->isAsym() || getLineProfile(index)->isSymIgm())
       m_asymLineIndices.push_back(index);
@@ -111,8 +114,9 @@ bool TLineModelElementParam::SetNominalAmplitude(Int32 line_index,
   return true;
 }
 
-Int32 TLineModelElementParam::getSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
+Float64 TLineModelElementParam::getLineTypeFlux(Float64 fluxval,
+                                                Float64 continuumFlux) const {
+  return IsAbsorption() ? -continuumFlux * fluxval : fluxval;
 }
 
 /**
@@ -216,17 +220,8 @@ const std::string &TLineModelElementParam::GetLineName(Int32 line_index) const {
   return m_Lines[line_index].GetName();
 }
 
-/**
- * \brief Returns the content of the m_SignFactors with index equal to the
- *argument.
- **/
-Float64 TLineModelElementParam::GetSignFactor(Int32 line_index) const {
-  return m_SignFactors[line_index];
-}
-
-bool TLineModelElementParam::SetAbsLinesLimit(Float64 limit) {
+void TLineModelElementParam::SetAbsLinesLimit(Float64 limit) {
   m_absLinesLimit = limit;
-  return true;
 }
 
 Float64 TLineModelElementParam::GetAbsLinesLimit() const {
@@ -271,9 +266,9 @@ void TLineModelElementParam::SetAllOffsetsEnabled(Float64 val) {
 Float64 TLineModelElementParam::GetLineProfileDerivVel(
     const CLineProfile &profile, Float64 x, Float64 x0, Float64 sigma,
     bool isEmission) const {
-  const Float64 c = SPEED_OF_LIGHT_IN_VACCUM;
-  const Float64 pfsSimuCompensationFactor = 1.0; // TODO should be removed !!!
-  Float64 v = getVelocity(), v_to_sigma = pfsSimuCompensationFactor / c * x0;
+  const Float64 c = SPEED_OF_LIGHT_IN_VACUUM;
+  Float64 v = getVelocity();
+  Float64 v_to_sigma = 1 / c * x0;
 
   Float64 profile_derivSigma = profile.GetLineProfileDerivSigma(x, x0, sigma);
 

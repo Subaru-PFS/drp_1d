@@ -159,8 +159,7 @@ void CLineModelResult::SetChisquareContinuumResult(
   if (index_z_in_store == -1)
     THROWG(ErrorCode::INTERNAL_ERROR, "Redshift not in fitstore");
 
-  for (Int32 k = 0; k < continuumFitStore->getContinuumCount();
-       k++) { // TODO: handle the use of more than one continuum in linemodel
+  for (Int32 k = 0; k < continuumFitStore->getContinuumCount(); k++) {
     ChiSquareTplContinuum[k][index_z] =
         continuumFitStore->GetFitValues(index_z_in_store, k).merit;
   }

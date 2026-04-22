@@ -45,10 +45,10 @@
 #include "RedshiftLibrary/common/polynom.h"
 #include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/line/lineprofile.h"
+#include <cmath>
 
 namespace NSEpic {
 
-// TODO should be defined elsewhere
 enum TLineWidthType { INSTRUMENTDRIVEN, COMBINED, VELOCITYDRIVEN };
 
 enum class ElementComposition {
@@ -63,7 +63,11 @@ enum class ElementComposition {
 struct TLineModelElementParam {
 
   TLineModelElementParam(CLineVector lines, Float64 velocity,
-                         const std::string &lineWidthType);
+                         const std::string &lineWidthType,
+                         Float64 maxDistanceToLine = NAN,
+                         Int32 minSamplesNumberForLineFit = -1,
+                         bool useAmpOffsetsCoeffs = false,
+                         Float64 nSigmaAmpOffsets = 0);
 
   CLineVector m_Lines;
   Float64 m_Velocity = NAN;
@@ -75,6 +79,10 @@ struct TLineModelElementParam {
   TFloat64List m_OffsetsStd;
   TInt32Map m_LinesIds;
   std::string m_fittingGroupInfo;
+  Float64 m_maxDistanceToLine;
+  Int32 m_minSamplesNumberForLineFit;
+  bool m_useAmpOffsetsCoeffs = false;
+  Float64 m_nSigmaAmpOffsets = 0;
   CPolynomCoeffs m_ampOffsetsCoeffs;
   Float64 m_sumCross = 0.0;
   Float64 m_sumGauss = 0.0;
@@ -82,7 +90,6 @@ struct TLineModelElementParam {
       0.0; // dtmFree is the non-positive-constrained version of sumCross
 
   TLineWidthType m_LineWidthType;
-  TFloat64List m_SignFactors;
 
   TInt32List m_asymLineIndices;
   Float64 m_absLinesLimit =
@@ -103,6 +110,8 @@ struct TLineModelElementParam {
   bool m_nullNominalAmplitudes = false;
   // the profile is null on the element (all lines) support
   bool m_nullLineProfiles = false;
+  // if the fit failed (eg ndof > nsamples, or l-bfgs-b did not converge)
+  bool m_fitFailed = false;
 
   void init(const std::string &widthType);
   const Float64 &getSumGauss() const { return m_sumGauss; }
@@ -114,15 +123,11 @@ struct TLineModelElementParam {
   void SetSumGauss(Float64 val) { m_sumGauss = val; }
 
   const std::string &getFittingGroupInfo() const { return m_fittingGroupInfo; }
-  // const Float64 &getSumGauss() const {return m_sumGauss;}
-
-  // TODO this is ugly, and maybe m_SignFactor should not exist, knowing
-  // m_type/m_isEmission should be enough
-  Int32 getSignFactor(Int32 line_index) const;
-  Float64 GetSignFactor(Int32 line_index) const;
 
   Float64 getVelocity() const { return m_Velocity; }
   Float64 getVelocityStd() const { return m_VelocityStd; };
+
+  Float64 getLineTypeFlux(Float64 fluxval, Float64 continuumFlux) const;
 
   TAsymParams GetAsymfitParams(Int32 asym_line_index = 0) const {
     if (!m_asymLineIndices.size())
@@ -173,7 +178,7 @@ struct TLineModelElementParam {
     auto &fastd = m_FittedAmplitudesStd;
     fa[index] = fittedAmp * nominalAmplitude;
     // limit the absorption to 0.0-1.0, so that it's never <0
-    if (m_SignFactors[index] == -1 && m_absLinesLimit > 0.0 &&
+    if (IsAbsorption() && m_absLinesLimit > 0.0 &&
         fa[index] > m_absLinesLimit) {
       fa[index] = m_absLinesLimit;
     }
@@ -289,7 +294,7 @@ struct TLineModelElementParam {
 
   bool isNotFittable() const {
     return m_globalOutsideLambdaRange || m_nullNominalAmplitudes ||
-           m_absLinesNullContinuum || m_nullLineProfiles;
+           m_absLinesNullContinuum || m_nullLineProfiles || m_fitFailed;
   }
 
   bool isOutsideLambdaRangeLine(Int32 line_index) const {
@@ -312,7 +317,7 @@ struct TLineModelElementParam {
 
   bool LimitFittedAmplitude(Int32 line_index, Float64 limit);
   void SetAllOffsetsEnabled(Float64 val);
-  bool SetAbsLinesLimit(Float64 limit);
+  void SetAbsLinesLimit(Float64 limit);
   Float64 GetAbsLinesLimit() const;
 
   void setVelocity(Float64 vel);

@@ -68,14 +68,12 @@ CSvdlcFitter::CSvdlcFitter(
 // with linear solver: gsl_multifit_wlinear
 
 void CSvdlcFitter::doFit(Float64 redshift) {
+  // NB dummy multiobs implementation (functional for one obs only)
 
-  // 1. fit only the current continuum
-  // prepare continuum on the observed grid
+  // set the continuum with amplitude at 1.0
+  m_continuumManager->setFitContinuum_tplAmplitudeOne();
 
-  // re-interpolate the continuum on the grid
-  m_continuumManager->reinterpolateContinuumResetAmp();
-
-  m_spectraIndex.setAtBegining(); // TODO dummy impl
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
 
   TInt32List validEltsIdx = m_ElementsVector->getValidElementIndices();
 
@@ -90,7 +88,7 @@ void CSvdlcFitter::doFit(Float64 redshift) {
   fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx, m_spectralAxis,
                                          ampsfitted, errorsfitted, chi2_cl,
                                          redshift);
-  // TODO multiobs loop here
+  // multiobs: add a loop here
   m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
   for ([[maybe_unused]] auto &spcIndex : m_spectraIndex)
     getModel().initModelWithContinuum();
@@ -116,11 +114,11 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
     const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
     TFloat64List &ampsfitted, TFloat64List &errorsfitted, Float64 &chisquare,
     Float64 redshift) {
-  m_spectraIndex.setAtBegining(); // TODO dummy impl
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   const CSpectrumFluxAxis &fluxAxis = getModel().getSpcFluxAxis();
   const CSpectrumFluxAxis &continuumfluxAxis =
       getModel().getContinuumFluxAxis();
-  const auto &ErrorNoContinuum = getSpectrum().GetFluxAxis().GetError();
 
   if (EltsIdx.size() < 1)
     THROWG(ErrorCode::IE_EMPTY_LIST, Formatter()
@@ -160,9 +158,9 @@ void CSvdlcFitter::fitAmplitudesLinesAndContinuumLinSolve(
 
   for (Int32 i = 0, idx = imin; idx <= imax; ++i, ++idx) {
     Float64 const yi = fluxAxis[idx] * normFactor;
-    Float64 const ei = ErrorNoContinuum[idx] * normFactor;
+    Float64 const wi = fluxAxis.GetWeight(idx, normFactor);
     gsl_vector_set(y, i, yi);
-    gsl_vector_set(w, i, 1.0 / (ei * ei));
+    gsl_vector_set(w, i, wi);
   }
 
   // remove eventually null columns
@@ -278,7 +276,7 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
       // set the amplitude to NAN
       Int32 elt_idx = EltsIdx[iddl];
       m_ElementsVector->SetElementAmplitude(elt_idx, NAN, NAN);
-      m_ElementsVector->getElementsParams()[elt_idx]->m_nullLineProfiles = true;
+      m_ElementsVector->getElementsParams()[elt_idx]->m_fitFailed = true;
       Flag.warning(WarningCode::NULL_LINES_PROFILE,
                    Formatter() << "Null lines profile"
                                << " of elt " << elt_idx);
@@ -290,8 +288,6 @@ gsl_matrix *CSvdlcFitter::cleanMatrix(const TInt32List &EltsIdx,
                  Formatter() << "SVD reduced to continuum only since all lines "
                                 "profiles are null");
   }
-
-  // TODO handle the null continuum case
 
   for (Int32 icol = EltsIdx.size(); icol < nline; ++icol)
     valid_col_indices.push_back(icol);

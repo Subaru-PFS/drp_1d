@@ -109,7 +109,22 @@ def filterFactory(filterDict: dict) -> AbstractFilterItem:
 
 
 class FilterItem(AbstractFilterItem):
-    allowed_instructions = ["<", ">", "<=", ">=", "=", "in", "~in", "!=", "&", "~&", "0&", "^"]
+    allowed_instructions = [
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "=",
+        "in",
+        "~in",
+        "include",
+        "exclude",
+        "!=",
+        "&",
+        "~&",
+        "0&",
+        "^",
+    ]
 
     def apply(self, df: Optional[pd.DataFrame] = None, mask: Optional[pd.Series] = None) -> pd.Series:
         if df is None:
@@ -133,6 +148,8 @@ class FilterItem(AbstractFilterItem):
             "!=": self._different,
             "in": self._is_in,
             "~in": self._is_not_in,
+            "include": self._include,
+            "exclude": self._exclude,
             "&": self._bitwise_and,
             "~&": self._bitwise_not_and,
             "0&": self._bitwise_and_or_0,
@@ -164,6 +181,12 @@ class FilterItem(AbstractFilterItem):
 
     def _is_not_in(self, a):
         return ~a.isin(self.value)
+
+    def _include(self, a):
+        return a.between(self.value[0], self.value[1])
+
+    def _exclude(self, a):
+        return ~a.between(self.value[0], self.value[1])
 
     def _bitwise_and(self, a):
         return (a & self.value).astype(bool)

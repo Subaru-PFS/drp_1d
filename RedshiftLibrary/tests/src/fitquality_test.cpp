@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(andersonDarlingTest_test) {
   const auto mean = NSFitQuality::mean(data);
   const auto stdev = NSFitQuality::stdev(data, mean);
   BOOST_CHECK_CLOSE(NSFitQuality::andersonDarlingTest(data, mean, stdev),
-                    0.22083660833332985, 1e-4);
+                    0.031548086904761408, 1e-4);
 }
 
 BOOST_AUTO_TEST_CASE(ksTest_test) {

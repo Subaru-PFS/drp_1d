@@ -68,7 +68,8 @@ std::pair<Float64, Float64> CRulesManager::computeMerit(Int32 iratio) {
  *emission and then for absorption.
  **/
 void CRulesManager::applyRules(bool enableLogs) {
-  m_spectraIndex.setAtBegining(); // dummy implementation
+  // NB dummy multiobs implementation (functional for one obs only)
+  m_spectraIndex.setAtBegining(); // temporary multiobs implementation
   if (m_rulesoption == "no") {
     return;
   }

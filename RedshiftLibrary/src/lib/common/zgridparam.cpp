@@ -46,11 +46,13 @@ using namespace NSEpic;
 TFloat64List CZGridParam::getZGrid(bool logsampling) const {
 
   TFloat64Range range(zmin, zmax);
+  const Float64 epsilon = 1e-6;
   if (!isnan(zcenter))
     return range.spanCenteredWindow(zcenter, logsampling, zstep);
 
-  auto grid = logsampling ? range.SpreadOverLogZplusOneEpsilon(zstep)
-                          : range.SpreadOverEpsilon(zstep);
+  auto grid = logsampling
+                  ? range.SpreadOverLogZplusOneEpsilon(zstep, false, epsilon)
+                  : range.SpreadOverEpsilon(zstep, false, epsilon);
 
   return grid;
 }
@@ -74,7 +76,7 @@ TFloat64List CZGridListParams::getZGrid(bool logsampling) const {
 
 std::tuple<Int32, TInt32List>
 CZGridListParams::insertSubgrid(TFloat64List &subgrid, TFloat64List &zgrid) {
-  const Float64 epsilon = 1E-8;
+  const Float64 epsilon = 1E-6;
   TFloat64Range range_epsilon = {subgrid.front() - epsilon,
                                  subgrid.back() + epsilon};
   range_epsilon.IntersectWith(zgrid);

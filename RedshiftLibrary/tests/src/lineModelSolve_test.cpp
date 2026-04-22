@@ -600,7 +600,7 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
   BOOST_CHECK_CLOSE(res->ksResiduals, 0.49250300737949704, 1e-2);
   BOOST_CHECK_CLOSE(res->ksStdResiduals, 0.49250369206954603, 1e-2);
   BOOST_CHECK_CLOSE(res->ksStdMeanResiduals, 0.49015814975057526, 1e-2);
-  BOOST_CHECK_CLOSE(res->andersonResiduals, 233.33837768875401, 1e-2);
+  BOOST_CHECK_CLOSE(res->andersonResiduals, 0.34983265022174048, 1e-2);
   BOOST_CHECK_CLOSE(res->fittedContinuum.meanResiduals, 5.3069139794684041e-07,
                     1e-2);
   BOOST_CHECK_CLOSE(res->fittedContinuum.stdResiduals, 8.4620124124646403e-07,
@@ -615,8 +615,8 @@ BOOST_FIXTURE_TEST_CASE(computePowerLaw_test,
                     0.1);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
                     0.08497111085032491, 1e-2);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 9.4419779149304439,
-                    1e-2);
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals,
+                    0.015278472943645233, 1e-2);
   ctx.reset();
 }
 
@@ -685,7 +685,7 @@ BOOST_FIXTURE_TEST_CASE(computeTplFitRules_test,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
                     0.31009614204202307, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2102555493232368,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 0.1360425575344007,
                     1e-4);
   ctx.reset();
 }

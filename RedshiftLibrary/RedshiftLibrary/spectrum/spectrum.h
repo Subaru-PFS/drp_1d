@@ -108,13 +108,14 @@ public:
   void setObsID(const std::string &obsID);
   EType GetType() const;
 
-  bool InvertFlux();
+  void NegateFlux();
 
   const CSpectrumSpectralAxis &GetSpectralAxis() const;
   const CSpectrumFluxAxis &GetFluxAxis() const;
   const CSpectrumFluxAxis &GetRawFluxAxis() const;
   const CSpectrumFluxAxis &GetContinuumFluxAxis() const;
   const CSpectrumFluxAxis &GetWithoutContinuumFluxAxis() const;
+  bool HasErrorAxis() const;
   const CSpectrumNoiseAxis &GetErrorAxis() const;
   const std::shared_ptr<const CLSF> GetLSF() const;
   const std::shared_ptr<const CPhotometricData> GetPhotData() const;
@@ -142,11 +143,11 @@ public:
   Float64 GetMeanResolution() const;
   TLambdaRange GetLambdaRange() const;
 
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64 &mean,
-                                Float64 &std) const;
-  bool GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const;
+  std::pair<Float64, Float64>
+  GetMeanAndStdFluxInRange(TFloat64Range wlRange) const;
+  std::pair<Float64, Float64> GetLinearRegInRange(TFloat64Range wlRange) const;
 
-  bool RemoveContinuum(CContinuum &remover) const;
+  void computeContinuum(CContinuumEstimator &estimator) const;
   void ValidateFlux(Float64 LambdaMin, Float64 LambdaMax) const;
   void ValidateNoise(Float64 LambdaMin, Float64 LambdaMax) const;
   virtual bool checkCorrectness(bool valid, Int32 index) const { return valid; }
@@ -293,6 +294,10 @@ inline CSpectrumFluxAxis &CSpectrum::GetWithoutContinuumFluxAxis_() {
     EstimateContinuum();
   }
   return m_WithoutContinuumFluxAxis;
+}
+
+inline bool CSpectrum::HasErrorAxis() const {
+  return GetFluxAxis().hasErrorData();
 }
 
 inline const CSpectrumNoiseAxis &CSpectrum::GetErrorAxis() const {

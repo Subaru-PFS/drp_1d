@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   TCandidateZbyID candidate_ref = {{"EXT0", std::make_shared<TCandidateZ>()}};
   candidate_ref["EXT0"]->Redshift = 1.;
 
-  TFloat64List gaussY_2 = generateGaussian(gaussZ, 0.3, mu);
+  TFloat64List gaussY_2 = generateGaussian(gaussZ, 0.3 * sqrt(2), mu);
   CPdfCandidatesZ zcand_op = CPdfCandidatesZ(candidate_ref);
 
   // compute with direct integration
@@ -430,12 +430,12 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   zcand_op.m_optMethod = 1;
   result = zcand_op.Compute(gaussZ, gaussY_2);
   candidate = result->m_ranked_candidates;
-
+  Float64 sigma = 0.3 * sqrt(2);
   BOOST_CHECK_CLOSE(candidate[0].second->GaussAmp *
                         candidate[0].second->GaussSigma * sqrt(2 * M_PI),
                     1.0, precision);
-  BOOST_CHECK_CLOSE(candidate[0].second->GaussSigma, 0.3, precision);
+  BOOST_CHECK_CLOSE(candidate[0].second->GaussSigma, sigma, precision);
   BOOST_CHECK_CLOSE(candidate[0].second->GaussAmp,
-                    1 / (0.3 * std::sqrt(2 * M_PI)), precision);
+                    1 / (sigma * std::sqrt(2 * M_PI)), precision);
 }
 BOOST_AUTO_TEST_SUITE_END()
