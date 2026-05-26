@@ -79,6 +79,7 @@ class Spectrum:
         lsf,
         photometric_data,
         wave_frame="vacuum",
+        spectrum_infos=dict(),
         filter_loader_class: type[AbstractFilterLoader] = ParamJsonFilterLoader,
     ):
         self.source_id = str(source_id)
@@ -91,6 +92,7 @@ class Spectrum:
         self._lsf = lsf
         self._photometric_data = photometric_data
         self.w_frame = wave_frame
+        self._spectrum_infos = spectrum_infos
         self.masks = dict()
 
     @property
@@ -225,6 +227,10 @@ class Spectrum:
     @doc_method
     def get_photometric_data(self):
         return self._photometric_data
+
+    @doc_method
+    def get_spectrum_infos(self):
+        return self._spectrum_infos
 
     def push_in_context(self):
         ctx = CProcessFlowContext.GetInstance()
@@ -384,7 +390,7 @@ class Spectrum:
     def init(self):
         """
         Does three things :
-         - Check if airvaccum conversion specified in parameters is legitimate
+         - Check if airvacuum conversion specified in parameters is legitimate
          - Apply filtering specified in parameters
          - Check if spectrum(s) wavelength(s) is/are correct:
             not empty, contains lambda range(s) specified in parameters

@@ -54,9 +54,32 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def _get_attribute_from_result_store(
-        self, object_type, stage, method, data_spec, rank, band_name=None, obs_id=None
-    ):
+    def _handle_tmapfloat64(self, attr, band_name, object_type, **_):
+        if band_name is not None:
+            return attr[band_name]
+        return attr[object_type]
+
+    def _handle_tmaptfloat64list(self, attr, obs_id, **_):
+        if obs_id is not None:
+            return attr.to_numpy(obs_id)
+        return None
+
+    def _handle_tlist(self, attr, **_):
+        return attr.to_numpy()
+
+    def _handle_tstringlist(self, attr, **_):
+        return np.array(attr)
+
+    def _handle_cmask(self, attr, **_):
+        return attr.getMaskList().to_numpy()
+
+    def _handle_default(self, attr, **_):
+        return attr
+
+    def _get_attribute_from_result_store(self, object_type, stage, method, data_spec, **kwargs):
+        obs_id = kwargs.get("obs_id", None)
+        band_name = kwargs.get("band_name", None)
+        rank = kwargs.get("rank", None)
         operator_result = self._get_operator_result(object_type, stage, method, data_spec, rank)
         band_name_hook = "[band_name]"
         object_type_hook = "[object_type]"
@@ -76,41 +99,39 @@ class ResultStoreOutput(AbstractOutput):
             attr = getattr(operator_result, operator_result_name)
 
         attr_type = type(attr).__name__
-        if attr_type == "TMapFloat64":
-            if band_name is not None:
-                return attr[band_name]
-            return attr[object_type]
-        if attr_type == "TMapTFloat64List":
-            if obs_id is not None:
-                return attr.to_numpy(obs_id)
-        elif attr_type == "TFloat64List" or attr_type == "TInt32List" or attr_type == "TBoolList":
-            return attr.to_numpy()
-        elif attr_type == "TStringList":
-            return np.array(attr)
-        elif attr_type == "CMask":
-            return attr.getMaskList().to_numpy()
-        else:
-            return attr
 
-    def get_attribute_from_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+        attr_type_mapping = {
+            "TMapFloat64": self._handle_tmapfloat64,
+            "TMapTFloat64List": self._handle_tmaptfloat64list,
+            "TFloat64List": self._handle_tlist,
+            "TInt32List": self._handle_tlist,
+            "TBoolList": self._handle_tlist,
+            "TStringList": self._handle_tstringlist,
+            "CMask": self._handle_cmask,
+        }
+
+        handler = attr_type_mapping.get(attr_type, self._handle_default)
+        return handler(attr, band_name=band_name, object_type=object_type, obs_id=obs_id)
+
+    def get_attribute_from_source(self, object_type, stage, method, dataset, attribute, **kwargs):
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
-        return self._get_attribute_from_result_store(
-            object_type, stage, method, attribute_info, rank=rank, band_name=band_name, obs_id=obs_id
-        )
+        return self._get_attribute_from_result_store(object_type, stage, method, attribute_info, **kwargs)
 
-    def has_attribute_in_source(
-        self, object_type, stage, method, dataset, attribute, rank=None, band_name=None, obs_id=None
-    ):
+    def has_attribute_in_source(self, object_type, stage, method, dataset, attribute, **kwargs):
+        obs_id = kwargs.get("obs_id", None)
+        band_name = kwargs.get("band_name", None)
+        rank = kwargs.get("rank", None)
+
+        output = False
         rs = self.results_specifications.get_df_by_name(attribute)
         rs = rs[rs["dataset"] == dataset]
 
         attribute_info = rs.iloc[0]
         if type(attribute_info.ResultStore_key) is not str:
-            return False
+            return output
+        operator_result = None
         if rank is not None:
             method = getattr(self.parameters.get_redshift_solver_method(object_type), "value", None)
             if self.results_store.HasCandidateDataset(
@@ -125,71 +146,59 @@ class ResultStoreOutput(AbstractOutput):
                         object_type, stage, method, attribute_info, rank
                     )
                 except AmzException:
-                    return False
-            else:
-                return False
+                    operator_result = None
         else:
             try:
                 operator_result = self._get_operator_result(
                     object_type, stage, method, attribute_info, rank=None
                 )
             except AmzException:
-                return False
+                operator_result = None
+
+        if not operator_result:
+            return output
+
         if "[object_type]" in attribute_info.OperatorResult_name:
             or_name = attribute_info.OperatorResult_name.replace("[object_type]", "")
             if hasattr(operator_result, or_name):
-                return object_type in getattr(operator_result, or_name)
-            else:
-                return False
+                output = object_type in getattr(operator_result, or_name)
         elif "[band_name]" in attribute_info.OperatorResult_name:
             or_name = attribute_info.OperatorResult_name.replace("[band_name]", "")
             if hasattr(operator_result, or_name):
                 o = getattr(operator_result, or_name)
                 if o:
-                    return band_name in o
-                else:
-                    return False
-            else:
-                return False
+                    output = band_name in o
         elif "[obs_id]" in attribute_info.OperatorResult_name:
             or_name = attribute_info.OperatorResult_name.replace("[obs_id]", "")
             if hasattr(operator_result, or_name):
                 o = getattr(operator_result, or_name)
                 if o:
-                    return obs_id in o
-                else:
-                    return False
-            else:
-                return False
+                    output = obs_id in o
         elif "." in attribute_info.OperatorResult_name:
             o = attribute_info.OperatorResult_name.split(".")
             has_o = hasattr(operator_result, o[0])
             if has_o:
-                return hasattr(getattr(operator_result, o[0]), o[1])
-            else:
-                return False
+                output = hasattr(getattr(operator_result, o[0]), o[1])
         else:
-            return hasattr(operator_result, attribute_info.OperatorResult_name)
+            output = hasattr(operator_result, attribute_info.OperatorResult_name)
+        return output
 
     def has_dataset_in_source(self, object_type, stage, method, dataset):
         """Checks that at least one of the attributes of the dataset is present in the result store"""
+        output = False
         if dataset == "classification":
             return self.results_store.HasDataset(dataset, dataset, dataset, "solveResult")
-
         # Gets all rows corresponding to given dataset
         ds_attributes = self.filter_dataset_attributes(dataset, object_type)
-        if not len(ds_attributes):
-            return False
-
-        if dataset == "continuum_quality" and stage != "redshiftSolver":
-            return False
-        # Checks that at least one of the attributes of the selected rows is present in the result store
-        has_dataset = False
-        for rs_key in ds_attributes.ResultStore_key.unique():
-            has_dataset = has_dataset or self.results_store.HasDataset(
-                object_type or "", stage or "", method or "", rs_key
-            )
-        return has_dataset
+        if len(ds_attributes) > 0:
+            if not (dataset == "continuum_quality" and stage != "redshiftSolver"):
+                # Checks that at least one of the attributes of the selected rows is present in the result store
+                unique_keys = ds_attributes.ResultStore_key.unique()
+                output = any(
+                    self.results_store.HasDataset(object_type or "", stage or "", method or "", key)
+                    for key in unique_keys
+                )
+        return output
 
     def has_candidate_dataset_in_source(self, object_type, stage, method, dataset):
         rs = self.results_specifications.get_df_by_dataset(dataset)
@@ -203,6 +212,7 @@ class ResultStoreOutput(AbstractOutput):
         return self.results_store.getNbRedshiftCandidates(object_type, stage, method)
 
     def _get_operator_result(self, object_type, stage, method, attribute_info, rank=None):
+        output = None
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key in ["init_warningFlag", "context_warningFlag", "warningFlag"]:
                 dataset = "" if attribute_info.dataset != "classification" else "classification"
@@ -216,7 +226,7 @@ class ResultStoreOutput(AbstractOutput):
                 attribute_info.ResultStore_key,
             )
             if or_type == "CClassificationResult":
-                return self.results_store.GetClassificationResult(
+                output = self.results_store.GetClassificationResult(
                     attribute_info.dataset,
                     attribute_info.dataset,
                     attribute_info.dataset,
@@ -232,7 +242,7 @@ class ResultStoreOutput(AbstractOutput):
             )
             try:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
-                return getter(object_type, stage, method, attribute_info.ResultStore_key)
+                output = getter(object_type, stage, method, attribute_info.ResultStore_key)
             except Exception:
                 raise APIException(
                     ErrorCode.OUTPUT_READER_ERROR, "Unknown OperatorResult type {}".format(str(or_type))
@@ -245,9 +255,9 @@ class ResultStoreOutput(AbstractOutput):
                 attribute_info.ResultStore_key,
                 attribute_info.dataset.replace("<ObsID>", ""),
             )
+            firstpass_result = "Firstpass" in attribute_info["name"]
             if or_type == "TLineModelResult":
-                firstpass_result = "Firstpass" in attribute_info["name"]
-                return self.results_store.GetLineModelResult(
+                output = self.results_store.GetLineModelResult(
                     object_type,
                     stage,
                     method,
@@ -258,8 +268,7 @@ class ResultStoreOutput(AbstractOutput):
                 )
             # Template fitting case
             elif or_type == "TExtremaResult":
-                firstpass_result = "Firstpass" in attribute_info["name"]
-                return self.results_store.GetExtremaResult(
+                output = self.results_store.GetExtremaResult(
                     object_type,
                     stage,
                     method,
@@ -281,7 +290,7 @@ class ResultStoreOutput(AbstractOutput):
                 )
             else:
                 getter = getattr(self.results_store, "Get" + or_type[1:])
-                return getter(
+                output = getter(
                     object_type,
                     stage,
                     method,
@@ -291,6 +300,7 @@ class ResultStoreOutput(AbstractOutput):
                 )
         else:
             raise APIException(ErrorCode.OUTPUT_READER_ERROR, "Unknown level {}".format(attribute_info.level))
+        return output
 
     def store_error(self, amz_exception, object_type, stage):
         full_name = self.get_error_full_name(object_type, stage)

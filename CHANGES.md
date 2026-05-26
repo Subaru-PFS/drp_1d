@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.18.0 (2026-04-20)
+### Added
+* [10305] :  Add new filters to include/exclude a range of values
+### Changed
+* [10196] : Update of ExternalStorage : Remove spectrum_id argument from constructor. Add spectrum_id and spectrum_file_path arguments to read method
+* [10221] : Move spectrum_infos dictionary to the Spectrum class, this optional dictionary can provide additional information to external clients if needed
+* [10338] : Change outputs name in `results_specifications.csv` for model and continuum in the case of `lineMeasSolver`
+* [9820] : [API] Renamed `AbstractSpectrumReader::set_air_or_vaccum` to `set_air_or_vacuum`
+* [10339] : Change prototypes of `get_attribute_short`, `get_attribute` and `has_attribute functions`
+### Fixed
+* [10114] : Fix `SubClassifSolverError` caused by ratioToFree. Enhance tplRatio first pass results filling
+* [10207] : Set the parameter `templateFittingSolve.firstPass.extremaCount` as required, and removed `templateFittingSolve.secondPass.continuumFit`
+* [10016] : Fix overlapping line support in hybrid fitter, with new parameter `nSigmaAmpOffset` to set the added line support margin for polynomials under lines
+* [10047] : Update of fit quality anderson test : divide result by n samples, and set bad test values to DBL_MAX rather than NAN
+* [10282] : Fix redshift uncertainty computation (deltaz) from pdf : add factor 1/sqrt(2)
+* [10335] : Fix linemodel fitting when the parameter `useLogLambdaSampling` is set to true
+* [8868]  : Fix absorption line measurement in linemeas, when the continuum is fitted jointly with a polynomial (it was always NAN before)
+
 ## 1.16.0 (2025-11-20)
 ### Added
 * [10031] : Add a minimal number of samples to fit a continuum (one new parameter `nbSamplesMinForContinuumFit`) and provide the number of pixels effectively used for fitting (two new output results `ContinuumNPixelsUsedForFit` & `ContinuumNPixelsOfResiduals`)

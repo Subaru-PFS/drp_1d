@@ -110,12 +110,12 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
 
   TLineModelElementParam_ptr fdata_id =
       std::make_shared<TLineModelElementParam>(
-          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "instrumentDriven");
+          rs, SPEED_OF_LIGHT_IN_VACUUM / 1000., "instrumentDriven");
   TLineModelElementParam_ptr fdata_c = std::make_shared<TLineModelElementParam>(
-      rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "combined");
+      rs, SPEED_OF_LIGHT_IN_VACUUM / 1000., "combined");
   TLineModelElementParam_ptr fdata_vd =
       std::make_shared<TLineModelElementParam>(
-          rs, SPEED_OF_LIGHT_IN_VACCUM / 1000., "velocityDriven");
+          rs, SPEED_OF_LIGHT_IN_VACUUM / 1000., "velocityDriven");
 
   CLineModelElement elementID = CLineModelElement(fdata_id);      //,
   CLineModelElement elementcombined = CLineModelElement(fdata_c); //,

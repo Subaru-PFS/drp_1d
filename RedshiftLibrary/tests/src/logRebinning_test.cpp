@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
   CSpectrumLogRebinning logRebinning(*ctx_logSampled);
 
   // logSampled spectrum
-  CSpectrumAxis lbdaAxis({exp(2), exp(3), exp(4)});
+  CSpectrumSpectralAxis lbdaAxis({exp(2), exp(3), exp(4)});
   CSpectrumFluxAxis fluxAxis({0, 0, 0});
   CFullSpectrum spc_1(lbdaAxis, fluxAxis);
   TFloat64Range lbdaRange(exp(3), exp(6));
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(setupRebinning_test) {
   BOOST_CHECK_CLOSE(logRebinning.m_lambdaRange_ref.GetEnd(), exp(6), precision);
 
   // no logSampled spectrum
-  CSpectrumAxis lbdaAxis2({2, 4, 6});
+  CSpectrumSpectralAxis lbdaAxis2({2, 4, 6});
   spc_1.SetSpectralAxis(lbdaAxis2);
   TFloat64Range lbdaRange2(exp(3), exp(15));
 

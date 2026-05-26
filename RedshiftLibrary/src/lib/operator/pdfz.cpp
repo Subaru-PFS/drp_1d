@@ -351,6 +351,7 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
 
   // prepare logLikelihood and LogEvidence
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
+
   logEvidence = cstLog + logsumexp;
 
   for (Int32 k = 0; k < ssize(redshifts); k++)
@@ -498,10 +499,12 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    const TFloat64List &logProba = logProbaList[km];
+    const TFloat64List &logProba = logProbaList[km]; // logpdf
     const Float64 logWeight =
         LogEvidencesWPriorM[km] - m_postmargZResult->valMargEvidenceLog;
 
+    // For numerical stability, use log(exp(a) + exp(b)) = max(a,b) + log(
+    // exp(a-max(a,b)) + exp(b-max(a,b)) )
     for (Int32 k = 0; k < zsize; k++) {
       Float64 &logValProba = m_postmargZResult->valProbaLog[k];
       const Float64 logValProbaAdd = logProba[k] + logWeight;
@@ -524,10 +527,6 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 
 // This mathematically does not correspond to any valid method for combining
 // PDFs.
-// TODO: problem while estimating best proba. is it best proba for each z ? In
-// that case: what about sum_z P = 1 ?
-// TODO: this method should be replaced/modified to correspond to the MaxPDF
-// technique.
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
   validateChisquareArray(chisquarearray);
@@ -552,9 +551,8 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
       THROWG(ErrorCode::INTERNAL_ERROR, "z-bins comparison failed");
 
     for (Int32 k = 0; k < ssize(redshifts); k++)
-      if (true)
-        m_postmargZResult->valProbaLog[k] =
-            std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
+      m_postmargZResult->valProbaLog[k] =
+          std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
   }
 
   // normalize: sum_z P = 1

@@ -102,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE(computeNoFFT_test,
                     1e-4);
   BOOST_CHECK_CLOSE(res->fittedContinuum.ksStdMeanResiduals,
                     0.30692167604051857, 1e-4);
-  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 7.2096655554220144,
+  BOOST_CHECK_CLOSE(res->fittedContinuum.andersonResiduals, 0.13603142557400205,
                     1e-4);
   BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsUsedForFit, 55);
   BOOST_CHECK_EQUAL(res->fittedContinuum.nPixelsOfResiduals, 55);

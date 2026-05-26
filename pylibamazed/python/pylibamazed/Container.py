@@ -38,6 +38,7 @@
 # ============================================================================
 from typing import Generic, TypeVar, Optional
 from pylibamazed.DocDecorator import doc_method
+import numpy as np
 
 T = TypeVar("T")
 
@@ -56,14 +57,10 @@ class Container(Generic[T]):
         return rep
 
     def __eq__(self, __value__):
-        if type(self) != type(__value__):
-            return False
-        if len(self.data) != len(__value__.data):
-            return False
-        for key in self.data:
-            if not all(self.data.get(key) == __value__.get(key)):
-                return False
-        return True
+        output = False
+        if isinstance(__value__, type(self)) and len(self.data) == len(__value__.data):
+            output = all(np.array_equal(self.data.get(k), __value__.data.get(k)) for k in self.data)
+        return output
 
     @doc_method
     def append(self, dataToAppend: T, obs_id=""):

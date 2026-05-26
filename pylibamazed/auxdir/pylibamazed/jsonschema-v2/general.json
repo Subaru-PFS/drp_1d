@@ -82,7 +82,7 @@
         "peckreeder1972",
         "ciddor1996"
       ],
-      "title": "Air vaccum method",
+      "title": "Air vacuum method",
       "description": "Method to apply for the air to vacuum wavelength conversion when reading input spectrum. Currently \"default\" method corresponds to morton2000"
     },
     "lineMeasRunMode": {

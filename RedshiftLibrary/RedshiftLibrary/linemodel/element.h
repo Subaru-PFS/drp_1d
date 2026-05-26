@@ -71,9 +71,7 @@ using ConstTLineModelElementParam_ptr =
 class CLineModelElement {
 
 public:
-  CLineModelElement(const TLineModelElementParam_ptr elementParam,
-                    Float64 maxDistanceToLine = 1.0,
-                    Int32 minSamplesNumberForLineFit = -1);
+  CLineModelElement(const TLineModelElementParam_ptr elementParam);
 
   Float64 GetObservedPosition(Int32 line_index, Float64 redshift,
                               bool doAsymfitdelta = true) const;
@@ -87,22 +85,23 @@ public:
   void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                       Float64 redshift, const TFloat64Range &lambdaRange,
                       Float64 max_offset = 0.0);
+  TInt32RangeList getSupportNoOverlap(bool polynomialMargin = false) const;
+  TInt32RangeList getSortedSupportNoOverlap() const;
   TInt32RangeList getSupport() const;
-  TInt32RangeList getTheoreticalSupport() const;
-  void EstimateTheoreticalSupport(Int32 line_index,
-                                  const CSpectrumSpectralAxis &spectralAxis,
-                                  Float64 redshift,
-                                  const TFloat64Range &lambdaRange,
-                                  Float64 max_offset = 0.0);
+  Int32 getLeftSampleIndex() const;
+
+  void EstimateSupport(Int32 line_index,
+                       const CSpectrumSpectralAxis &spectralAxis,
+                       Float64 redshift, const TFloat64Range &lambdaRange,
+                       Float64 max_offset = 0.0);
   void EstimateLineVisbility(Int32 line_index,
                              const CSpectrumSpectralAxis &spectralAxis,
-                             const TInt32Range &supportRange,
                              Float64 line_lambda, Float64 sigma,
                              Float64 max_offset);
   void computeOutsideLambdaRange();
 
-  TInt32Range getSupportSubElt(Int32 line_index) const;
-  TInt32Range getTheoreticalSupportSubElt(Int32 line_id) const;
+  TInt32Range const &getSupportNoOverlapSubElt(Int32 line_index) const;
+  TInt32Range const &getSupportSubElt(Int32 line_index) const;
 
   static TInt32Range
   EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis, Float64 mu,
@@ -111,7 +110,13 @@ public:
   std::pair<Float64, Float64> GetContinuumAtCenterProfile(
       Int32 line_index, const CSpectrumSpectralAxis &spectralAxis,
       Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
-      bool enableAmplitudeOffsets = false) const;
+      bool withAmplitudeOffsets = false) const;
+
+  std::pair<Float64, Float64>
+  GetContinuumAtCenterProfile(const CSpectrumSpectralAxis &spectralAxis,
+                              Float64 redshift,
+                              const CSpectrumFluxAxis &continuumfluxAxis,
+                              bool withAmplitudeOffsets = false) const;
 
   Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                            Float64 continuumFlux,
@@ -130,11 +135,6 @@ public:
                           CSpectrumFluxAxis &modelfluxAxis,
                           const CSpectrumFluxAxis &continuumfluxAxis,
                           Float64 redshift, Int32 line_index = undefIdx) const;
-  void
-  addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
-                             CSpectrumFluxAxis &modelfluxAxis,
-                             const CSpectrumFluxAxis &continuumFluxAxis,
-                             Float64 redshift, bool emissionLine) const;
 
   void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                          const CSpectrumFluxAxis &continuumfluxAxis,
@@ -156,8 +156,6 @@ public:
   void SetLineProfile(Int32 line_index, CLineProfile_ptr &&profile);
 
   bool isLineActiveOnSupport(Int32 line_indexA, Int32 line_indexB) const;
-  Int32 getStartNoOverlap(Int32 line_index) const;
-  Int32 getEndNoOverlap(Int32 line_index) const;
 
   void debug(std::ostream &os) const;
   void dumpElement(std::ostream &os) const;
@@ -192,19 +190,18 @@ protected:
 
   const TLineModelElementParam_ptr m_ElementParam;
 
-  Float64 m_maxDistanceToLine;
-  Int32 m_minSamplesNumberForLineFit;
-
   bool m_OutsideLambdaRange;
 
   std::shared_ptr<const CLSF> m_LSF;
 
   std::vector<TBoolList> m_LineIsActiveOnSupport;
 
-  TInt32List m_StartNoOverlap;
-  TInt32List m_EndNoOverlap;
-  TInt32List m_StartTheoretical;
-  TInt32List m_EndTheoretical;
+  TInt32RangeList m_range; // wavelength ranges of each lines in the element
+  TInt32RangeList m_rangeNoOverlap; // ranges of merged overlapping lines
+  TInt32RangeList
+      m_rangeNoOverlapMargin; // with two-side margins for polynomials
+
+  TInt32List m_sortedLineIndices;
 
   TBoolList m_OutsideLambdaRangeList;
   Int32 m_size;
@@ -212,8 +209,9 @@ protected:
   void initSupport(const CSpectrumSpectralAxis &spectralAxis, Float64 redshift,
                    const TFloat64Range &lambdaRange, Float64 max_offset = 0.0);
   bool mergeIfOverlapping(Int32 i, Int32 j);
-  void resolveOverlaps();
-  bool detectDuplicateOverlaps();
+  void sortLinesByLeftIndex();
+  void mergeOverlapingLines();
+  bool detectRemainingOverlaps();
   void propagateOverlap(Int32 i, Int32 j);
 };
 
@@ -234,12 +232,20 @@ inline bool CLineModelElement::isLineActiveOnSupport(Int32 lineindexA,
   return m_LineIsActiveOnSupport[lineindexA][lineindexB];
 }
 
-inline Int32 CLineModelElement::getStartNoOverlap(Int32 line_index) const {
-  return m_StartNoOverlap[line_index];
+inline TInt32Range const &
+CLineModelElement::getSupportNoOverlapSubElt(Int32 line_index) const {
+  return m_rangeNoOverlap[line_index];
 }
 
-inline Int32 CLineModelElement::getEndNoOverlap(Int32 line_index) const {
-  return m_EndNoOverlap[line_index];
+inline TInt32Range const &
+CLineModelElement::getSupportSubElt(Int32 line_index) const {
+  return m_range[line_index];
+}
+
+inline Int32 CLineModelElement::getLeftSampleIndex() const {
+  ASSERT(!m_sortedLineIndices.empty(), ErrorCode::INTERNAL_ERROR,
+         "m_sortedLineIndices was not computed");
+  return m_range[m_sortedLineIndices.front()].GetBegin();
 }
 
 inline void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {

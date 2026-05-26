@@ -60,7 +60,7 @@ public:
   const std::string &getType() override { return m_type; };
 
 protected:
-  void rebin(CSpectrumFluxAxis &rebinedFluxAxis, const TFloat64Range &range,
+  void rebin(TAxisSampleList &rebinedFlux, const TFloat64Range &range,
              const CSpectrumSpectralAxis &targetSpectralAxis,
              CMask &rebinedMask, const std::string opt_error_interp,
              const TAxisSampleList &Xtgt, TFloat64List &error_tmp,

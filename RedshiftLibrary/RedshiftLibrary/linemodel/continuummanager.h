@@ -21,8 +21,6 @@ class CSpectrum;
 class CTemplateCatalog;
 class CSpectrumFluxCorrectionCalzetti;
 
-class CContinuumModelSolution;
-
 class CContinuumManager {
 
 public:
@@ -88,8 +86,7 @@ public:
   void logParameters();
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getIsmCorrectionFromTpl();
-  void reinterpolateContinuum(Float64 redshift);
-  void reinterpolateContinuumResetAmp();
+  void setFitContinuum_tplAmplitudeOne();
 
   bool isContFittedToNull() const {
     return isContinuumComponentFitter() && m_continuumFittedToNull;
@@ -114,6 +111,9 @@ public:
                                      TInt32List &validEltsIdx);
 
 private:
+  void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,
+                                    const TFloat64List &polyCoeffs);
+
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   std::string m_tplCategory;
 
@@ -134,9 +134,6 @@ private:
   std::shared_ptr<CContinuumModelSolution> m_fitContinuum;
 
   Float64 m_fitContinuum_tplFitAlpha = 0.;
-
-  void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,
-                                    const TFloat64List &polyCoeffs);
 };
 
 } // namespace NSEpic

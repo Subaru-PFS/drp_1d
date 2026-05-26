@@ -100,10 +100,8 @@ public:
   Int32 m_maxModelSaveCount = 20;
   std::string m_tplCategory;
 
-  bool m_opt_tplfit_fftprocessing =
-      false; // we cant set it as the default since not taken into account when
-             // deciding on rebinning
-  bool m_opt_tplfit_fftprocessing_secondpass = false; // true;
+  bool m_opt_tplfit_fftprocessing = false;
+  bool m_useloglambdasampling = false;
   bool m_opt_tplfit_use_photometry = false;
   bool m_opt_tplfit_dustFit = true;
   bool m_opt_tplfit_extinction = true;
@@ -117,7 +115,7 @@ public:
   TContinuumComponent m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
-  Float64 m_opt_continuum_bad_chi2_threshold = 100;
+  Float64 m_opt_continuum_bad_chi2_threshold = NAN;
 
   EContinuumFit m_continnuum_fit_option = EContinuumFit::retryAll;
 

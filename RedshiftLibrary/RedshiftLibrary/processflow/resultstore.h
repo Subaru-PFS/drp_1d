@@ -41,6 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/processflow/scopestore.h"
 
@@ -94,6 +95,7 @@ public:
                          bool overwrite = false);
   std::weak_ptr<const COperatorResult>
   GetScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
+
                              const std::string &name) const;
   TResultsMap GetScopedPerTemplateResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>

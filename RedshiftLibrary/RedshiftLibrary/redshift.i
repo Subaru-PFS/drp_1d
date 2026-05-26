@@ -397,7 +397,6 @@ class CLineRatioCatalog : public CLineCatalog
  public:
   CLineRatioCatalog(const std::string& name, const CLineCatalog& lineCatalog);
   ~CLineRatioCatalog();
-  void addVelocity(const std::string& name, Float64 value);
   void setPrior(Float64 prior);
 
   void setIsmIndex(Float64 ismIndex);
@@ -663,7 +662,6 @@ class CSpectrum
   void setObsID(const std::string& obsID);
 
   void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
 class CFullSpectrum: public CSpectrum
@@ -688,7 +686,6 @@ class CFullSpectrum: public CSpectrum
   void setObsID(const std::string& obsID);
 
   void ValidateNoise( Float64 LambdaMin,  Float64 LambdaMax ) const;
-  bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
@@ -705,7 +702,7 @@ class CSpectrumAxis
   Float64* GetSamples();
   TAxisSampleList& GetSamplesVector();
   Int32 GetSamplesCount() const;
-  virtual void SetSize( Int32 s );
+  virtual void resize( Int32 s );
 };
 %clear (const Float64* samples, Int32 n);
 
@@ -736,7 +733,7 @@ class CSpectrumFluxAxis : public CSpectrumAxis
   CSpectrumFluxAxis( const Float64* samples, Int32 n );
   CSpectrumFluxAxis( const double* samples, Int32 n,
   		     const double* error, Int32 m );
-  void SetSize( Int32 s );
+  void resize( Int32 s );
 
 };
 

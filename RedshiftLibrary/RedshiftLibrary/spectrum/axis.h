@@ -40,7 +40,10 @@
 #define _REDSHIFT_SPECTRUM_AXIS_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/vectorOperations.h"
 #include <algorithm>
+#include <functional>
 
 namespace NSEpic {
 
@@ -56,49 +59,109 @@ public:
   explicit CSpectrumAxis(Int32 n, Float64 value = 0.0) : m_Samples(n, value){};
   CSpectrumAxis(const Float64 *samples, Int32 n)
       : m_Samples(samples, samples + n){};
-  CSpectrumAxis(const TFloat64List &samples) : m_Samples(samples){};
-  CSpectrumAxis(TFloat64List &&samples) : m_Samples(std::move(samples)){};
+  explicit CSpectrumAxis(const TFloat64List &samples) : m_Samples(samples){};
+  explicit CSpectrumAxis(TFloat64List &&samples)
+      : m_Samples(std::move(samples)){};
 
   virtual ~CSpectrumAxis() = default;
   CSpectrumAxis &operator=(const CSpectrumAxis &other) = default;
   CSpectrumAxis &operator=(CSpectrumAxis &&other) = default;
-  virtual CSpectrumAxis &operator*=(const Float64 op);
-  virtual CSpectrumAxis &operator/=(const Float64 op);
-  Float64 &operator[](const Int32 i);
-  const Float64 &operator[](const Int32 i) const;
+  virtual CSpectrumAxis &operator*=(Float64 op);
+  virtual CSpectrumAxis &operator/=(Float64 op);
+  virtual CSpectrumAxis &operator+=(CSpectrumAxis const &other);
+  virtual CSpectrumAxis &operator-=(CSpectrumAxis const &other);
+  Float64 operator[](Int32 i) const;
   CSpectrumAxis MaskAxis(const TMaskList &mask) const;
+  // Hidden friend symmetric operators (ie non-member, but here for ADL )
+  friend CSpectrumAxis operator*(CSpectrumAxis axis, Float64 op);
+  friend CSpectrumAxis operator*(Float64 op, CSpectrumAxis axis);
+  friend CSpectrumAxis operator+(CSpectrumAxis const &axis1,
+                                 CSpectrumAxis const &axis2);
+  friend CSpectrumAxis operator-(CSpectrumAxis const &axis1,
+                                 CSpectrumAxis const &axis2);
+  // member assymetric operator
+  CSpectrumAxis operator/(Float64 op) const;
 
   const Float64 *GetSamples() const;
-  const TAxisSampleList &GetSamplesVector() const;
-  TAxisSampleList &GetSamplesVector();
-  void setSamplesVector(TAxisSampleList axisList);
+  const TAxisSampleList &GetSamplesVector() const &;
+  TAxisSampleList &&GetSamplesVector() &&;
+  virtual void setSamplesVector(TAxisSampleList axisList);
   Int32 GetSamplesCount() const;
-  virtual void SetSize(Int32 s);
-  void clear();
+  virtual void resize(Int32 s, Float64 valueDef = 0.0);
+  virtual void clear();
+  void Invert(bool checkNull = true);
+  void Negate();
+
   CSpectrumAxis extract(Int32 startIdx, Int32 endIdx) const;
   bool isEmpty() const;
-  friend CSpectrumAxis operator*(const CSpectrumAxis &axis, const Float64 op) {
-    CSpectrumAxis multipliedAxis = axis;
-    multipliedAxis *= op;
-    return multipliedAxis;
-  }
-
-  friend CSpectrumAxis operator*(const Float64 op, const CSpectrumAxis &axis) {
-    return axis * op;
-  }
+  bool containsNullValue() const;
 
 protected:
   TAxisSampleList m_Samples;
   virtual void resetAxisProperties(){}; // by default it does nothing
 };
 
-inline Float64 &CSpectrumAxis::operator[](const Int32 i) {
+inline Float64 CSpectrumAxis::operator[](Int32 i) const { return m_Samples[i]; }
+
+inline CSpectrumAxis &CSpectrumAxis::operator*=(Float64 op) {
   resetAxisProperties();
-  return m_Samples[i];
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), m_Samples.begin(),
+                 [op](Float64 sample) { return sample * op; });
+  return *this;
 }
 
-inline const Float64 &CSpectrumAxis::operator[](const Int32 i) const {
-  return m_Samples[i];
+inline CSpectrumAxis &CSpectrumAxis::operator/=(Float64 op) {
+  operator*=(1 / op);
+  return *this;
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator+=(CSpectrumAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "Cannot sum axis of different sizes");
+  resetAxisProperties();
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(), std::plus<>());
+  return *this;
+}
+
+inline CSpectrumAxis &CSpectrumAxis::operator-=(CSpectrumAxis const &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Cannot subtract axis of different sizes");
+  resetAxisProperties();
+  std::transform(m_Samples.cbegin(), m_Samples.cend(), other.m_Samples.cbegin(),
+                 m_Samples.begin(), std::minus<>());
+  return *this;
+}
+
+inline CSpectrumAxis operator*(CSpectrumAxis axis, Float64 op) {
+  CSpectrumAxis multipliedAxis(std::move(axis));
+  multipliedAxis *= op;
+  return multipliedAxis;
+}
+
+inline CSpectrumAxis operator*(Float64 op, CSpectrumAxis axis) {
+  return std::move(axis) * op;
+}
+
+inline CSpectrumAxis operator+(CSpectrumAxis const &axis1,
+                               CSpectrumAxis const &axis2) {
+  CSpectrumAxis sumaxis(axis1);
+  sumaxis += axis2;
+  return sumaxis;
+}
+
+inline CSpectrumAxis operator-(CSpectrumAxis const &axis1,
+                               CSpectrumAxis const &axis2) {
+  CSpectrumAxis diffaxis(axis1);
+  diffaxis -= axis2;
+  return diffaxis;
+}
+
+inline CSpectrumAxis CSpectrumAxis::operator/(Float64 op) const {
+  CSpectrumAxis dividedAxis = *this;
+  dividedAxis /= op;
+  return dividedAxis;
 }
 
 inline Int32 CSpectrumAxis::GetSamplesCount() const { return m_Samples.size(); }
@@ -112,20 +175,60 @@ inline void CSpectrumAxis::setSamplesVector(TAxisSampleList axisList) {
   m_Samples = std::move(axisList);
 }
 
-inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const {
+inline const TAxisSampleList &CSpectrumAxis::GetSamplesVector() const & {
   return m_Samples;
 }
 
-inline TAxisSampleList &CSpectrumAxis::GetSamplesVector() { return m_Samples; }
+inline TAxisSampleList &&CSpectrumAxis::GetSamplesVector() && {
+  return std::move(m_Samples);
+}
+
+inline void CSpectrumAxis::resize(Int32 s, Float64 valueDef) {
+  m_Samples.resize(s, valueDef);
+}
+
+inline void CSpectrumAxis::clear() {
+  resetAxisProperties();
+  m_Samples.clear();
+}
 
 inline bool CSpectrumAxis::isEmpty() const { return m_Samples.size() == 0; }
+
+inline bool CSpectrumAxis::containsNullValue() const {
+  return std::find(m_Samples.cbegin(), m_Samples.cend(), 0.) !=
+         m_Samples.cend();
+}
+
+inline void CSpectrumAxis::Invert(bool checkNull) {
+  if (checkNull && containsNullValue())
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "Try to invert an axis containing a null value");
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 [](Float64 val) { return 1 / val; });
+}
+
+inline void CSpectrumAxis::Negate() {
+  std::transform(m_Samples.begin(), m_Samples.end(), m_Samples.begin(),
+                 std::negate<Float64>());
+}
 
 inline CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx,
                                             Int32 endIdx) const {
   if (!m_Samples.size())
     return CSpectrumAxis();
+  if (startIdx < 0 || startIdx >= GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "startIdx out of bounds");
+  if (endIdx < 0 || endIdx >= GetSamplesCount())
+    THROWG(ErrorCode::INTERNAL_ERROR, "endIdx out of bounds");
   return CSpectrumAxis(TFloat64List(m_Samples.begin() + startIdx,
                                     m_Samples.begin() + endIdx + 1));
 }
+
+inline CSpectrumAxis
+CSpectrumAxis::MaskAxis(const TMaskList &mask) const // mask is 0. or 1.
+{
+  return CSpectrumAxis(NSVectorOp::maskVector<Float64>(mask, m_Samples));
+}
+
 } // namespace NSEpic
 #endif

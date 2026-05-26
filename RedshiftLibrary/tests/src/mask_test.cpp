@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_SUITE(Mask)
 BOOST_AUTO_TEST_CASE(Mask1) {
   CMask mask;
 
+  BOOST_CHECK(mask.isEmpty());
+
   mask.SetSize(4);
 
   BOOST_CHECK(mask.GetMasksCount() == 4);
@@ -109,7 +111,6 @@ BOOST_AUTO_TEST_CASE(Mask2) {
   mask1[0] = 0;
   mask1[1] = 0; // mask1=0000 mask2=f00f
   BOOST_CHECK_CLOSE(mask1.ComputeOverlapFraction(mask2), 0, 1e-6);
-  // TODO : should better raise an exception
 
   mask1.SetSize(3);
   mask1[2] = 0x01; // mask1=000001 mask2=f00f
@@ -132,11 +133,9 @@ BOOST_AUTO_TEST_CASE(Mask2) {
   mask1[0] = 0;
   mask1[1] = 0; // mask1=0000 mask2=f00f
   BOOST_CHECK_CLOSE(mask1.IntersectAndComputeOverlapFraction(mask2), 0, 1e-6);
-  // TODO : should better raise an exception
 
   BOOST_CHECK(mask2.GetUnMaskedSampleCount() == 0xff);
 
-  // TODO: GetMaskedSampleCount is dead code
   mask1[0] = 0;
   mask1[0] = 1;
   BOOST_CHECK(mask1.GetMaskedSampleCount() == 1);

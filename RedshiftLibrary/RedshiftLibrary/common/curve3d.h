@@ -57,17 +57,17 @@ public:
   void setFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx,
                       Float64 value);
 
-  TCurve toCurve(Int16 igmIdx = 0, Int16 ismIdx = 0) &&;
+  TCurve &&toCurve(Int16 igmIdx = 0, Int16 ismIdx = 0) &&;
   TCurve toCoefCurve(Int16 igmIdx, Int16 ismIdx) const;
 
   bool pixelIsCoefValid(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
 
   const T3DList<Float64> &getFlux() const & { return flux; };
-  T3DList<Float64> getFlux() && { return std::move(flux); };
+  T3DList<Float64> &&getFlux() && { return std::move(flux); };
   const T3DList<Float64> &getFluxError() const & { return fluxError; };
-  T3DList<Float64> getFluxError() && { return std::move(fluxError); };
+  T3DList<Float64> &&getFluxError() && { return std::move(fluxError); };
   const T3DList<bool> &getIsExtincted() const & { return isExtincted; };
-  T3DList<bool> getIsExtincted() && { return std::move(isExtincted); };
+  T3DList<bool> &&getIsExtincted() && { return std::move(isExtincted); };
 
   Float64 getFluxAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;
   Float64 getFluxErrorAt(Int16 igmIdx, Int16 ismIdx, Int32 pixelIdx) const;

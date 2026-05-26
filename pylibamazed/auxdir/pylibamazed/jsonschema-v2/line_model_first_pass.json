@@ -41,7 +41,7 @@
     "extremaCount": {
       "type": "integer",
       "title": "Maximum number of first pass candidate to retain",
-      "description": "Maximum number of first pass candidate to retain (has to be >= linemodel.extremacount)"
+      "description": "Maximum number of first pass candidate to retain (has to be >= linemodel.extremaCount)"
     }
   }
 }

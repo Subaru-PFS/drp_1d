@@ -98,7 +98,7 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
       THROWG(ErrorCode::INTERNAL_ERROR,
              "model: Unable to use tplratio line priors "
              "with nElts>1 for now");
-    // NB: this could be done if the EL element idx in searched (see later
+    // NB this could be done if the EL element idx in searched (see later
     // in the itratio loop, UV Abs lines would be not affected by priors
     // then)
 
@@ -148,6 +148,7 @@ void CTplratioManager::duplicateTplratioResult(Int32 idx) {
     m_absLinesNullContinuum[idx][iElt] = m_absLinesNullContinuum[idx - 1][iElt];
     m_nullNominalAmplitudes[idx][iElt] = m_nullNominalAmplitudes[idx - 1][iElt];
     m_nullLineProfiles[idx][iElt] = m_nullLineProfiles[idx - 1][iElt];
+    m_fitFailed[idx][iElt] = m_fitFailed[idx - 1][iElt];
     m_DtmTplratio[idx][iElt] = m_DtmTplratio[idx - 1][iElt];
     m_MtmTplratio[idx][iElt] = m_MtmTplratio[idx - 1][iElt];
     m_LyaAsymCoeffTplratio[idx][iElt] = m_LyaAsymCoeffTplratio[idx - 1][iElt];
@@ -179,6 +180,7 @@ void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_absLinesNullContinuum.assign(s, TBoolList(elCount, false));
   m_nullNominalAmplitudes.assign(s, TBoolList(elCount, false));
   m_nullLineProfiles.assign(s, TBoolList(elCount, false));
+  m_fitFailed.assign(s, TBoolList(elCount, false));
   m_LyaAsymCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaWidthCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
   m_LyaDeltaCoeffTplratio.assign(s, TFloat64List(elCount, NAN));
@@ -429,6 +431,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
   m_absLinesNullContinuum[idx].assign(s, false);
   m_nullNominalAmplitudes[idx].assign(s, false);
   m_nullLineProfiles[idx].assign(s, false);
+  m_fitFailed[idx].assign(s, false);
   m_LyaAsymCoeffTplratio[idx].assign(s, NAN);
   m_LyaWidthCoeffTplratio[idx].assign(s, NAN);
   m_LyaDeltaCoeffTplratio[idx].assign(s, NAN);
@@ -442,6 +445,7 @@ void CTplratioManager::updateTplratioResults(Int32 idx, Float64 _merit,
     m_absLinesNullContinuum[idx][iElt] = param->m_absLinesNullContinuum;
     m_nullNominalAmplitudes[idx][iElt] = param->m_nullNominalAmplitudes;
     m_nullLineProfiles[idx][iElt] = param->m_nullLineProfiles;
+    m_fitFailed[idx][iElt] = param->m_fitFailed;
     if (param->isNotFittable())
       continue;
 
@@ -528,7 +532,6 @@ std::pair<Float64, Float64> CTplratioManager::computeMerit(Int32 itratio) {
 }
 
 void CTplratioManager::resetToBestRatio(Float64 redshift) {
-
   // first reinit all the elements:
   setTplratioModel(m_savedIdxFitted, redshift);
 
@@ -540,6 +543,7 @@ void CTplratioManager::resetToBestRatio(Float64 redshift) {
     param->m_nullNominalAmplitudes =
         m_nullNominalAmplitudes[m_savedIdxFitted][iElt];
     param->m_nullLineProfiles = m_nullLineProfiles[m_savedIdxFitted][iElt];
+    param->m_fitFailed = m_fitFailed[m_savedIdxFitted][iElt];
     Log.LogDetail(Formatter()
                   << "    model - Linemodel: tplratio = " << m_savedIdxFitted
                   << " (" << getTplratio_bestTplName() << ", with ebmv="
@@ -583,14 +587,6 @@ void CTplratioManager::setTplratioModel(Int32 itplratio, Float64 redshift,
                                         bool enableSetVelocity) {
   SetNominalAmplitudes(itplratio);
 
-  /* TODO reactivate this if once called with enableSetVelocity=true . ->
-  velocities must be imported from linemodelfitting if (enableSetVelocity) {
-    // Set the velocities from templates: todo auto switch when velfit is ON
-    m_CatalogTplRatio.GetCatalogVelocities(itplratio, m_velocityEmission,
-                                           m_velocityAbsorption);
-  }
-
-  */
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:

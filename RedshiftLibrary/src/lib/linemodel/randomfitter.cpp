@@ -88,24 +88,16 @@ void CRandomFitter::doFit(Float64 redshift) {
 Float64 CRandomFitter::getContinuumMeanUnderElement(Int32 eltId) const {
   Int32 n = 0;
   Float64 m = 0.0;
-  // Float64 sumErr=0.0;
 
-  TInt32RangeList support;
-  Int32 iElts = eltId;
-  {
-    if (getElementList()[iElts]->IsOutsideLambdaRange()) {
-      return 0.0;
-    }
-    TInt32RangeList s = getElementList()[iElts]->getSupport();
-    for (Int32 iS = 0; iS < ssize(s); iS++) {
-      support.push_back(s[iS]);
-    }
+  if (getElementList()[eltId]->IsOutsideLambdaRange()) {
+    return 0.0;
   }
+  TInt32RangeList support = getElementList()[eltId]->getSupportNoOverlap();
 
   const auto &ContinuumFluxAxis = getModel().getContinuumFluxAxis();
   // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
-  for (Int32 iS = 0; iS < ssize(support); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j <= support[iS].GetEnd(); j++) {
+  for (auto const &support_i : support) {
+    for (Int32 j : support_i) {
       n++;
       // w = 1.0 / ErrorNoContinuum[j];
       // sumErr += w;

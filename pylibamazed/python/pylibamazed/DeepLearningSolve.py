@@ -68,7 +68,7 @@ class DeepLearningSolve(AbstractReliabilitySolver):
         output.load_object_level(self.object_type)
 
         pdf = BuilderPdfHandler().add_params(output, self.object_type, logsampling).build()
-        pdf.convertToRegular(True, c_zgrid_zend)
+        pdf.convertToRegular()
 
         zgrid = pdf.redshifts
         pdfval = pdf.valProbaLog

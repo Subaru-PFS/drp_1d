@@ -25,7 +25,7 @@ Following methods need to be implemented:
     AbstractSpectrumReader.load_lsf
     AbstractSpectrumReader.load_photometry
     AbstractSpectrumReader.load_others
-    AbstractSpectrumReader.set_air_or_vaccum
+    AbstractSpectrumReader.set_air_or_vacuum
 
 If necessary, it is possible to overload the constructor :
 
@@ -127,6 +127,7 @@ Its public methods are:
     Spectrum.get_others
     Spectrum.get_lsf
     Spectrum.get_photometric_data
+    Spectrum.get_spectrum_infos 
     Spectrum.init
 
 
@@ -151,12 +152,6 @@ This abstract class needs to be implemented with the following methods:
 .. autosummary::
     AbstractExternalStorage.read
     AbstractExternalStorage.close
-
-
-Its other public methods are:
-
-.. autosummary::
-    AbstractExternalStorage.set_spectrum_id
 
 You must then use the ``register_storage`` method to register your implementation of ``AbstractExternalStorage``.
 

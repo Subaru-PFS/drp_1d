@@ -1,3 +1,5 @@
+.. _powerlaw:
+
 Power law
 =========
 
@@ -6,12 +8,16 @@ Power law
 
 
 A fitting method to use for QSOs.
-The idea is to fit the flux with two power laws (first power law for wavelength < 5400 Å, second one for wavelength > 5400 Å).
+The idea is to fit the flux with two power laws (a first power law for wavelength < 5400 Å, a second one for wavelength > 5400 Å).
 We make the fit using the least square fitting method on a log/log scale.
 
 
+Mathematical description
+------------------------
+
+
 Applying least square fitting method on log/log scale
------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. math::
      \begin{cases}
@@ -31,6 +37,7 @@ With :math:`Y = \ln{y}`,  :math:`X = \ln{x}`, :math:`A = \ln{a}` :
      \end{cases}
 
 .. math::
+
      \Leftrightarrow
      \begin{cases}
           Y = A_1 +  b_1  X & \text{for } X \leqslant X_c \\
@@ -99,7 +106,7 @@ Which can be reduced with the continuity constraint of the 2 power laws in **(1)
 Matrix calculations then allow to find an analytic solution to this equation.
 
 Case were b1 / b2 is fixed
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Constraints on min / max value of b1 and b2 can be set in parameters.
 If b1 or b2 reaches these limits, we redo the fit with b1 or b2 fixed to the limit value.
 We then have a linear least square fitting with 2 parameters.
@@ -147,7 +154,7 @@ From **(1)** , we obtain:
      \gamma = \left( \begin{array}{c} \bar{b_1}X_i \\ \vdots \\ \bar{b_1}X_c + \bar{b_2}(X_i - X_c) \\ \vdots \end{array} \right)
    
 Calculating coefs standard deviations
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Variances and covariances of A1, b1, b2 are the terms of :math:`M^{-1}`.
 We use the approximation :math:`\text{Var}(a_1) = \text{Var}(\exp(A_1)) \approx a_1^2 var(A1)` 
@@ -159,29 +166,16 @@ For A2, based on :math:`A2 = A1 + (b1-b2) X_c` we find:
 
 And using the same approximation than for :math:`a_1`, we deduce the formula :math:`\text{Var}(a_2)` from :math:`\text{Var}(A_2)`
 
-Estimating continuum amplitude
-------------------------------
+Estimating continuum SNR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To calculate continuum SNR, we use :math:`\text{max}(\frac{a_1}{\sigma_{a_1}}, \frac{a_2}{\sigma_{a_2}})`
-If SNR is lower than threshold defined in parameters, we apply same behavior than in template fitting.
 
-
-Behaviour for too little sample
--------------------------------
-
-Two main cases of too little cases are possible:
-
-* The total number of samples is too low : coefficient are forced to zero, and a warning is issued.
-* One of either sides of lambda cut does not have enough samples:
-    - The coefficients are calculated using the side with enough samples: we use a simple least square fitting method.
-    - They are extended to the side with too little samples before chi2 calculation
-
-
-Calculating the noise
----------------------
-
+Propagating the noise in log scale
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Knowing the in input standard deviation :math:`\sigma`` on each sample y, we need an expression of the standard deviation :math:`\sigma_{log}` of :math:`\log(y)`.
 Using the transformation :math:`\ln(y+ \partial y) = \ln(y) + \frac{\partial y}{y} + o(\partial y^2)`,
-we approximate :math:`ln(y \pm \sigma) \approx \ln(y) \pm \frac{\sigma}{y}`
+we approximate :math:`\ln(y \pm \sigma) \approx \ln(y) \pm \frac{\sigma}{y}`
 
 We will use:
 
@@ -190,12 +184,32 @@ We will use:
           \sigma_{log} = \frac{\sigma}{y}
      }
 
-:math:`ln` is also applied to the x-axis. We could empirically compensate with :math:`\sigma_{loglog} = x \sigma_{log} = \frac{x}{y} \sigma`
-
-For the moment, it did not show a big difference in the tests so we will not apply this ponderation yet.
+Note that this has an impact on the calculations : the standard deviation to use in matrix :math:`N` is not the simple standard deviation of pixel i anymore, but it is dependent on the model flux, which we don't know before fitting. Therefore, we will compute the power law coefficients in two steps : first step without ponderation, and once a first estimate of the power law coefficients have been made, we compute a second step using this power law estimate to ponderate the standard deviation of the flux, and retrieve our final power law coefficients.
 
 
+.. comment
+     :math:`ln` is also applied to the x-axis. We could empirically compensate with :math:`\sigma_{loglog} = x \sigma_{log} = \frac{x}{y} \sigma`
+
+     For the moment, it did not show a big difference in the tests so we will not apply this ponderation yet.
 
 
 
 
+
+
+In practice
+--------------
+
+
+Simple case 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For each redshift : 
+
+#. Intialize flux curve : apply a blue shift on the input flux so lambda axis corresponds to lambda rest
+#. If the number of unmasked samples is lower than thershold defined in parameter `nbSamplesMinForContinuumFit`, we force coefficients to zero and issue a warning.
+#. Compute SNR-compliant pixels : pixels for which :math:`\frac{flux}{error} > \text{threshold}` with :math:`\text{threshold}` defined in parameter `continuumFit.nullThreshold`. If the number of valid pixel i.e. pixels which are both not masked (from input spectrum) and SNR-compliant is lower than the threshold defined in parameter `nbSamplesMinForContinuumFit`, we compute constant law : :math:`y = a` with :math:`a = \frac{\sum d_i \, w_i}{\sum w_i}` with :math:`w_i = \frac{1}{\sigma_i^2}`, taking into account all unmasked pixels (event the non-snr compliant ones). Igm and ism are forced to zero.
+#. Compute the emitted curve: we create one flux curve per igm / ism correction.
+#. For each of these emitted curves, compute the power law coefs, according to the equations above. If one of either sides of lambda cut does not have enough samples (compared to threshold `nbSamplesMinForContinuumFit`), the coefficients are computed using the side with enough samples: we use a simple least square fitting method. They are then extended to the side with too little samples before chi2 calculation. If there is no side with enough samples, coefficient are forced to zero, and a warning is issued.
+#. At each power law computation, if :math:`a` is too small (i.e. smaller than :math:`\text{__DBL_MIN__}` i.e. the smallest positive value representable by a double on the machine), all coefficients are forced to zero, and their standard deviation to infinity.
+#. Compute chi2 for each obtained power law coefficients, and find igm / ism indexes which minimize this chi2.

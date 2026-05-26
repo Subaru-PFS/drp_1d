@@ -52,9 +52,8 @@ private:
 public:
   TInt32List GetElementsIndicesInsideLambdaRange() const;
   TInt32List getNonZeroElementIndices(CLine::EType lineTypeFilter) const;
-  TInt32List getOverlappingElements(Int32 ind, const TInt32Set &excludedInd,
-                                    Float64 redshift,
-                                    Float64 overlapThres) const;
+  TInt32List getOverlappingElements(TInt32List &indicesToFit,
+                                    Float64 redshift) const;
 
   std::vector<TInt32List> GetModelVelfitGroups(CLine::EType lineType) const;
 
@@ -63,7 +62,8 @@ public:
       Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
       const TFloat64Range &lambdaRange, Float64 redshift) const;
 
-  TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
+  TInt32List getSupportIndexes(const TInt32List &EltsIdx,
+                               bool polynomialMargin = false) const;
 
   void addToSpectrumAmplitudeOffset(
       const CSpectrumSpectralAxis &spectralAxis,
@@ -124,7 +124,8 @@ class CLMEltListVector {
 public:
   CLMEltListVector(const CSpectraGlobalIndex &spcIndex,
                    const CLineMap &restLineList,
-                   ElementComposition element_composition);
+                   ElementComposition element_composition,
+                   bool useAmpOffsetsCoeffs);
   CLMEltListVector() = delete;
 
   std::pair<Int32, Int32> findElementIndex(Int32 line_id) const;
@@ -159,15 +160,18 @@ public:
   void resetElementsFittingParam(bool enableAmplitudeOffsets);
   void resetAsymfitParams();
 
-  void computeGlobalOutsideLambdaRange();
+  void computeGlobalOutsideLambdaRange(TInt32List const &EltsIdx = {});
   void setNullNominalAmplitudesNotFittable();
   void setAbsLinesNullContinuumNotFittable(
       std::shared_ptr<CSpcModelVector> const &models);
-  void setAllAbsLinesFittable();
-  void setAllAbsLinesNotFittable();
+  void unsetAllAbsLinesNullContinuum();
+  void setAllAbsLinesNullContinuum();
   void resetNullLineProfiles();
-  void
-  computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models);
+  void resetFitFailed();
+  void computeGlobalLineValidity(std::shared_ptr<CSpcModelVector> const &models,
+                                 bool checkNullContinuum = true);
+  void computeAbsLineValidity(std::shared_ptr<CSpcModelVector> const &models,
+                              bool checkNullContinuum);
   TInt32List getValidElementIndices(TInt32List const &EltIndices) const;
   TInt32List getValidElementIndices() const;
   Int32 getNonZeroElementsNDdl() const;
@@ -183,14 +187,15 @@ private:
 
   // when spectrum component is "noContinuum" set to true
   // to invalid all absorption lines of all element
-  bool m_allAbsLinesNoContinuum = false;
+  bool m_allAbsLinesNullContinuum = false;
 
-  void AddElementParam(CLineVector lines);
+  void AddElementParam(CLineVector lines, bool useAmpOffsetsCoeffs);
   void fillElements();
-  void LoadCatalog();
-  void LoadCatalogOneLineByElement();
-  void LoadCatalogOneMultiline();
-  void LoadCatalogTwoMultilinesAE();
+  void LoadCatalog(bool useAmpOffsetsCoeffs);
+  void LoadCatalogOneLineByElement(bool useAmpOffsetsCoeffs);
+  void LoadCatalogOneMultiline(bool useAmpOffsetsCoeffs);
+  void LoadCatalogTwoMultilinesAE(bool useAmpOffsetsCoeffs);
+  void sortLinesByCenterWavelength(CLineVector &lineVector) const;
   bool computeOutsideLambdaRangeLine(Int32 elt_index, Int32 line_index);
   bool computeOutsideLambdaRange(Int32 elt_index);
 };

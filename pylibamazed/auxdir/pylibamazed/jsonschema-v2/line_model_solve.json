@@ -17,8 +17,6 @@
         "velocityEmission",
         "velocityAbsorption",
         "velocityFit",
-        "lbdaOffsetFit",
-        "ampOffsetFit",
         "skipSecondPass",
         "extremaCount",
         "extremaCutProbaThreshold",
@@ -87,7 +85,7 @@
             "lbfgsb"
           ],
           "title": "Line fitting method",
-          "description": "Line fitting method: \n * **individual**: independant fit of all lines amplitude \n * **svd**: joint fit of all lines amplitude (sparsity not exploited) \n * **hybrid**: svd only for groups of lines sharings pixels (eg. Ha and N2), independant fit for the other lines \n * **lbfgsb**: like hybrid but using non-linear least-square fit instead of svd to fit jointly the 3 Gaussian parameters (amplitude, position and width). Based on l-bfgs-b algorithm (bounded gradient descent). \n Note: if `lineRatioType=tplRatio`, choose \"individual\" (one set of ratio <-> a unique amplitude fitted for all lines)."
+          "description": "Line fitting method: \n * **individual**: independant fit of all lines amplitude \n * **svd**: joint fit of all lines amplitude (sparsity not exploited) \n * **hybrid**: svd only for groups of lines sharings pixels (eg. Ha and N2), independant fit for the other lines \n * **lbfgsb**: like hybrid but using non-linear least-square fit instead of svd to fit jointly the 3 Gaussian parameters (amplitude, position and width). Based on l-bfgs-b algorithm (bounded gradient descent) \n * **ones**: for developoment purpose only. \n Note: if `lineRatioType=tplRatio`, choose \"individual\" (one set of ratio <-> a unique amplitude fitted for all lines)."
         },
         "lineWidthType": {
           "type": "string",
@@ -155,24 +153,30 @@
         "lbdaOffsetFit": {
           "type": "boolean",
           "title": "Wether to fit wavelength offset",
-          "description": "Wether the 2nd pass includes lines wavelength offset fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+          "description": "Wether the 2nd pass includes lines wavelength offset fitting. Required and relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
         },
         "lbdaOffsetMax": {
           "type": "number",
           "minimum": 0,
           "title": "Maxiumun authorized wavelength offset in each direction",
-          "description": "Size in km/s of the wavelength range of the effective line center arround the position given by the redshift. Relevant only when lbdaOffsetFit is set to true"
+          "description": "Size in km/s of the wavelength range of the effective line center arround the position given by the redshift. Required and relevant only when lbdaOffsetFit is set to true"
         },
         "lbdaOffsetStep": {
           "type": "number",
           "minimum": 0,
           "title": "Wavelength offset steps in km/s",
-          "description": "Steps of the wavelength offset fitting loop. Relevant only when lbdaOffsetFit is set to true and fittingMethod=svd or hybrid (not used for fittingMethod=lbfgsb)"
+          "description": "Steps of the wavelength offset fitting loop. Required and relevant only when lbdaOffsetFit is set to true and fittingMethod=svd or hybrid (not used for fittingMethod=lbfgsb)"
         },
         "ampOffsetFit": {
           "type": "boolean",
           "title": "Wether to fit amplitude offset",
-          "description": "Wether the 2nd pass includes line's polynomial offset in the profile fitting. Relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+          "description": "Wether the 2nd pass includes line's polynomial offset in the profile fitting. Required and relevant only for `fittingMethod=svd`, `hybrid` or `lbfgsb`"
+        },
+        "nSigmaAmpOffset": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Line support size margin",
+          "description": "Full margin (not half) to add at each line support to better fit the polynomial under the line, expressed in sigma of the gaussian profile, required if ampOffsetFit is true. For instance, if nSigmaSupport is 8 and nSigmaAmpOffset is 6, the total support will be 14 sigma including a margin for the polynomial of 3 sigma on each side."
         },
         "skipSecondPass": {
           "type": "boolean",
@@ -298,7 +302,7 @@
         "nSigmaSupport": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "title": "Support size",
+          "title": "Line support size",
           "description": "Full (not half) size of each line support in sigma of the gaussian profile "
         },
         "maxDistanceToLine": {
@@ -316,7 +320,9 @@
         "hAlphaPrior": {
           "type": "number",
           "title": "Ha prior",
-          "description": "\n * **-1**: no prior \n * **positive below 1**: low multiplicative prior probability (posterior penalization) when Ha line is not measured (the measured amplitude is <=0 or is not the strongest measured line) \n * **else**: prior probability is set to 1 when Ha line is strongest measured line, typical value between 1e-1 to 1e-5"
+          "minimum": -1,
+          "maximum": 1,
+          "description": "\n * **-1**: no prior \n * **positive**: prior penalization to apply when Ha line is not the strongest measured line (or is not present).  1 means no penalty, and the more the penalty value decreases, the more the Ha prior is strong. A typical value is between 1e-1 to 1e-5."
         },
         "enablePhotometry": {
           "type": "boolean",
@@ -355,7 +361,7 @@
             "ones"
           ],
           "title": "Second pass continuum fitting method",
-          "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask)"
+          "description": "During the 2nd pass, after fitting of all the parameters, redo a joint fit of continuum and linemodel amplitudes and eventually a 2nd order polynomial using an SVD on the full observed range (heavy computation). \n * **-1**: skip this step \n * **svdlcp2**: refit continuum, linemodel and 2nd order polynomial \n * **svdlc**: refit only continuum and linemodel (usefull if we don't trust the continuum/linemodel orthogonalization, because it is done on a free linemodel or a mask) \n * **random** / **ones**: for developoment purpose only"
         },
         "secondPass": {
           "$ref": "second_pass.json"

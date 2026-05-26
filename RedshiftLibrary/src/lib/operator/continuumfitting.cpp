@@ -63,21 +63,18 @@ Float64 COperatorContinuumFitting::EstimateLikelihoodCstLog() const {
        boost::combine(m_spectra, m_lambdaRanges)) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         spectrum_ptr->GetSpectralAxis();
-    const TFloat64List &error =
-        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+    auto const &flux_for_weight = spectrum_ptr->GetFluxAxis();
 
-    Int32 numDevs = 0;
+    auto const &iRange = TInt32Range(lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector()));
+    Int32 numDevs = iRange.GetLength() + 1;
+    Float64 sumLogNoise =
+        std::transform_reduce(iRange.begin(), iRange.end(), 0., std::plus(),
+                              [&flux_for_weight](Int32 j) {
+                                return log(flux_for_weight.GetWeight(j));
+                              });
 
-    Float64 sumLogNoise = 0.0;
-
-    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
-        spcSpectralAxis.GetSamplesVector());
-
-    for (Int32 j = imin; j <= imax; j++) {
-      numDevs++;
-      sumLogNoise += log(error[j]);
-    }
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
   }
   return cstLog;
 }

@@ -50,20 +50,18 @@ class CSpectrumFluxAxis;
  * \ingroup Redshift
  * Common ancestral class for continuum estimators.
  **/
-class CContinuum {
+class CContinuumEstimator {
 
 public:
-  CContinuum() = default;
-  virtual ~CContinuum() = default;
+  CContinuumEstimator() = default;
+  virtual ~CContinuumEstimator() = default;
   // rule of 5 defaults
-  CContinuum(const CContinuum &) = default;
-  CContinuum(CContinuum &&) = default;
-  CContinuum &operator=(const CContinuum &) = default;
-  CContinuum &operator=(CContinuum &&) = default;
+  CContinuumEstimator(const CContinuumEstimator &) = default;
+  CContinuumEstimator(CContinuumEstimator &&) = default;
+  CContinuumEstimator &operator=(const CContinuumEstimator &) = default;
+  CContinuumEstimator &operator=(CContinuumEstimator &&) = default;
 
-  virtual bool
-  RemoveContinuum(const CSpectrum &s,
-                  CSpectrumFluxAxis &noContinuumFluxAxis) const = 0;
+  virtual CSpectrumFluxAxis computeContinuum(const CSpectrum &s) const = 0;
 
 private:
 };

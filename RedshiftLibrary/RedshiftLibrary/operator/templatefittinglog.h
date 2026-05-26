@@ -111,16 +111,21 @@ public:
       TInt32Range zIdxRangeToCompute = TInt32Range(undefIdx, undefIdx),
       std::shared_ptr<CTemplateFittingResult> const &result = nullptr) override;
 
+  std::pair<CModelSpectrumResult, TPhotVal>
+  ComputeSpectrumModel(const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef,
+                       Int32 meiksinIdx, Float64 amplitude,
+                       const Float64 overlapThreshold, Int32 spcIndex) override;
   inline bool IsFFTProcessing() override { return true; };
 
-  // made public for unit-testing
+private:
+  friend class templateFittingLog_test::EstimateXtY_test;
+
   TInt32Range FindTplSpectralIndex(const TFloat64Range &redshiftrange) const;
   TInt32Range FindTplSpectralIndex(const CSpectrumSpectralAxis &spcSpectralAxis,
                                    const CSpectrumSpectralAxis &tplSpectralAxis,
                                    const TFloat64Range &redshiftrange) const;
 
-private:
-  friend class templateFittingLog_test::EstimateXtY_test;
+  void buildTemplateAtFullRedshiftRange(const CTemplate &logSampledTpl);
 
   void FitAllz(std::shared_ptr<CTemplateFittingResult> result,
                const TInt32List &MeiksinList = TInt32List(1, 0),
@@ -167,6 +172,7 @@ private:
 
   // shadow CoperatorContinuumFitting::m_spectra
   std::vector<std::shared_ptr<const CFullSpectrum>> m_spectraFull;
+  std::vector<std::shared_ptr<const TFloat64Range>> m_lambdaRangesFull;
 
   Float64 m_logstep;
   Int32 m_ssRatio;

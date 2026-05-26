@@ -83,5 +83,5 @@ class TestSpectrumReaderImplementationErrors:
     def test_load_photometry_not_implemented_error(self):
         self.spectrumReader.load_photometry(None)
 
-    def test_set_air_or_vaccum_not_implemented_error(self):
-        self.spectrumReader.set_air_or_vaccum(None)
+    def test_set_air_or_vacuum_not_implemented_error(self):
+        self.spectrumReader.set_air_or_vacuum(None)

@@ -100,7 +100,7 @@ void T3DCurve::setIsExtincted(T3DList<bool> inputIsExtincted) {
   isExtincted = std::move(inputIsExtincted);
 }
 
-TCurve T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) && {
+TCurve &&T3DCurve::toCurve(Int16 igmIdx, Int16 ismIdx) && {
   if (ismIdx > nIsm)
     THROWG(ErrorCode::INTERNAL_ERROR,
            Formatter() << "ismIdx = " << ismIdx << " < " << nIsm);

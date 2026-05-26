@@ -17,7 +17,7 @@ def test_container_equality():
     assert Container(**{"key": array1}) != Container(**{"other key": array1})
 
     # Container with same keys but different data not equal
-    assert Container(**{"key": array1}) != Container(**{"other key": array2})
+    assert Container(**{"key": array1}) != Container(**{"key": array2})
 
     # Containers with same data and keys but in different order are not equal
     assert Container(**{"key": array1, "key2": array2}) == Container(**{"key2": array2, "key": array1})

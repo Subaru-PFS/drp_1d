@@ -69,6 +69,7 @@ void CRegulament::ApplyWithRedshift( Float64 Redshift )
 
 }
 */
+
 bool CRegulament::CreateRulesFromJSONFiles(void) {
   // To be removed once JSON code is in <--
   bool True = true;

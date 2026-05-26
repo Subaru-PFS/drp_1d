@@ -57,7 +57,7 @@ static const Int32 allIdx = -9;
 static const std::string undefStr = "undefined";
 
 static const Int32 MEDIAN_FAST_OR_BEERS_THRESHOLD = 1000;
-static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
+static const Float64 SPEED_OF_LIGHT_IN_VACUUM =
     GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
 // static const Float64 INSTRUMENT_RESOLUTION_FACTOR =
@@ -69,10 +69,6 @@ static const Int32 IGM_OVERSAMPLING = 1;
 static const Float64 IGM_RAW_STEP =
     0.05; //  wavelength step of input extinction curves (in Angstrom)
 
-static const Float64 OVERLAP_THRES_HYBRID_FIT =
-    0.15; // 15% seemed necessary for Ha/SII complex when lines are very
-// wide (either because of PSF or source size)
-// mainly for hybrid fitting
 static const Int32 MIN_GRID_COUNT = 10;
 
 static const Float64 LSF_MIN_LAMBDA = 200.0;
@@ -89,6 +85,9 @@ static const Float64 LAMBDA_OFFSET_STEP = 25.0; // km/s;
 
 // For QSO power law calculation, lambda at which the power law coefs changes
 static const Float64 POWER_LOW_WAVELENGTH_CUT = 5400;
+
+// For CContinuumIrregularSamplingMedian, number of smoothing cycles
+static const Float64 N_SAMPLING_SMOOTH_CYCLES = 5;
 
 } // namespace NSEpic
 #endif

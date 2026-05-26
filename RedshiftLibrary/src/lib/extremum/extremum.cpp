@@ -114,8 +114,6 @@ TPointList CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
     }
   }
 
-  // TODO: add a boolean referring to the metric to use for the sort
-  // by default, using the pdf value
   SortIndexes(maxY);
 
   Int32 keepMinN = 1;

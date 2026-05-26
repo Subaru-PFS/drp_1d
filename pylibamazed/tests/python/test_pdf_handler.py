@@ -47,6 +47,7 @@ from tests.python.utils import (
     check_from_parameter_dict,
     make_parameter_dict_at_redshift_solver_level,
 )
+import numpy as np
 
 
 class TestBuildPdfParams:
@@ -63,7 +64,7 @@ class TestBuildPdfhandler:
         abstract_output.object_results = {
             "some_object_type": {
                 "firstpass_pdf_params": PdfHandlerTestUtils.pdf_params(),
-                "firstpass_pdf": {"FirstpassLogZPdfNative": ""},
+                "firstpass_pdf": {"FirstpassLogZPdfNative": np.array([])},
             }
         }
         BuilderPdfHandler().add_params(abstract_output, "some_object_type", True, True).build()
@@ -71,7 +72,10 @@ class TestBuildPdfhandler:
     def test_other_pass(self):
         abstract_output = PdfHandlerTestUtils.abstract_output()
         abstract_output.object_results = {
-            "some_object_type": {"pdf_params": PdfHandlerTestUtils.pdf_params(), "pdf": {"LogZPdfNative": ""}}
+            "some_object_type": {
+                "pdf_params": PdfHandlerTestUtils.pdf_params(),
+                "pdf": {"LogZPdfNative": np.array([])},
+            }
         }
         BuilderPdfHandler().add_params(abstract_output, "some_object_type", True).build()
 
@@ -90,7 +94,6 @@ class TestPdfHandlerClass:
 
     def test_convertToRegular(self):
         self.pdf_handler.convertToRegular()
-        self.pdf_handler.convertToRegular(True, 10)
 
     def test_isPdfValid(self):
         with pytest.raises(Exception):

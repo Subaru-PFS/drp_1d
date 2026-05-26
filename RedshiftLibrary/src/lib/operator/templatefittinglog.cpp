@@ -43,6 +43,7 @@
 
 #include <boost/range/combine.hpp>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -106,16 +107,16 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     m_spectraFull.clear();
     for (const auto &spectrum : Context.getRebinnedFullSpectra())
       m_spectraFull.push_back(spectrum);
-    m_lambdaRanges = Context.getRebinnedFullClampedLambdaRanges();
+    m_lambdaRangesFull = Context.getRebinnedFullClampedLambdaRanges();
     return;
   }
 
   // else subsampling required, subsample each spectrum :
   //  (coarse redshift grid)
   m_spectraFull.clear();
-  m_lambdaRanges.clear();
+  m_lambdaRangesFull.clear();
   m_spectraFull.reserve(Context.getSpectra().size());
-  m_lambdaRanges.reserve(Context.getSpectra().size());
+  m_lambdaRangesFull.reserve(Context.getSpectra().size());
 
   for (auto const &[logSampledSpectrum_ptr, logSampledLambdaRange_ptr] :
        boost::combine(Context.getRebinnedFullSpectra(),
@@ -145,7 +146,7 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
                                                    *ssLambdaRange);
 
     m_spectraFull.push_back(std::move(ssSpectrum));
-    m_lambdaRanges.push_back(std::move(ssLambdaRange));
+    m_lambdaRangesFull.push_back(std::move(ssLambdaRange));
   }
 }
 
@@ -478,23 +479,19 @@ void COperatorTemplateFittingLog::FitAllz(
   Int32 nzranges = izrangelist.size();
 
   // since dtd is cte, better compute it here
-  const TAxisSampleList &error =
-      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+  auto const &flux_axis = m_spectraFull[0]->GetFluxAxis();
 
   const Int32 nRedshifts = result->Redshifts.size();
-  const TAxisSampleList &spectrumRebinedFluxRaw =
-      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const TAxisSampleList &spectrumRebinedFluxRaw = flux_axis.GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   auto const &mask = m_spectraFull[0]->getMask();
   Float64 dtd = 0.0;
   TFloat64List inv_err2(nSpcPixels);
-  TFloat64List inv_err(nSpcPixels);
   TFloat64List spcRebinedFluxOverErr2(nSpcPixels);
   TFloat64List spcRebinedFlux2OverErr2(nSpcPixels);
-  for (Int32 j = 0; j < ssize(error); j++) {
+  for (Int32 j = 0; j < flux_axis.GetSamplesCount(); j++) {
     if (mask[j]) {
-      inv_err[j] = 1.0 / error[j];
-      inv_err2[j] = inv_err[j] * inv_err[j];
+      inv_err2[j] = flux_axis.GetWeight(j);
       spcRebinedFluxOverErr2[j] = spectrumRebinedFluxRaw[j] * inv_err2[j];
       spcRebinedFlux2OverErr2[j] =
           spcRebinedFluxOverErr2[j] * spectrumRebinedFluxRaw[j];
@@ -690,12 +687,12 @@ void COperatorTemplateFittingLog::computeFitQuality(
     const std::shared_ptr<CTemplateFittingResult> &result, Int32 resultIdx,
     Int32 subResultSize, Int32 firstTplIdx, CMask const &lineMask) {
 
-  const auto &spectrumRebinedFluxRaw =
-      m_spectraFull[0]->GetFluxAxis().GetSamplesVector();
+  const auto &flux_axis = m_spectraFull[0]->GetFluxAxis();
+  const auto &flux_axis_for_error = m_spectraFull[0]->GetRawFluxAxis();
+  const auto &spectrumRebinedFluxRaw = flux_axis.GetSamplesVector();
   const Int32 nSpcPixels = spectrumRebinedFluxRaw.size();
   auto const &mask = m_spectraFull[0]->getMask();
-  const auto &error =
-      m_spectraFull[0]->GetFluxAxis().GetError().GetSamplesVector();
+  const auto &error = flux_axis_for_error.GetError().GetSamplesVector();
 
   for (Int32 isubz = 0, fullResultIdx = resultIdx; isubz < subResultSize;
        ++isubz, ++fullResultIdx, ++firstTplIdx) {
@@ -746,8 +743,6 @@ void COperatorTemplateFittingLog::computeFitQuality(
 }
 
 /**
-  // TODO : many vectors allocated in this function. Check if the allocation
- time is significant, and eventually use preallocated member buffers...
  * @brief COperatorTemplateFittingLog::FitRangez
  * @param spectrumRebinedLambda
  * @param spectrumRebinedFluxRaw
@@ -865,26 +860,50 @@ void COperatorTemplateFittingLog::FitRangez(
   }
 
   // prepare best fit data buffer
-  TFloat64List bestChi2(nshifts, DBL_MAX);
-  std::vector<TFitQuality> bestFitQuality(nshifts);
-  TFloat64List bestFitAmp(nshifts, NAN);
-  TFloat64List bestFitAmpErr(nshifts, NAN);
-  TFloat64List bestFitAmpSigma(nshifts, NAN);
-  TFloat64List bestFitDtm(nshifts, NAN);
-  TFloat64List bestFitMtm(nshifts, NAN);
-  TFloat64List bestFitSNR(nshifts, NAN);
-  TFloat64List bestISMCoeff(nshifts, NAN);
-  TInt32List bestIGMIdx(nshifts, undefIdx);
+  auto &bestChi2 = result->ChiSquare;
+  bestChi2 = TFloat64List(nshifts, DBL_MAX);
+
+  auto &bestFitQuality = result->FitQuality;
+  bestFitQuality = std::vector<TFitQuality>(nshifts);
+
+  auto &bestFitAmp = result->FitAmplitude;
+  bestFitAmp = TFloat64List(nshifts, NAN);
+
+  auto &bestFitAmpErr = result->FitAmplitudeError;
+  bestFitAmpErr = TFloat64List(nshifts, NAN);
+
+  auto &bestFitAmpSigma = result->FitAmplitudeSigma;
+  bestFitAmpSigma = TFloat64List(nshifts, NAN);
+
+  auto &bestFitDtm = result->FitDtM;
+  bestFitDtm = TFloat64List(nshifts, NAN);
+
+  auto &bestFitMtm = result->FitMtM;
+  bestFitMtm = TFloat64List(nshifts, NAN);
+
+  auto &bestFitSNR = result->SNR;
+  bestFitSNR = TFloat64List(nshifts, NAN);
+
+  auto &bestISMCoeff = result->FitEbmvCoeff;
+  bestISMCoeff = TFloat64List(nshifts, NAN);
+
+  auto &bestIGMIdx = result->FitMeiksinIdx;
+  bestIGMIdx = TInt32List(nshifts, undefIdx);
 
   // prepare intermediate fit data buffer
   Int32 nIGMFinal = nIGM;
   if (overrideNIGMTobesaved > nIGM) {
     nIGMFinal = overrideNIGMTobesaved;
   }
-  TList<TList<TFloat64List>> intermediateChi2(
+  auto &intermediateChi2 = result->ChiSquareIntermediate;
+  intermediateChi2 = TList<TList<TFloat64List>>(
       nshifts, TList<TFloat64List>(nISM, TFloat64List(nIGMFinal, DBL_MAX)));
-  TList<TInt32List> intermediateIsmEbmvIdx(nshifts, EbmvList);
-  TList<TInt32List> intermediateIgmMeiksinIdx(
+
+  auto &intermediateIsmEbmvIdx = result->IsmEbmvIdxIntermediate;
+  intermediateIsmEbmvIdx = TList<TInt32List>(nshifts, EbmvList);
+
+  auto &intermediateIgmMeiksinIdx = result->IgmMeiksinIdxIntermediate;
+  intermediateIgmMeiksinIdx = TList<TInt32List>(
       nshifts, enableIGM ? MeiksinList : TInt32List(nIGMFinal, undefIdx));
 
   // precompute DtD and nValidSamples in case of lineMask
@@ -981,6 +1000,10 @@ void COperatorTemplateFittingLog::FitRangez(
           amp_err[k] = INFINITY;
           amp_sigma[k] = -INFINITY;
           chi2[k] = INFINITY;
+          bestFitAmp[k] = amp[k];
+          bestFitAmpErr[k] = amp_err[k];
+          bestFitAmpSigma[k] = amp_sigma[k];
+          bestChi2[k] = chi2[k];
         } else if (mtm_vec[k] == 0.0) {
           THROWG(ErrorCode::INTERNAL_ERROR, "mtm_vec[k] == 0");
         } else {
@@ -1052,23 +1075,10 @@ void COperatorTemplateFittingLog::FitRangez(
   std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
   std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
   std::reverse(intermediateChi2.begin(), intermediateChi2.end());
+  // no need to reverse intermediateIsmEbmvIdx and intermediateIgmMeiksinIdx:
+  // all values identical along z
   for (Int32 k = 0; k < ssize(result->Redshifts); k++)
     result->Overlap[k] = TFloat64List(1, 1.0);
-
-  result->ChiSquare = bestChi2;
-  result->FitQuality = bestFitQuality;
-  result->FitAmplitude = bestFitAmp;
-  result->FitAmplitudeError = bestFitAmpErr;
-  result->FitAmplitudeSigma = bestFitAmpSigma;
-  result->FitDtM = bestFitDtm;
-  result->FitMtM = bestFitMtm;
-  result->SNR = bestFitSNR;
-  result->FitEbmvCoeff = bestISMCoeff;
-  result->FitMeiksinIdx = bestIGMIdx;
-  result->ChiSquareIntermediate = intermediateChi2;
-  // no need to reverse the two next: all values identical along z
-  result->IsmEbmvIdxIntermediate = intermediateIsmEbmvIdx;
-  result->IgmMeiksinIdxIntermediate = intermediateIgmMeiksinIdx;
 }
 
 // find indexes in templateSpectra for which Z falls into the redshift range
@@ -1132,6 +1142,37 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
 
   return TInt32Range(ilbdamin, ilbdamax);
 }
+
+void COperatorTemplateFittingLog::buildTemplateAtFullRedshiftRange(
+    const CTemplate &logSampledTpl) {
+
+  if (!logSampledTpl.GetSpectralAxis().IsLogSampled()) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
+  }
+  // check if spc and tpl have same step
+  const Float64 epsilon = 1E-8;
+  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
+               logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
+      epsilon)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "tpl and spc are not sampled with the same step");
+
+  // subsample template if necessary
+  TInt32Range ilbda = FindTplSpectralIndex(m_spectraFull[0]->GetSpectralAxis(),
+                                           logSampledTpl.GetSpectralAxis(),
+                                           TFloat64Range(m_redshifts));
+  TMaskList mask_tpl =
+      logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
+
+  m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);
+  // double make sure that subsampled spectrum is well sampled
+  if (!m_templateRebined_bf[0].GetSpectralAxis().IsLogSampled(m_logstep)) {
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "subsampled template "
+           "is not log sampled with the redshift step");
+  }
+}
+
 /**
  * \brief COperatorTemplateFittingLog::Compute
  *
@@ -1174,37 +1215,9 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
     THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
   }
 
-  if (!logSampledTpl.GetSpectralAxis().IsLogSampled()) {
-    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
-  }
-  // check if spc and tpl have same step
-  const Float64 epsilon = 1E-8;
-  if (std::abs(m_spectraFull[0]->GetSpectralAxis().GetlogGridStep() -
-               logSampledTpl.GetSpectralAxis().GetlogGridStep() * m_ssRatio) >
-      epsilon)
-    THROWG(ErrorCode::INTERNAL_ERROR,
-           "tpl and spc are not sampled with the same step");
-
   m_continuum_null_amp_threshold = opt_continuum_null_amp_threshold;
 
-  // subsample template if necessary
-  if (m_ssRatio == 1) { // no required subsampling
-    m_templateRebined_bf[0] = logSampledTpl;
-  } else {
-    TInt32Range ilbda = FindTplSpectralIndex(
-        m_spectraFull[0]->GetSpectralAxis(), logSampledTpl.GetSpectralAxis(),
-        TFloat64Range(m_redshifts));
-    TMaskList mask_tpl =
-        logSampledTpl.GetSpectralAxis().GetSubSamplingMask(m_ssRatio, ilbda);
-
-    m_templateRebined_bf[0] = CTemplate(logSampledTpl, mask_tpl);
-    // double make sure that subsampled spectrum is well sampled
-    if (!m_templateRebined_bf[0].GetSpectralAxis().IsLogSampled(m_logstep)) {
-      THROWG(ErrorCode::INTERNAL_ERROR,
-             "subsampled template "
-             "is not log sampled with the redshift step");
-    }
-  }
+  buildTemplateAtFullRedshiftRange(logSampledTpl);
 
   //**************** Fitting at all redshifts ****************//
   // Note: below corresponds to ::BasicFit code except that redshift loop
@@ -1267,9 +1280,77 @@ std::shared_ptr<CTemplateFittingResult> COperatorTemplateFittingLog::Compute(
   return result;
 }
 
+// for use inside the linemodelfitting, when useLogLambdaSampling == true
+// will build a model using the fine logStep (like if m_ssratio=1)
+std::pair<CModelSpectrumResult, TPhotVal>
+COperatorTemplateFittingLog::ComputeSpectrumModel(
+    const CTemplate &tpl, Float64 redshift, Float64 ebmvCoef, Int32 meiksinIdx,
+    Float64 amplitude, const Float64 overlapThreshold, Int32 spcIndex) {
+
+  auto &spectra = Context.getRebinnedFullSpectra()[spcIndex];
+  auto &modelTpl = m_templateRebined_bf[spcIndex];
+
+  if (!tpl.GetSpectralAxis().IsLogSampled(m_logstep / m_ssRatio)) {
+    THROWG(ErrorCode::INTERNAL_ERROR, "template is not log sampled");
+  }
+  // check if spc and tpl have same step
+  const Float64 epsilon = 1E-8;
+  if (std::abs(spectra->GetSpectralAxis().GetlogGridStep() -
+               tpl.GetSpectralAxis().GetlogGridStep()) > epsilon)
+    THROWG(ErrorCode::INTERNAL_ERROR,
+           "tpl and spc are not sampled with the same step");
+
+  // extract part of template visible at redshift
+  auto const &iRange =
+      FindTplSpectralIndex(spectra->GetSpectralAxis(), tpl.GetSpectralAxis(),
+                           TFloat64Range{redshift, redshift});
+  TMaskList mask(tpl.GetSampleCount(), 0);
+  auto const &start = mask.begin() + iRange.GetBegin();
+  auto const &end = mask.begin() + iRange.GetEnd() + 1;
+  std::fill(start, end, Mask{1});
+
+  // remove the spectrum masked samples
+  auto const &spcMaskList = spectra->getMask().getMaskList();
+  std::transform(start, end, spcMaskList.begin(), start, std::bit_and());
+  modelTpl = CTemplate(tpl, mask);
+
+  // apply IGM & ISM
+  if ((ebmvCoef > 0.) || (meiksinIdx > -1))
+    InitIsmIgmConfig(redshift, 0, modelTpl.GetSampleCount() - 1, spcIndex);
+
+  if (ebmvCoef > 0.) {
+    if (modelTpl.CalzettiInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "ISM is not initialized");
+    }
+    Int32 idxEbmv = -1;
+    idxEbmv = modelTpl.m_ismCorrectionCalzetti->GetEbmvIndex(ebmvCoef);
+
+    if (idxEbmv != -1)
+      ApplyDustCoeff(idxEbmv, spcIndex);
+  }
+  if (meiksinIdx > -1) {
+    if (modelTpl.MeiksinInitFailed()) {
+      THROWG(ErrorCode::INTERNAL_ERROR, "IGM is not initialized");
+    }
+    ApplyMeiksinCoeff(meiksinIdx, spcIndex);
+  }
+
+  ApplyAmplitude(amplitude, spcIndex);
+
+  // shift the spectralaxis to sync with the spectrum lambdaAxis
+  const CSpectrumFluxAxis &modelflux = modelTpl.GetFluxAxis();
+  CSpectrumSpectralAxis modelwav = modelTpl.GetSpectralAxis().ShiftByWaveLength(
+      (1.0 + redshift), CSpectrumSpectralAxis::nShiftForward);
+  CModelSpectrumResult model(std::move(modelwav).GetSamplesVector(),
+                             modelflux.GetSamplesVector(),
+                             m_spectra[spcIndex]->getObsID());
+  return std::make_pair(std::move(model),
+                        spcIndex > 0 ? TPhotVal() : getIntegratedFluxes());
+}
+
 CMask COperatorTemplateFittingLog::maskTemplate() {
   auto const &spectralAxis = m_templateRebined_bf[0].GetSpectralAxis();
-  auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis();
+  auto fluxAxis = m_templateRebined_bf[0].GetFluxAxis().GetSamplesVector();
 
   auto const range = spectralAxis.GetLambdaRange();
   auto const mask = m_maskBuilder->getMask(spectralAxis, range, 0.0, 0);
@@ -1277,33 +1358,32 @@ CMask COperatorTemplateFittingLog::maskTemplate() {
     if (!mask[i])
       fluxAxis[i] = 0.0;
   }
-  m_templateRebined_bf[0].SetFluxAxis(std::move(fluxAxis));
+  m_templateRebined_bf[0].SetFluxAxis(CSpectrumFluxAxis(std::move(fluxAxis)));
   return mask;
 }
 
 Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog() const {
   Float64 cstLog = 0.0;
   for (auto const &[spectrum_ptr, lambdaRange_ptr] :
-       boost::combine(m_spectraFull, m_lambdaRanges)) {
+       boost::combine(m_spectraFull, m_lambdaRangesFull)) {
     const CSpectrumSpectralAxis &spcSpectralAxis =
         spectrum_ptr->GetSpectralAxis();
-    const TFloat64List &error =
-        spectrum_ptr->GetFluxAxis().GetError().GetSamplesVector();
+    const auto &flux_for_weight = spectrum_ptr->GetFluxAxis();
     auto const &mask = spectrum_ptr->getMask();
 
     Int32 numDevs = 0;
 
     Float64 sumLogNoise = 0.0;
 
-    auto const &[imin, imax] = lambdaRange_ptr->getClosestInnerIndices(
-        spcSpectralAxis.GetSamplesVector());
-    for (Int32 j = imin; j <= imax; j++) {
+    auto const &iRange = TInt32Range(lambdaRange_ptr->getClosestInnerIndices(
+        spcSpectralAxis.GetSamplesVector()));
+    for (auto j : iRange) {
       if (mask[j]) {
         numDevs++;
-        sumLogNoise += log(error[j]);
+        sumLogNoise += log(flux_for_weight.GetWeight(j));
       }
     }
-    cstLog += -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    cstLog += -numDevs * 0.5 * log(2 * M_PI) + 0.5 * sumLogNoise;
   }
   return cstLog;
 }

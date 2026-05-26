@@ -100,12 +100,13 @@ CLMEltListVector RuleStrongHigherThanWeak_fixture::makeElementListVector() {
       "{\"model\" : {\"stage\": {\"methodSolve\": {\"lineModel\": {"
       "\"maxDistanceToLine\" : \"1\","
       "\"nbSamplesMinForLineFit\": \"2\","
+      "\"ampOffsetFit\": \"false\","
       "\"velocityEmission\": 100,"
       "\"lineWidthType\": \"instrumentDriven\""
       "}}}}}"};
   Context.LoadParameterStore(jsonString);
   CLMEltListVector element_list_vector =
-      CLMEltListVector(spc_index, lm, ElementComposition::Default);
+      CLMEltListVector(spc_index, lm, ElementComposition::Default, false);
   spc_index.setAtBegining();
   for (auto &elt : element_list_vector.getElementList()) {
     elt->m_OutsideLambdaRangeList.assign(2, false);

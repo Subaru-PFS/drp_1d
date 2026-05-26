@@ -58,33 +58,36 @@ def buildPdfParams(pdf_params, first_pass=False):
 
 @doc_method
 def get_final_regular_z_grid(spectrum_model: str, parameters: Parameters):
+    output = None
     method = parameters.get_redshift_solver_method(spectrum_model)
     if method is None:
-        return None
+        return output
     if parameters.get_skipsecondpass(method, spectrum_model, False):
         raise APIException(
-            ErrorCode.IE_INVALID_PARAMETER, "get_final_regular_z_grid cannot be called with skipSecondPass"
+            ErrorCode.IE_INVALID_PARAMETER,
+            "get_final_regular_z_grid cannot be called with skipSecondPass",
         )
 
     p_redshift_range = parameters.get_redshiftrange(spectrum_model)
     if p_redshift_range is None:
-        return None
+        return output
     redshift_range = TFloat64Range(p_redshift_range[0], p_redshift_range[1])
     redshift_step = parameters.get_redshiftstep(spectrum_model)
     is_log = parameters.is_log_sampling(spectrum_model)
 
-    grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
-
     if parameters.has_two_pass(spectrum_model):
         ratio = parameters.get_large_grid_ratio(spectrum_model, method)
-        if ratio is None:
-            return None
-        fp_grid_param = CZGridParam(redshift_range, redshift_step * ratio, np.nan)
-        zend = fp_grid_param.getZGrid(is_log)[-1]
-        redshift_range = TFloat64Range(p_redshift_range[0], zend)
+        if ratio is not None:
+            fp_grid_param = CZGridParam(redshift_range, redshift_step * ratio, np.nan)
+            zend = fp_grid_param.getZGrid(is_log)[-1]
+            redshift_range = TFloat64Range(p_redshift_range[0], zend)
+            grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+            output = grid_param.getZGrid(is_log)
+    else:
         grid_param = CZGridParam(redshift_range, redshift_step, np.nan)
+        output = grid_param.getZGrid(is_log)
 
-    return grid_param.getZGrid(is_log)
+    return output
 
 
 class BuilderPdfHandler:
@@ -132,11 +135,8 @@ class PdfHandler:
         return self._pdf.isRegular()
 
     @doc_method
-    def convertToRegular(self, fine=True, zgrid_max=None):
+    def convertToRegular(self, fine=True):
         self._pdf.convertToRegular(fine)
-
-        if zgrid_max is not None and self._pdf.zmax[0] < zgrid_max:
-            self._pdf.extrapolate_on_right_border(zgrid_max)
 
     def isPdfValid(self):
         return self._pdf.isPdfValid()
